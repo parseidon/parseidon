@@ -1,0 +1,49 @@
+Grammar         = SPACING Definition+;
+Definition      = SPACING (IsTerminal / Drop)? Identifier !EQUAL Expression LINE_END;
+Expression      = Sequence (SLASH Sequence)*;
+Sequence        = Prefix*;
+Prefix          = Drop? Suffix;
+Suffix          = Primary (QUESTION / STAR / PLUS)?;
+Primary         = Identifier
+                / Literal
+                / !BRACKET_OPEN Expression !BRACKET_CLOSE
+                / Regex
+                / DOT;  
+$Identifier     = IdentStart IdentCont SPACING;
+IdentStart      = [a-zA-Z_];
+IdentCont       = [a-zA-Z0-9_]*;
+$Literal        = ((!'\'' CHAR*  !'\'') / ('"' CHAR* '"')) SPACING ;
+Char            = [^'\\] / '\\\'' / '\\\\' / ESCAPEES;
+$Regex          = '[' ( [^\\\[\]] / '\\[' / '\\]' / '\\-' / '\\^' / '\\\\' / ESCAPEES )+ ']' ('{' NUMBER '}')? SPACING;
+
+SLASH           = '/' SPACING;
+AND             = '&' SPACING;
+NOT             = '!' SPACING;
+QUESTION        = '?' SPACING;
+STAR            = '*' SPACING;
+PLUS            = '+' SPACING;
+Drop            = '!' SPACING;
+IsTerminal      = '$' SPACING;
+
+ESCAPEES        = '\\0'
+                / '\\a'
+                / '\\b' 
+                / '\\f'
+                / '\\n'
+                / '\\r'
+                / '\\t' 
+                / '\\v' 
+                / ('\\u' [0-9a-fA-F]{4})
+                / ('\\u' [0-9a-fA-F]{8})
+                ;
+
+EQUAL           = '=' SPACING;
+!LINE_END       = SPACING ';';
+DOT             = '.' SPACING;
+!SPACING        = (NEW_LINE / WHITE_SPACE / COMMENT)* ;
+WHITE_SPACE     = [ \t\r\n];
+NEW_LINE        = [\r];
+NUMBER          = [1-9] [0-9]*;
+COMMENT         = '#' (![\r\n] .)* [\r\n];
+BRACKET_OPEN    = '(' SPACING;
+BRACKET_CLOSE   = ')' SPACING;

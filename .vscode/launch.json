@@ -1,0 +1,41 @@
+{
+    // Verwendet IntelliSense zum Ermitteln möglicher Attribute.
+    // Zeigen Sie auf vorhandene Attribute, um die zugehörigen Beschreibungen anzuzeigen.
+    // Weitere Informationen finden Sie unter https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch CLI",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "dotnet: build",
+            "program": "${workspaceFolder}/Output/bin/apps/Parseidon.Cli/Debug/net9.0/Parseidon.dll",
+            "args": ["-g", "${workspaceFolder}/common/parseidon.pgram", "-s", "-a", "${workspaceFolder}/Output/ast.yaml", "--ns", "Parseidon.Parser", "--cn", "ParseidonParser", "-o", "${workspaceFolder}/Output/Parser.cs"],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        },
+        {
+            "name": "Create Parser",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "dotnet: build",
+            "program": "${workspaceFolder}/Output/bin/apps/Parseidon.Cli/Debug/net9.0/Parseidon.dll",
+            "args": ["-g", "${workspaceFolder}/common/parseidon.pgram", "--ns", "Parseidon.Parser", "--cn", "ParseidonParser", "-o", "${workspaceFolder}/libs/Parser/Parser.cs"],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        },
+        {
+            "name": "Create AST",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "dotnet: build",
+            "program": "${workspaceFolder}/Output/bin/apps/Parseidon.Cli/Debug/net9.0/Parseidon.dll",
+            "args": ["-g", "${workspaceFolder}/common/parseidon.pgram", "-s", "-a", "${workspaceFolder}/Output/ast.yaml"],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        }
+    ]
+}
