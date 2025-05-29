@@ -1,6 +1,6 @@
 namespace Parseidon.Helper;
 
-public class ScopedStack<T>
+public class ScopedStack<T> where T : class
 {
     private class StackEntry
     {
