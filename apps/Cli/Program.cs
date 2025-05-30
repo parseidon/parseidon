@@ -61,18 +61,13 @@ var result = CommandLine.Parser.Default.ParseArguments<CommandLineOptions>(args)
         if (options.Verbose)
             Console.WriteLine($"Sie haben die Datei ausgewählt: {GrammarFile}");
 
-        if ((!String.IsNullOrEmpty(options.OutputFile) || options.ShowCode) && (String.IsNullOrEmpty(options.Namespace) || String.IsNullOrEmpty(options.ClassName)))
-        {
-            Console.WriteLine("Bitte geben Sie einen Namespace und einen Klassennamen an, wenn Sie den Code anzeigen möchten.");
-            return;
-        }
         String Text = System.IO.File.ReadAllText(GrammarFile);
         ParseidonParser Parser = new ParseidonParser();
         Parser.Parse(Text);
         
         if (!string.IsNullOrEmpty(options.OutputFile) || options.ShowCode)
         {
-            CreateCodeVisitor visitor = new CreateCodeVisitor(options.Namespace, options.ClassName);
+            CreateCodeVisitor visitor = new CreateCodeVisitor();
             Parser.Visit(visitor);
             if (!string.IsNullOrEmpty(options.OutputFile))
             {
@@ -143,12 +138,6 @@ class CommandLineOptions
     [Option('o', "output", Required = false, HelpText = "Path to the output file.")]
     public string OutputFile { get; set; } = string.Empty;
 
-    [Option("ns", Required = false, HelpText = "Namespace for the generated code.")]
-    public string Namespace { get; set; } = string.Empty;
-
-    [Option("cn", Required = false, HelpText = "Class name for the generated code.")]
-    public string ClassName { get; set; } = string.Empty;
-    
     [Option('a', "ast", Required = false, HelpText = "Path to the AST file.")]
     public string ASTFile { get; set; } = string.Empty;
 

@@ -1,4 +1,10 @@
-Grammar         = Spacing Definition+;
+@namespace Parseidon.Parser;
+@class ParseidonParser;
+
+Grammar         = Config Definition+;
+Config          = Namespace ClassName;
+Namespace       = Spacing !'@namespace' Spacing CSIdentifier LineEnd;
+ClassName       = Spacing !'@class' Spacing CSIdentifier LineEnd;
 Definition      = Spacing (IsTerminal / Drop)? Identifier !Equal Expression LineEnd;
 Expression      = Sequence (Or Sequence)*;
 Sequence        = Prefix*;
@@ -12,6 +18,8 @@ Primary         = Identifier
 $Identifier     = IdentStart IdentCont Spacing;
 IdentStart      = [a-zA-Z_];
 IdentCont       = [a-zA-Z0-9_]*;
+$CSIdentifier   = IdentStart CSIdentCont Spacing;
+CSIdentCont     = [a-zA-Z0-9_.]*;
 $Literal        = ((!'\'' Char*  !'\'') / ('"' Char* '"')) Spacing ;
 Char            = [^'\\] / '\\\'' / '\\\\' / EscapeChars;
 $Regex          = '[' ( [^\\\[\]] / '\\[' / '\\]' / '\\-' / '\\^' / '\\\\' / EscapeChars )+ ']' ('{' Number '}')? Spacing;

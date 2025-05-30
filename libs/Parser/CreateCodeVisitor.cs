@@ -8,8 +8,8 @@ namespace Parseidon.Parser;
 
 public class CreateCodeVisitor : ParseidonParser.Visitor
 {
-    private readonly string _namespace;
-    private readonly string _className;
+    private String _namespace = String.Empty;
+    private String _className = String.Empty;
     private Grammar.Grammar? _grammar;
 
     private ScopedStack<AbstractGrammarElement> _stack = new ScopedStack<AbstractGrammarElement>();
@@ -28,13 +28,6 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
                 """;
             return "";
         }
-    }
-
-    public CreateCodeVisitor(String namespaceName, String className)
-    {
-        _namespace = namespaceName;
-        _className = className;
-
     }
 
     public override void Visit(ParseidonParser.ASTNode node)
@@ -83,6 +76,16 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
         List<SimpleRule> rules = PopList<SimpleRule>();
         _grammar = new Grammar.Grammar(_className, rules);
     }
+    public override void OnNamespace(ParseidonParser.ASTNode node)
+    {
+        ReferenceElement name = Pop<ReferenceElement>();
+        _namespace = name.ReferenceName;
+    }
+    public override void OnClassName(ParseidonParser.ASTNode node)
+    {
+        ReferenceElement name = Pop<ReferenceElement>();
+        _className = name.ReferenceName;
+    }
     public override void OnIsTerminal(ParseidonParser.ASTNode node)
     {
         Push(new IsTerminalMarker(null));
@@ -111,6 +114,10 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
     {
         Push(new ReferenceElement(node.Text.Trim()));
     }
+    public override void OnCSIdentifier(ParseidonParser.ASTNode node)
+    {
+        Push(new ReferenceElement(node.Text.Trim()));
+    }    
     public override void OnIdentStart(ParseidonParser.ASTNode node) { }
     public override void OnIdentCont(ParseidonParser.ASTNode node) { }
     public override void OnExpression(ParseidonParser.ASTNode node)
