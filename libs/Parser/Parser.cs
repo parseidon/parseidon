@@ -13,36 +13,36 @@ public class ParseidonParser
 {
     public class Visitor
     {
-        public virtual void OnRuleGrammar(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleSpacing(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleNewLine(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleWhiteSpace(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleComment(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleDefinition(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleIsTerminal(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleDrop(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleIdentifier(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleIdentStart(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleIdentCont(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleEqual(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleExpression(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleSequence(ParseidonParser.ASTNode node) {}
-        public virtual void OnRulePrefix(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleSuffix(ParseidonParser.ASTNode node) {}
-        public virtual void OnRulePrimary(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleLiteral(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleChar(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleEscapeChars(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleBracketOpen(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleBracketClose(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleRegex(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleNumber(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleDot(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleOptional(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleZeroOrMore(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleOneOrMore(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleOr(ParseidonParser.ASTNode node) {}
-        public virtual void OnRuleLineEnd(ParseidonParser.ASTNode node) {}
+        public virtual void OnGrammar(ParseidonParser.ASTNode node) {}
+        public virtual void OnSpacing(ParseidonParser.ASTNode node) {}
+        public virtual void OnNewLine(ParseidonParser.ASTNode node) {}
+        public virtual void OnWhiteSpace(ParseidonParser.ASTNode node) {}
+        public virtual void OnComment(ParseidonParser.ASTNode node) {}
+        public virtual void OnDefinition(ParseidonParser.ASTNode node) {}
+        public virtual void OnIsTerminal(ParseidonParser.ASTNode node) {}
+        public virtual void OnDrop(ParseidonParser.ASTNode node) {}
+        public virtual void OnIdentifier(ParseidonParser.ASTNode node) {}
+        public virtual void OnIdentStart(ParseidonParser.ASTNode node) {}
+        public virtual void OnIdentCont(ParseidonParser.ASTNode node) {}
+        public virtual void OnEqual(ParseidonParser.ASTNode node) {}
+        public virtual void OnExpression(ParseidonParser.ASTNode node) {}
+        public virtual void OnSequence(ParseidonParser.ASTNode node) {}
+        public virtual void OnPrefix(ParseidonParser.ASTNode node) {}
+        public virtual void OnSuffix(ParseidonParser.ASTNode node) {}
+        public virtual void OnPrimary(ParseidonParser.ASTNode node) {}
+        public virtual void OnLiteral(ParseidonParser.ASTNode node) {}
+        public virtual void OnChar(ParseidonParser.ASTNode node) {}
+        public virtual void OnEscapeChars(ParseidonParser.ASTNode node) {}
+        public virtual void OnBracketOpen(ParseidonParser.ASTNode node) {}
+        public virtual void OnBracketClose(ParseidonParser.ASTNode node) {}
+        public virtual void OnRegex(ParseidonParser.ASTNode node) {}
+        public virtual void OnNumber(ParseidonParser.ASTNode node) {}
+        public virtual void OnDot(ParseidonParser.ASTNode node) {}
+        public virtual void OnOptional(ParseidonParser.ASTNode node) {}
+        public virtual void OnZeroOrMore(ParseidonParser.ASTNode node) {}
+        public virtual void OnOneOrMore(ParseidonParser.ASTNode node) {}
+        public virtual void OnOr(ParseidonParser.ASTNode node) {}
+        public virtual void OnLineEnd(ParseidonParser.ASTNode node) {}
         public virtual void Visit(ASTNode node)
         {
             if(node == null)
@@ -56,36 +56,36 @@ public class ParseidonParser
         {
             switch(tokenId)
             {
-                case 29: OnRuleGrammar(node); break;
-                case 6: OnRuleSpacing(node); break;
-                case 4: OnRuleNewLine(node); break;
-                case 5: OnRuleWhiteSpace(node); break;
-                case 2: OnRuleComment(node); break;
-                case 28: OnRuleDefinition(node); break;
-                case 11: OnRuleIsTerminal(node); break;
-                case 12: OnRuleDrop(node); break;
-                case 22: OnRuleIdentifier(node); break;
-                case 21: OnRuleIdentStart(node); break;
-                case 20: OnRuleIdentCont(node); break;
-                case 9: OnRuleEqual(node); break;
-                case 27: OnRuleExpression(node); break;
-                case 26: OnRuleSequence(node); break;
-                case 25: OnRulePrefix(node); break;
-                case 24: OnRuleSuffix(node); break;
-                case 23: OnRulePrimary(node); break;
-                case 19: OnRuleLiteral(node); break;
-                case 18: OnRuleChar(node); break;
-                case 10: OnRuleEscapeChars(node); break;
-                case 1: OnRuleBracketOpen(node); break;
-                case 0: OnRuleBracketClose(node); break;
-                case 17: OnRuleRegex(node); break;
-                case 3: OnRuleNumber(node); break;
-                case 7: OnRuleDot(node); break;
-                case 15: OnRuleOptional(node); break;
-                case 14: OnRuleZeroOrMore(node); break;
-                case 13: OnRuleOneOrMore(node); break;
-                case 16: OnRuleOr(node); break;
-                case 8: OnRuleLineEnd(node); break;
+                case 29: OnGrammar(node); break;
+                case 6: OnSpacing(node); break;
+                case 4: OnNewLine(node); break;
+                case 5: OnWhiteSpace(node); break;
+                case 2: OnComment(node); break;
+                case 28: OnDefinition(node); break;
+                case 11: OnIsTerminal(node); break;
+                case 12: OnDrop(node); break;
+                case 22: OnIdentifier(node); break;
+                case 21: OnIdentStart(node); break;
+                case 20: OnIdentCont(node); break;
+                case 9: OnEqual(node); break;
+                case 27: OnExpression(node); break;
+                case 26: OnSequence(node); break;
+                case 25: OnPrefix(node); break;
+                case 24: OnSuffix(node); break;
+                case 23: OnPrimary(node); break;
+                case 19: OnLiteral(node); break;
+                case 18: OnChar(node); break;
+                case 10: OnEscapeChars(node); break;
+                case 1: OnBracketOpen(node); break;
+                case 0: OnBracketClose(node); break;
+                case 17: OnRegex(node); break;
+                case 3: OnNumber(node); break;
+                case 7: OnDot(node); break;
+                case 15: OnOptional(node); break;
+                case 14: OnZeroOrMore(node); break;
+                case 13: OnOneOrMore(node); break;
+                case 16: OnOr(node); break;
+                case 8: OnLineEnd(node); break;
             }
         }
     }

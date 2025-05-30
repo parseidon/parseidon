@@ -20,7 +20,7 @@ public class SimpleRule : AbstractNamedDefinitionElement
         }
     }
 
-    public override String GetEventName() => $"OnRule{Name.Humanize().Dehumanize()}";
+    public override String GetEventName() => $"On{Name.Humanize().Dehumanize()}";
 
 
 }

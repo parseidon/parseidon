@@ -78,24 +78,24 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
         _stack.Push(element);
     }
 
-    public override void OnRuleGrammar(ParseidonParser.ASTNode node)
+    public override void OnGrammar(ParseidonParser.ASTNode node)
     {
         List<SimpleRule> rules = PopList<SimpleRule>();
         _grammar = new Grammar.Grammar(_className, rules);
     }
-    public override void OnRuleIsTerminal(ParseidonParser.ASTNode node)
+    public override void OnIsTerminal(ParseidonParser.ASTNode node)
     {
         Push(new IsTerminalMarker(null));
     }
-    public override void OnRuleDrop(ParseidonParser.ASTNode node)
+    public override void OnDrop(ParseidonParser.ASTNode node)
     {
         Push(new DropMarker(null));
     }
-    public override void OnRuleSpacing(ParseidonParser.ASTNode node) { }
-    public override void OnRuleNewLine(ParseidonParser.ASTNode node) { }
-    public override void OnRuleWhiteSpace(ParseidonParser.ASTNode node) { }
-    public override void OnRuleComment(ParseidonParser.ASTNode node) { }
-    public override void OnRuleDefinition(ParseidonParser.ASTNode node)
+    public override void OnSpacing(ParseidonParser.ASTNode node) { }
+    public override void OnNewLine(ParseidonParser.ASTNode node) { }
+    public override void OnWhiteSpace(ParseidonParser.ASTNode node) { }
+    public override void OnComment(ParseidonParser.ASTNode node) { }
+    public override void OnDefinition(ParseidonParser.ASTNode node)
     {
         AbstractGrammarElement definition = Pop<AbstractGrammarElement>();
         ReferenceElement name = Pop<ReferenceElement>();
@@ -107,13 +107,13 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
         }
         Push(new SimpleRule(name.ReferenceName, definition));
     }
-    public override void OnRuleIdentifier(ParseidonParser.ASTNode node)
+    public override void OnIdentifier(ParseidonParser.ASTNode node)
     {
         Push(new ReferenceElement(node.Text.Trim()));
     }
-    public override void OnRuleIdentStart(ParseidonParser.ASTNode node) { }
-    public override void OnRuleIdentCont(ParseidonParser.ASTNode node) { }
-    public override void OnRuleExpression(ParseidonParser.ASTNode node)
+    public override void OnIdentStart(ParseidonParser.ASTNode node) { }
+    public override void OnIdentCont(ParseidonParser.ASTNode node) { }
+    public override void OnExpression(ParseidonParser.ASTNode node)
     {
         List<AbstractDefinitionElement> elements = PopList<AbstractDefinitionElement>();
         if (elements.Count < 1)
@@ -133,7 +133,7 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
             Push(rightElement);
         }
     }
-    public override void OnRuleSequence(ParseidonParser.ASTNode node)
+    public override void OnSequence(ParseidonParser.ASTNode node)
     {
         List<AbstractDefinitionElement> elements = PopList<AbstractDefinitionElement>();
         if (elements.Count < 1)
@@ -153,7 +153,7 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
             Push(rightElement);
         }
     }
-    public override void OnRulePrefix(ParseidonParser.ASTNode node)
+    public override void OnPrefix(ParseidonParser.ASTNode node)
     {
         AbstractGrammarElement element = Pop<AbstractGrammarElement>();
         AbstractMarker? marker = TryPop<AbstractMarker>();
@@ -165,7 +165,7 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
         }
         Push(element);
     }
-    public override void OnRuleSuffix(ParseidonParser.ASTNode node)
+    public override void OnSuffix(ParseidonParser.ASTNode node)
     {
         AbstractOneChildOperator? suffixOperator = TryPop<AbstractOneChildOperator>();
         AbstractGrammarElement element = Pop<AbstractGrammarElement>();
@@ -177,40 +177,40 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
         Push(element);
     }
 
-    public override void OnRulePrimary(ParseidonParser.ASTNode node)
+    public override void OnPrimary(ParseidonParser.ASTNode node)
     {
         Push(new DefinitionElement(Pop<AbstractGrammarElement>()));
     }
-    public override void OnRuleLiteral(ParseidonParser.ASTNode node)
+    public override void OnLiteral(ParseidonParser.ASTNode node)
     {
         Push(new TextTerminal(node.Text));
     }
-    public override void OnRuleChar(ParseidonParser.ASTNode node) { }
-    public override void OnRuleEscapeChars(ParseidonParser.ASTNode node) { }
-    public override void OnRuleBracketOpen(ParseidonParser.ASTNode node) { }
-    public override void OnRuleBracketClose(ParseidonParser.ASTNode node) { }
-    public override void OnRuleRegex(ParseidonParser.ASTNode node)
+    public override void OnChar(ParseidonParser.ASTNode node) { }
+    public override void OnEscapeChars(ParseidonParser.ASTNode node) { }
+    public override void OnBracketOpen(ParseidonParser.ASTNode node) { }
+    public override void OnBracketClose(ParseidonParser.ASTNode node) { }
+    public override void OnRegex(ParseidonParser.ASTNode node)
     {
         Push(new RegExTerminal(node.Text));
     }
-    public override void OnRuleNumber(ParseidonParser.ASTNode node) { }
-    public override void OnRuleDot(ParseidonParser.ASTNode node)
+    public override void OnNumber(ParseidonParser.ASTNode node) { }
+    public override void OnDot(ParseidonParser.ASTNode node)
     {
         Push(new RegExTerminal("."));
     }
-    public override void OnRuleOptional(ParseidonParser.ASTNode node)
+    public override void OnOptional(ParseidonParser.ASTNode node)
     {
         Push(new OptionalOperator(null));
     }
-    public override void OnRuleZeroOrMore(ParseidonParser.ASTNode node)
+    public override void OnZeroOrMore(ParseidonParser.ASTNode node)
     {
         Push(new ZeroOrMoreOperator(null));
     }
-    public override void OnRuleOneOrMore(ParseidonParser.ASTNode node)
+    public override void OnOneOrMore(ParseidonParser.ASTNode node)
     {
         Push(new OneOrMoreOperator(null));
     }
-    public override void OnRuleOr(ParseidonParser.ASTNode node) { }
-    public override void OnRuleLineEnd(ParseidonParser.ASTNode node) { }
+    public override void OnOr(ParseidonParser.ASTNode node) { }
+    public override void OnLineEnd(ParseidonParser.ASTNode node) { }
 }
 
