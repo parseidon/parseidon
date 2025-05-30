@@ -90,8 +90,6 @@ public class ParseidonParser
         }
     }
 
-    private ASTNode? rootNode = null;
-    
     public class ASTNode
     {
         private List<ASTNode> _children { get; } = new List<ASTNode>();
@@ -104,14 +102,14 @@ public class ParseidonParser
         public Int32 Position { get; set; }
         public ASTNode? Parent { get => _parent; }            
     
-        public ASTNode(Int32 tokenId, String name, String text)
+        internal ASTNode(Int32 tokenId, String name, String text)
         {
             Text = text;
             TokenId = tokenId;
             Name = name;
         }
     
-        public void AssignFrom(ASTNode node)
+        internal void AssignFrom(ASTNode node)
         {
             Int32 nodeIndex = _children.IndexOf(node);
             if (nodeIndex >= 0)
@@ -129,7 +127,7 @@ public class ParseidonParser
             }
         }
          
-        public String GetText()
+        internal String GetText()
         {
             if (Children.Count > 0)
                 return String.Join("", Children.Select(x => x.GetText()));
@@ -137,7 +135,7 @@ public class ParseidonParser
                 return Text;
         }
     
-        public void SetParent(ASTNode? parent, Int32 index = -1)
+        internal void SetParent(ASTNode? parent, Int32 index = -1)
         {
             if(_parent != null)
                 _parent._children.Remove(this);
@@ -151,13 +149,13 @@ public class ParseidonParser
             }
         }
         
-        public void AddChild(ASTNode? child)
+        internal void AddChild(ASTNode? child)
         {
             if(child != null)
                 _children.Add(child);
         }
     
-        public void ClearChildren()
+        internal void ClearChildren()
         {
             _children.Clear();
         }            
@@ -174,7 +172,9 @@ public class ParseidonParser
         public Boolean Eof => !(Position < Text.Length);
     }
     
-    public Boolean CheckRegEx(ASTNode parentNode, ParserState state, String regEx)
+    private ASTNode? rootNode = null;
+    
+    private Boolean CheckRegEx(ASTNode parentNode, ParserState state, String regEx)
     {
         Int32 oldPosition = state.Position;
         if((state.Position < state.Text.Length) && Regex.Match(state.Text[state.Position].ToString(), regEx).Success)
@@ -187,7 +187,7 @@ public class ParseidonParser
         return false;
     }
     
-    public Boolean CheckText(ASTNode parentNode, ParserState state, String text)
+    private Boolean CheckText(ASTNode parentNode, ParserState state, String text)
     {
         Int32 oldPosition = state.Position;
         Int32 position = 0;
@@ -205,7 +205,7 @@ public class ParseidonParser
         return true;
     }
     
-    public Boolean CheckAnd(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> leftCheck, Func<ASTNode, Boolean> rightCheck)
+    private Boolean CheckAnd(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> leftCheck, Func<ASTNode, Boolean> rightCheck)
     {
         Int32 oldPosition = state.Position;
         ASTNode tempNode = new ASTNode(parentNode.TokenId, "AND", parentNode.Text);
@@ -223,7 +223,7 @@ public class ParseidonParser
         return false;
     }
     
-    public Boolean CheckOr(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> leftCheck, Func<ASTNode, Boolean> rightCheck)
+    private Boolean CheckOr(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> leftCheck, Func<ASTNode, Boolean> rightCheck)
     {
         Int32 oldPosition = state.Position;
         if(leftCheck(parentNode))
@@ -234,14 +234,14 @@ public class ParseidonParser
         return false;
     }
     
-    public Boolean Drop(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> check)
+    private Boolean Drop(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> check)
     {
         Int32 oldPosition = state.Position;
         ASTNode tempNode = new ASTNode(-1, "", "");
         return check(tempNode);
     }
     
-    public Boolean CheckOneOrMore(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> check)
+    private Boolean CheckOneOrMore(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> check)
     {
         Int32 oldPosition = state.Position;
         if(check(parentNode))
@@ -258,7 +258,7 @@ public class ParseidonParser
         return false;
     }
     
-    public Boolean CheckZeroOrMore(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> check)
+    private Boolean CheckZeroOrMore(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> check)
     {
         Int32 oldPosition = state.Position;
         while((!state.Eof) && check(parentNode))
@@ -269,7 +269,7 @@ public class ParseidonParser
         return true;
     }
     
-    public Boolean CheckDifference(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> leftCheck, Func<ASTNode, Boolean> rightCheck)
+    private Boolean CheckDifference(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> leftCheck, Func<ASTNode, Boolean> rightCheck)
     {
         Int32 oldPosition = state.Position;
         if(leftCheck(parentNode))
@@ -282,7 +282,7 @@ public class ParseidonParser
         return false;
     }
     
-    public Boolean CheckRange(ASTNode parentNode, ParserState state, Int32 minCount, Int32 maxCount, Func<ASTNode, Boolean> check)
+    private Boolean CheckRange(ASTNode parentNode, ParserState state, Int32 minCount, Int32 maxCount, Func<ASTNode, Boolean> check)
     {
         Int32 oldPosition = state.Position;
         Int32 count = 0;
@@ -297,7 +297,7 @@ public class ParseidonParser
         return true;
     }
     
-    public Boolean MakeTerminal(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> check)
+    private Boolean MakeTerminal(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> check)
     {
         Int32 oldPosition = state.Position;
         ASTNode tempNode = new ASTNode(-1, "", "");
@@ -311,7 +311,7 @@ public class ParseidonParser
         return result;
     }
     
-    public Boolean PromoteAction(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> check)
+    private Boolean PromoteAction(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> check)
     {
         Int32 childCount = parentNode.Children.Count;
         Boolean result = check(parentNode);
@@ -323,7 +323,7 @@ public class ParseidonParser
         return result;
     }
     
-    public Boolean AddVirtualNode(ASTNode parentNode, ParserState state, Int32 tokenId, String text)
+    private Boolean AddVirtualNode(ASTNode parentNode, ParserState state, Int32 tokenId, String text)
     {
         parentNode.AddChild(new ASTNode(tokenId, "VIRTUAL", text));
         return true;
@@ -336,7 +336,7 @@ public class ParseidonParser
         visitor.Visit(rootNode);
     }
 
-    public Boolean CheckRule_Grammar(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_Grammar(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(29, "Grammar", "");
@@ -352,7 +352,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_Spacing(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_Spacing(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(6, "Spacing", "");
@@ -373,7 +373,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_NewLine(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_NewLine(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(4, "NewLine", "");
@@ -383,7 +383,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_WhiteSpace(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_WhiteSpace(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(5, "WhiteSpace", "");
@@ -393,7 +393,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_Comment(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_Comment(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(2, "Comment", "");
@@ -417,7 +417,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_Definition(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_Definition(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(28, "Definition", "");
@@ -450,7 +450,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_IsTerminal(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_IsTerminal(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(11, "IsTerminal", "");
@@ -464,7 +464,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_Drop(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_Drop(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(12, "Drop", "");
@@ -478,7 +478,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_Identifier(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_Identifier(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(22, "Identifier", "");
@@ -497,7 +497,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_IdentStart(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_IdentStart(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(21, "IdentStart", "");
@@ -507,7 +507,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_IdentCont(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_IdentCont(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(20, "IdentCont", "");
@@ -520,7 +520,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_Equal(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_Equal(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(9, "Equal", "");
@@ -534,7 +534,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_Expression(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_Expression(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(27, "Expression", "");
@@ -553,7 +553,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_Sequence(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_Sequence(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(26, "Sequence", "");
@@ -566,7 +566,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_Prefix(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_Prefix(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(25, "Prefix", "");
@@ -582,7 +582,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_Suffix(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_Suffix(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(24, "Suffix", "");
@@ -604,7 +604,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_Primary(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_Primary(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(23, "Primary", "");
@@ -637,7 +637,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_Literal(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_Literal(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(19, "Literal", "");
@@ -676,7 +676,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_Char(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_Char(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(18, "Char", "");
@@ -696,7 +696,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_EscapeChars(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_EscapeChars(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(10, "EscapeChars", "");
@@ -740,7 +740,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_BracketOpen(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_BracketOpen(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(1, "BracketOpen", "");
@@ -754,7 +754,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_BracketClose(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_BracketClose(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(0, "BracketClose", "");
@@ -768,7 +768,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_Regex(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_Regex(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(17, "Regex", "");
@@ -821,7 +821,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_Number(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_Number(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(3, "Number", "");
@@ -837,7 +837,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_Dot(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_Dot(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(7, "Dot", "");
@@ -851,7 +851,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_Optional(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_Optional(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(15, "Optional", "");
@@ -865,7 +865,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_ZeroOrMore(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_ZeroOrMore(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(14, "ZeroOrMore", "");
@@ -879,7 +879,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_OneOrMore(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_OneOrMore(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(13, "OneOrMore", "");
@@ -893,7 +893,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_Or(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_Or(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(16, "Or", "");
@@ -907,7 +907,7 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    public Boolean CheckRule_LineEnd(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_LineEnd(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
         ASTNode actualNode = new ASTNode(8, "LineEnd", "");
