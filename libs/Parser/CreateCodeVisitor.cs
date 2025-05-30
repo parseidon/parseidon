@@ -91,10 +91,10 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
     {
         Push(new DropMarker(null));
     }
-    public override void OnRuleSPACING(ParseidonParser.ASTNode node) { }
-    public override void OnRuleNEWLINE(ParseidonParser.ASTNode node) { }
-    public override void OnRuleWHITESPACE(ParseidonParser.ASTNode node) { }
-    public override void OnRuleCOMMENT(ParseidonParser.ASTNode node) { }
+    public override void OnRuleSpacing(ParseidonParser.ASTNode node) { }
+    public override void OnRuleNewLine(ParseidonParser.ASTNode node) { }
+    public override void OnRuleWhiteSpace(ParseidonParser.ASTNode node) { }
+    public override void OnRuleComment(ParseidonParser.ASTNode node) { }
     public override void OnRuleDefinition(ParseidonParser.ASTNode node)
     {
         AbstractGrammarElement definition = Pop<AbstractGrammarElement>();
@@ -186,31 +186,31 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
         Push(new TextTerminal(node.Text));
     }
     public override void OnRuleChar(ParseidonParser.ASTNode node) { }
-    public override void OnRuleESCAPEES(ParseidonParser.ASTNode node) { }
-    public override void OnRuleBRACKETOPEN(ParseidonParser.ASTNode node) { }
-    public override void OnRuleBRACKETCLOSE(ParseidonParser.ASTNode node) { }
+    public override void OnRuleEscapeChars(ParseidonParser.ASTNode node) { }
+    public override void OnRuleBracketOpen(ParseidonParser.ASTNode node) { }
+    public override void OnRuleBracketClose(ParseidonParser.ASTNode node) { }
     public override void OnRuleRegex(ParseidonParser.ASTNode node)
     {
         Push(new RegExTerminal(node.Text));
     }
-    public override void OnRuleNUMBER(ParseidonParser.ASTNode node) { }
-    public override void OnRuleDOT(ParseidonParser.ASTNode node)
+    public override void OnRuleNumber(ParseidonParser.ASTNode node) { }
+    public override void OnRuleDot(ParseidonParser.ASTNode node)
     {
         Push(new RegExTerminal("."));
     }
-    public override void OnRuleQUESTION(ParseidonParser.ASTNode node)
+    public override void OnRuleOptional(ParseidonParser.ASTNode node)
     {
         Push(new OptionalOperator(null));
     }
-    public override void OnRuleSTAR(ParseidonParser.ASTNode node)
+    public override void OnRuleZeroOrMore(ParseidonParser.ASTNode node)
     {
         Push(new ZeroOrMoreOperator(null));
     }
-    public override void OnRulePLUS(ParseidonParser.ASTNode node)
+    public override void OnRuleOneOrMore(ParseidonParser.ASTNode node)
     {
         Push(new OneOrMoreOperator(null));
     }
-    public override void OnRuleSLASH(ParseidonParser.ASTNode node) { }
-    public override void OnRuleLINEEND(ParseidonParser.ASTNode node) { }
+    public override void OnRuleOr(ParseidonParser.ASTNode node) { }
+    public override void OnRuleLineEnd(ParseidonParser.ASTNode node) { }
 }
 

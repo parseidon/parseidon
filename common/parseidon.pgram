@@ -1,31 +1,29 @@
-Grammar         = SPACING Definition+;
-Definition      = SPACING (IsTerminal / Drop)? Identifier !EQUAL Expression LINE_END;
-Expression      = Sequence (SLASH Sequence)*;
+Grammar         = Spacing Definition+;
+Definition      = Spacing (IsTerminal / Drop)? Identifier !Equal Expression LineEnd;
+Expression      = Sequence (Or Sequence)*;
 Sequence        = Prefix*;
 Prefix          = Drop? Suffix;
-Suffix          = Primary (QUESTION / STAR / PLUS)?;
+Suffix          = Primary (Optional / ZeroOrMore / OneOrMore)?;
 Primary         = Identifier
                 / Literal
-                / !BRACKET_OPEN Expression !BRACKET_CLOSE
+                / !BracketOpen Expression !BracketClose
                 / Regex
-                / DOT;  
-$Identifier     = IdentStart IdentCont SPACING;
+                / Dot;  
+$Identifier     = IdentStart IdentCont Spacing;
 IdentStart      = [a-zA-Z_];
 IdentCont       = [a-zA-Z0-9_]*;
-$Literal        = ((!'\'' CHAR*  !'\'') / ('"' CHAR* '"')) SPACING ;
-Char            = [^'\\] / '\\\'' / '\\\\' / ESCAPEES;
-$Regex          = '[' ( [^\\\[\]] / '\\[' / '\\]' / '\\-' / '\\^' / '\\\\' / ESCAPEES )+ ']' ('{' NUMBER '}')? SPACING;
+$Literal        = ((!'\'' Char*  !'\'') / ('"' Char* '"')) Spacing ;
+Char            = [^'\\] / '\\\'' / '\\\\' / EscapeChars;
+$Regex          = '[' ( [^\\\[\]] / '\\[' / '\\]' / '\\-' / '\\^' / '\\\\' / EscapeChars )+ ']' ('{' Number '}')? Spacing;
 
-SLASH           = '/' SPACING;
-AND             = '&' SPACING;
-NOT             = '!' SPACING;
-QUESTION        = '?' SPACING;
-STAR            = '*' SPACING;
-PLUS            = '+' SPACING;
-Drop            = '!' SPACING;
-IsTerminal      = '$' SPACING;
+Or              = '/' Spacing;
+Optional        = '?' Spacing;
+ZeroOrMore      = '*' Spacing;
+OneOrMore       = '+' Spacing;
+Drop            = '!' Spacing;
+IsTerminal      = '$' Spacing;
 
-ESCAPEES        = '\\0'
+EscapeChars     = '\\0'
                 / '\\a'
                 / '\\b' 
                 / '\\f'
@@ -37,13 +35,13 @@ ESCAPEES        = '\\0'
                 / ('\\u' [0-9a-fA-F]{8})
                 ;
 
-EQUAL           = '=' SPACING;
-!LINE_END       = SPACING ';';
-DOT             = '.' SPACING;
-!SPACING        = (NEW_LINE / WHITE_SPACE / COMMENT)* ;
-WHITE_SPACE     = [ \t\r\n];
-NEW_LINE        = [\r];
-NUMBER          = [1-9] [0-9]*;
-COMMENT         = '#' (![\r\n] .)* [\r\n];
-BRACKET_OPEN    = '(' SPACING;
-BRACKET_CLOSE   = ')' SPACING;
+Equal           = '=' Spacing;
+!LineEnd        = Spacing ';';
+Dot             = '.' Spacing;
+!Spacing        = (NewLine / WhiteSpace / Comment)* ;
+WhiteSpace     = [ \t\r\n];
+NewLine         = [\r];
+Number          = [1-9] [0-9]*;
+Comment         = '#' (![\r\n] .)* [\r\n];
+BracketOpen     = '(' Spacing;
+BracketClose    = ')' Spacing;
