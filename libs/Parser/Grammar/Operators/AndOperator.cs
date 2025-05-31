@@ -15,4 +15,7 @@ public class AndOperator : AbstractTwoChildOperator
         result += ")";
         return result;
     }
+
+    public override bool IsStatic() => (Left is null ? base.IsStatic() : Left.IsStatic()) && (Right is null ? base.IsStatic() : Right.IsStatic());
+
 }

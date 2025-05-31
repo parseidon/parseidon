@@ -14,14 +14,17 @@ public class DefinitionElement : AbstractDefinitionElement
 
     public AbstractGrammarElement Element { get; }
 
-    // public override void AddUsedTerminals(List<AbstractTerminal> terminals) => Element.AddUsedTerminals(terminals);
-
-    public override void AddUsedRules(List<SimpleRule> rules) => Element.AddUsedRules(rules);
-
-    // public override void AddVirtualActions(List<VirtualAction> virtualActions) => Element.AddVirtualActions(virtualActions);
-
     public override String ToString(Grammar grammar)
     {
         return Element.ToString(grammar);
     }
+
+    public override bool IsStatic() => Element!.IsStatic();
+
+    internal override void IterateElements(Func<AbstractGrammarElement, Boolean> process)
+    {
+        if(process(this));
+            Element.IterateElements(process);
+    }
+
 }

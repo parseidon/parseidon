@@ -94,10 +94,6 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
     {
         Push(new DropMarker(null));
     }
-    public override void OnSpacing(ParseidonParser.ASTNode node) { }
-    public override void OnNewLine(ParseidonParser.ASTNode node) { }
-    public override void OnWhiteSpace(ParseidonParser.ASTNode node) { }
-    public override void OnComment(ParseidonParser.ASTNode node) { }
     public override void OnDefinition(ParseidonParser.ASTNode node)
     {
         AbstractGrammarElement definition = Pop<AbstractGrammarElement>();
@@ -118,8 +114,6 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
     {
         Push(new ReferenceElement(node.Text.Trim()));
     }    
-    public override void OnIdentStart(ParseidonParser.ASTNode node) { }
-    public override void OnIdentCont(ParseidonParser.ASTNode node) { }
     public override void OnExpression(ParseidonParser.ASTNode node)
     {
         List<AbstractDefinitionElement> elements = PopList<AbstractDefinitionElement>();
@@ -192,15 +186,10 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
     {
         Push(new TextTerminal(node.Text));
     }
-    public override void OnChar(ParseidonParser.ASTNode node) { }
-    public override void OnEscapeChars(ParseidonParser.ASTNode node) { }
-    public override void OnBracketOpen(ParseidonParser.ASTNode node) { }
-    public override void OnBracketClose(ParseidonParser.ASTNode node) { }
     public override void OnRegex(ParseidonParser.ASTNode node)
     {
         Push(new RegExTerminal(node.Text));
     }
-    public override void OnNumber(ParseidonParser.ASTNode node) { }
     public override void OnDot(ParseidonParser.ASTNode node)
     {
         Push(new RegExTerminal("."));
@@ -217,7 +206,5 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
     {
         Push(new OneOrMoreOperator(null));
     }
-    public override void OnOr(ParseidonParser.ASTNode node) { }
-    public override void OnLineEnd(ParseidonParser.ASTNode node) { }
 }
 

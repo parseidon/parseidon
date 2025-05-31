@@ -7,10 +7,12 @@ public class RegExTerminal : AbstractFinalTerminal
         RegEx = regEx;
         if (RegEx.Length == 0)
             throw new ArgumentException("");
-   }
+    }
 
     public String RegEx { get; }
 
     public override String ToString(Grammar grammar) => $"CheckRegEx(actualNode, state, \"{ToLiteral(RegEx, false).Trim()}\")"; 
+
+    public override bool IsStatic() => false;
 
 }

@@ -14,4 +14,6 @@ public class ZeroOrMoreOperator : AbstractOneChildOperator
         result += ")";
         return result;
     }
+
+    public override bool IsStatic() => false;
 }

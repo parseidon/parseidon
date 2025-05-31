@@ -1,3 +1,4 @@
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Parseidon.Helper;
 using Parseidon.Parser.Grammar.Block;
 
@@ -19,7 +20,7 @@ public abstract class AbstractGrammarElement
         return result.Substring(0, result.Length - 1);
     }
 
-     protected Grammar GetGrammar()
+    protected Grammar GetGrammar()
     {
         AbstractGrammarElement? result = this;
         while (!(result is Grammar) && (result != null))
@@ -38,7 +39,8 @@ public abstract class AbstractGrammarElement
 
     public virtual String ToString(Grammar grammar) => throw new NotImplementedException($"Not implemented: {this.GetType().Name}.ToString()");
 
-    public virtual void AddUsedRules(List<SimpleRule> rules) { }
+    public virtual Boolean IsStatic() => true;
 
+    internal virtual void IterateElements(Func<AbstractGrammarElement, Boolean> process) => process(this);
 }
 

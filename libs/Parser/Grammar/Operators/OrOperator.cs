@@ -1,3 +1,5 @@
+using Parseidon.Parser.Grammar.Block;
+
 namespace Parseidon.Parser.Grammar.Operators;
 
 public class OrOperator : AbstractTwoChildOperator
@@ -15,4 +17,7 @@ public class OrOperator : AbstractTwoChildOperator
         result += ")";
         return result;
     }
+
+    public override bool IsStatic() => false;
+
 }

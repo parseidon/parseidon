@@ -14,4 +14,7 @@ public class OneOrMoreOperator : AbstractOneChildOperator
         result += ")";
         return result;
     }
+
+    public override bool IsStatic() => false;
+
 }

@@ -1,5 +1,6 @@
 using System.Text;
 using Parseidon.Parser.Grammar.Block;
+using Parseidon.Parser.Grammar.Operators;
 
 namespace Parseidon.Parser.Grammar;
 
@@ -33,13 +34,28 @@ public class Grammar : AbstractNamedElement
     
     public override String ToString() => ToString(this);
 
-    public List<SimpleRule> FindRulesByName(String name)
+    public override bool IsStatic()
+    {
+        Boolean result = true;
+        foreach (SimpleRule rule in Rules)
+            result = result && rule.IsStatic();
+        return result;
+    }
+
+    internal override void IterateElements(Func<AbstractGrammarElement, Boolean> process)
+    {
+        if(process(this))
+            foreach (SimpleRule rule in Rules)
+                rule.IterateElements(process);
+    }
+
+    public SimpleRule? FindRuleByName(String name)
     {
         List<SimpleRule> rules = new List<SimpleRule>();
         foreach (SimpleRule element in Rules)
             if (element.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
-                rules.Add(element);
-        return rules;
+                return element;
+        return null;
     }    
     
     public Int32 GetElementIdOf(AbstractNamedElement element)
@@ -49,33 +65,85 @@ public class Grammar : AbstractNamedElement
         throw new Exception($"Can not find identifier '{element.Name}'!");
     }
 
-    public SimpleRule GetAxiomRule()
+    public SimpleRule GetRootRule()
     {
         String? axiomName = "Grammar";
         if(axiomName == null)
             throw new Exception("Grammar must have axiom option!");
-        List<SimpleRule> rules = FindRulesByName(axiomName);
-        if (rules.Count < 1)
+        SimpleRule? rule = FindRuleByName(axiomName);
+        if (rule is null)
             throw new Exception($"Can not find axiom option '{axiomName}'!");
-        if (rules.Count > 1)
-            throw new Exception($"There are multiple rules '{axiomName}'!");
-        return rules[0];
+        return rule;
+    }
+
+    private Boolean IterateUsedRules(AbstractGrammarElement element, List<SimpleRule> rules)
+    {
+        if ((element is SimpleRule rule) && (rules.IndexOf(rule) < 0))
+            rules.Add(rule);
+        else
+        if ((element is ReferenceElement referenceElement) && (FindRuleByName(referenceElement.ReferenceName) is SimpleRule referencedRule) && (rules.IndexOf(referencedRule) < 0))
+            referencedRule.IterateElements((element) => IterateUsedRules(element, rules));
+        return true;
     }
 
     private List<SimpleRule> GetUsedRules()
     {
         List<SimpleRule> result = new List<SimpleRule>();
-        GetAxiomRule().AddUsedRules(result);
+        SimpleRule rootRule = GetRootRule();
+        result.Add(rootRule);
+        rootRule.IterateElements((element) => IterateUsedRules(element, result));
+        result.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
         return result;
     }
 
-    private List<SimpleRule> GetUsedRulesWithASTNode()
+    private Boolean IterateRelevantGrammarRules(AbstractGrammarElement element, List<SimpleRule> rules, Boolean forceAdd)
     {
-        List<SimpleRule> result = new List<SimpleRule>();
-        foreach(SimpleRule rule in GetUsedRules())
-            result.Add(rule);
+        if ((element is SimpleRule rule) && (rules.IndexOf(rule) < 0) && !(rule.Definition is DropMarker) && (!rule.IsStatic() || forceAdd))
+            rules.Add(rule);
+        else
+        if ((element is ReferenceElement referenceElement) && (FindRuleByName(referenceElement.ReferenceName) is SimpleRule referencedRule) && (rules.IndexOf(referencedRule) < 0))
+        {
+            Boolean hasDropMarker = false;
+            AbstractGrammarElement? parent = element.Parent;
+            while ((parent is not null) && !hasDropMarker)
+            {
+                hasDropMarker = parent is DropMarker;
+                parent = parent.Parent;
+            }
+            if (!hasDropMarker)
+            {
+                Boolean hasOrParent = false;
+                parent = element.Parent;
+                while ((parent is not null) && !hasOrParent)
+                {
+                    hasOrParent = parent is OrOperator;
+                    parent = parent.Parent;
+                }
+                referencedRule.IterateElements(
+                    (element) => IterateRelevantGrammarRules(element, rules, hasOrParent)
+                );
+            }
+        }
+        Boolean result = !((element is SimpleRule rule1) && (rule1.Definition is IsTerminalMarker));
         return result;
     }
+
+    private List<SimpleRule> GetRelevantGrammarRules()
+    {
+        List<SimpleRule> result = new List<SimpleRule>();
+        SimpleRule rootRule = GetRootRule();
+        result.Add(rootRule);
+        rootRule.IterateElements((element) => IterateRelevantGrammarRules(element, result, false));
+        result.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
+        return result;
+    }
+    // private List<SimpleRule> GetUsedRulesWithASTNode()
+    // {
+    //     List<SimpleRule> result = new List<SimpleRule>();
+    //     foreach(SimpleRule rule in GetUsedRules())
+    //         result.Add(rule);
+    //     return result;
+    // }
 
     protected String GetCheckRuleCode()
     {
@@ -103,7 +171,7 @@ public class Grammar : AbstractNamedElement
 
     protected String GetParseCode()
     {
-        SimpleRule axiomRule = GetAxiomRule();
+        SimpleRule axiomRule = GetRootRule();
         String result =
             $$"""
             public void Parse(String text)
@@ -127,7 +195,7 @@ public class Grammar : AbstractNamedElement
 
     protected String GetVisitorCode()
     {
-        List<SimpleRule> usedRules = GetUsedRulesWithASTNode();
+        List<SimpleRule> usedRules = GetRelevantGrammarRules();
         String visitorEvents = "";
         foreach(AbstractNamedElement element in usedRules)
             visitorEvents += $"public virtual void {element.GetEventName()}({Name}.ASTNode node) {{}}\n";

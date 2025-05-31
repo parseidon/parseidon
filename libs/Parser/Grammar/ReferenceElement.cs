@@ -15,23 +15,11 @@ public class ReferenceElement : AbstractGrammarElement
 
     public override String ToString(Grammar grammar)
     {
-        List<SimpleRule> rules = grammar.FindRulesByName(ReferenceName);
-        if (rules.Count > 0)
-        {
-            if (rules.Count == 1)
-                return rules[0].GetReferenceCode(grammar);
-            OrOperator orOperator = new OrOperator(rules[0], rules[1]);
-            return orOperator.ToString(grammar);
-            // throw new NotImplementedException("Multiple Rules with one Name");
-        }
+        if (grammar.FindRuleByName(ReferenceName) is SimpleRule referencedRule)
+            return referencedRule.GetReferenceCode(grammar);
         throw new Exception($"Can not find element '{ReferenceName}'");
     }
 
-    public override void AddUsedRules(List<SimpleRule> rules)
-    {
-       List<SimpleRule> findRules = GetGrammar().FindRulesByName(ReferenceName);
-        if (findRules.Count > 0)
-            foreach (SimpleRule rule in findRules)
-                rule.AddUsedRules(rules);
-    }
+    public override Boolean IsStatic() => true;
+
 }

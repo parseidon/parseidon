@@ -10,9 +10,11 @@ public abstract class AbstractOneChildOperator : AbstractOperator
         Element = element;
     }
 
-    public AbstractGrammarElement? Element {
+    public AbstractGrammarElement? Element
+    {
         get => _element;
-        set {
+        set
+        {
             if (_element != null)
                 _element.Parent = null;
             _element = value;
@@ -21,6 +23,11 @@ public abstract class AbstractOneChildOperator : AbstractOperator
         }
     }
 
-    public override void AddUsedRules(List<SimpleRule> rules) => Element?.AddUsedRules(rules);
+    public override bool IsStatic() => Element is null ? base.IsStatic() : Element.IsStatic();
 
+    internal override void IterateElements(Func<AbstractGrammarElement, Boolean> process)
+    {
+        if(process(this));
+            Element!.IterateElements(process);
+    }
 }

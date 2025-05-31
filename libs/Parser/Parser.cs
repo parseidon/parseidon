@@ -13,41 +13,31 @@ public class ParseidonParser
 {
     public class Visitor
     {
-        public virtual void OnGrammar(ParseidonParser.ASTNode node) {}
-        public virtual void OnConfig(ParseidonParser.ASTNode node) {}
-        public virtual void OnNamespace(ParseidonParser.ASTNode node) {}
-        public virtual void OnSpacing(ParseidonParser.ASTNode node) {}
-        public virtual void OnNewLine(ParseidonParser.ASTNode node) {}
-        public virtual void OnWhiteSpace(ParseidonParser.ASTNode node) {}
-        public virtual void OnComment(ParseidonParser.ASTNode node) {}
         public virtual void OnCSIdentifier(ParseidonParser.ASTNode node) {}
-        public virtual void OnIdentStart(ParseidonParser.ASTNode node) {}
-        public virtual void OnCSIdentCont(ParseidonParser.ASTNode node) {}
-        public virtual void OnLineEnd(ParseidonParser.ASTNode node) {}
         public virtual void OnClassName(ParseidonParser.ASTNode node) {}
         public virtual void OnDefinition(ParseidonParser.ASTNode node) {}
-        public virtual void OnIsTerminal(ParseidonParser.ASTNode node) {}
-        public virtual void OnDrop(ParseidonParser.ASTNode node) {}
-        public virtual void OnIdentifier(ParseidonParser.ASTNode node) {}
-        public virtual void OnIdentCont(ParseidonParser.ASTNode node) {}
-        public virtual void OnEqual(ParseidonParser.ASTNode node) {}
-        public virtual void OnExpression(ParseidonParser.ASTNode node) {}
-        public virtual void OnSequence(ParseidonParser.ASTNode node) {}
-        public virtual void OnPrefix(ParseidonParser.ASTNode node) {}
-        public virtual void OnSuffix(ParseidonParser.ASTNode node) {}
-        public virtual void OnPrimary(ParseidonParser.ASTNode node) {}
-        public virtual void OnLiteral(ParseidonParser.ASTNode node) {}
-        public virtual void OnChar(ParseidonParser.ASTNode node) {}
-        public virtual void OnEscapeChars(ParseidonParser.ASTNode node) {}
-        public virtual void OnBracketOpen(ParseidonParser.ASTNode node) {}
-        public virtual void OnBracketClose(ParseidonParser.ASTNode node) {}
-        public virtual void OnRegex(ParseidonParser.ASTNode node) {}
-        public virtual void OnNumber(ParseidonParser.ASTNode node) {}
+        // Static
         public virtual void OnDot(ParseidonParser.ASTNode node) {}
-        public virtual void OnOptional(ParseidonParser.ASTNode node) {}
-        public virtual void OnZeroOrMore(ParseidonParser.ASTNode node) {}
+        // Static
+        public virtual void OnDrop(ParseidonParser.ASTNode node) {}
+        public virtual void OnExpression(ParseidonParser.ASTNode node) {}
+        public virtual void OnGrammar(ParseidonParser.ASTNode node) {}
+        public virtual void OnIdentifier(ParseidonParser.ASTNode node) {}
+        // Static
+        public virtual void OnIsTerminal(ParseidonParser.ASTNode node) {}
+        public virtual void OnLiteral(ParseidonParser.ASTNode node) {}
+        public virtual void OnNamespace(ParseidonParser.ASTNode node) {}
+        // Static
         public virtual void OnOneOrMore(ParseidonParser.ASTNode node) {}
-        public virtual void OnOr(ParseidonParser.ASTNode node) {}
+        // Static
+        public virtual void OnOptional(ParseidonParser.ASTNode node) {}
+        public virtual void OnPrefix(ParseidonParser.ASTNode node) {}
+        public virtual void OnPrimary(ParseidonParser.ASTNode node) {}
+        public virtual void OnRegex(ParseidonParser.ASTNode node) {}
+        public virtual void OnSequence(ParseidonParser.ASTNode node) {}
+        public virtual void OnSuffix(ParseidonParser.ASTNode node) {}
+        // Static
+        public virtual void OnZeroOrMore(ParseidonParser.ASTNode node) {}
         public virtual void Visit(ASTNode node)
         {
             if(node == null)
@@ -61,41 +51,25 @@ public class ParseidonParser
         {
             switch(tokenId)
             {
-                case 34: OnGrammar(node); break;
-                case 33: OnConfig(node); break;
-                case 32: OnNamespace(node); break;
-                case 6: OnSpacing(node); break;
-                case 4: OnNewLine(node); break;
-                case 5: OnWhiteSpace(node); break;
-                case 2: OnComment(node); break;
                 case 21: OnCSIdentifier(node); break;
-                case 23: OnIdentStart(node); break;
-                case 20: OnCSIdentCont(node); break;
-                case 8: OnLineEnd(node); break;
                 case 31: OnClassName(node); break;
                 case 30: OnDefinition(node); break;
-                case 11: OnIsTerminal(node); break;
-                case 12: OnDrop(node); break;
-                case 24: OnIdentifier(node); break;
-                case 22: OnIdentCont(node); break;
-                case 9: OnEqual(node); break;
-                case 29: OnExpression(node); break;
-                case 28: OnSequence(node); break;
-                case 27: OnPrefix(node); break;
-                case 26: OnSuffix(node); break;
-                case 25: OnPrimary(node); break;
-                case 19: OnLiteral(node); break;
-                case 18: OnChar(node); break;
-                case 10: OnEscapeChars(node); break;
-                case 1: OnBracketOpen(node); break;
-                case 0: OnBracketClose(node); break;
-                case 17: OnRegex(node); break;
-                case 3: OnNumber(node); break;
                 case 7: OnDot(node); break;
-                case 15: OnOptional(node); break;
-                case 14: OnZeroOrMore(node); break;
+                case 12: OnDrop(node); break;
+                case 29: OnExpression(node); break;
+                case 34: OnGrammar(node); break;
+                case 24: OnIdentifier(node); break;
+                case 11: OnIsTerminal(node); break;
+                case 19: OnLiteral(node); break;
+                case 32: OnNamespace(node); break;
                 case 13: OnOneOrMore(node); break;
-                case 16: OnOr(node); break;
+                case 15: OnOptional(node); break;
+                case 27: OnPrefix(node); break;
+                case 25: OnPrimary(node); break;
+                case 17: OnRegex(node); break;
+                case 28: OnSequence(node); break;
+                case 26: OnSuffix(node); break;
+                case 14: OnZeroOrMore(node); break;
             }
         }
     }
@@ -346,15 +320,59 @@ public class ParseidonParser
         visitor.Visit(rootNode);
     }
 
-    private Boolean CheckRule_Grammar(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_BracketClose(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(34, "Grammar", "");
+        ASTNode actualNode = new ASTNode(0, "BracketClose", "");
         Boolean result =         
             CheckAnd(actualNode, state, 
-                (actualNode) => CheckRule_Config(actualNode, state),
-                (actualNode) => CheckOneOrMore(actualNode, state, 
-                    (actualNode) => CheckRule_Definition(actualNode, state)
+                (actualNode) => CheckText(actualNode, state, ")"),
+                (actualNode) => CheckRule_Spacing(actualNode, state)
+            );
+        Int32 foundPosition = state.Position;
+        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
+            parentNode.AddChild(actualNode);
+        return result;
+    }
+    private Boolean CheckRule_BracketOpen(ASTNode parentNode, ParserState state)
+    {
+        Int32 oldPosition = state.Position;
+        ASTNode actualNode = new ASTNode(1, "BracketOpen", "");
+        Boolean result =         
+            CheckAnd(actualNode, state, 
+                (actualNode) => CheckText(actualNode, state, "("),
+                (actualNode) => CheckRule_Spacing(actualNode, state)
+            );
+        Int32 foundPosition = state.Position;
+        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
+            parentNode.AddChild(actualNode);
+        return result;
+    }
+    private Boolean CheckRule_CSIdentCont(ASTNode parentNode, ParserState state)
+    {
+        Int32 oldPosition = state.Position;
+        ASTNode actualNode = new ASTNode(20, "CSIdentCont", "");
+        Boolean result =         
+            CheckZeroOrMore(actualNode, state, 
+                (actualNode) => CheckRegEx(actualNode, state, "[a-zA-Z0-9_.]")
+            );
+        Int32 foundPosition = state.Position;
+        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
+            parentNode.AddChild(actualNode);
+        return result;
+    }
+    private Boolean CheckRule_CSIdentifier(ASTNode parentNode, ParserState state)
+    {
+        Int32 oldPosition = state.Position;
+        ASTNode actualNode = new ASTNode(21, "CSIdentifier", "");
+        Boolean result =         
+            MakeTerminal(actualNode, state, 
+                (actualNode) => CheckAnd(actualNode, state, 
+                    (actualNode) => CheckRule_IdentStart(actualNode, state),
+                    (actualNode) => CheckAnd(actualNode, state, 
+                        (actualNode) => CheckRule_CSIdentCont(actualNode, state),
+                        (actualNode) => CheckRule_Spacing(actualNode, state)
+                    )
                 )
             );
         Int32 foundPosition = state.Position;
@@ -362,30 +380,36 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    private Boolean CheckRule_Config(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_Char(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(33, "Config", "");
+        ASTNode actualNode = new ASTNode(18, "Char", "");
         Boolean result =         
-            CheckAnd(actualNode, state, 
-                (actualNode) => CheckRule_Namespace(actualNode, state),
-                (actualNode) => CheckRule_ClassName(actualNode, state)
+            CheckOr(actualNode, state, 
+                (actualNode) => CheckRegEx(actualNode, state, "[^'\\\\]"),
+                (actualNode) => CheckOr(actualNode, state, 
+                    (actualNode) => CheckText(actualNode, state, "\\'"),
+                    (actualNode) => CheckOr(actualNode, state, 
+                        (actualNode) => CheckText(actualNode, state, "\\\\"),
+                        (actualNode) => CheckRule_EscapeChars(actualNode, state)
+                    )
+                )
             );
         Int32 foundPosition = state.Position;
         if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
             parentNode.AddChild(actualNode);
         return result;
     }
-    private Boolean CheckRule_Namespace(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_ClassName(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(32, "Namespace", "");
+        ASTNode actualNode = new ASTNode(31, "ClassName", "");
         Boolean result =         
             CheckAnd(actualNode, state, 
                 (actualNode) => CheckRule_Spacing(actualNode, state),
                 (actualNode) => CheckAnd(actualNode, state, 
                     (actualNode) => Drop(actualNode, state, 
-                        (actualNode) => CheckText(actualNode, state, "@namespace")
+                        (actualNode) => CheckText(actualNode, state, "@class")
                     ),
                     (actualNode) => CheckAnd(actualNode, state, 
                         (actualNode) => CheckRule_Spacing(actualNode, state),
@@ -396,47 +420,6 @@ public class ParseidonParser
                     )
                 )
             );
-        Int32 foundPosition = state.Position;
-        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
-            parentNode.AddChild(actualNode);
-        return result;
-    }
-    private Boolean CheckRule_Spacing(ASTNode parentNode, ParserState state)
-    {
-        Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(6, "Spacing", "");
-        Boolean result =         
-            Drop(actualNode, state, 
-                (actualNode) => CheckZeroOrMore(actualNode, state, 
-                    (actualNode) => CheckOr(actualNode, state, 
-                        (actualNode) => CheckRule_NewLine(actualNode, state),
-                        (actualNode) => CheckOr(actualNode, state, 
-                            (actualNode) => CheckRule_WhiteSpace(actualNode, state),
-                            (actualNode) => CheckRule_Comment(actualNode, state)
-                        )
-                    )
-                )
-            );
-        Int32 foundPosition = state.Position;
-        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
-            parentNode.AddChild(actualNode);
-        return result;
-    }
-    private Boolean CheckRule_NewLine(ASTNode parentNode, ParserState state)
-    {
-        Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(4, "NewLine", "");
-        Boolean result =         CheckRegEx(actualNode, state, "[\\r]");
-        Int32 foundPosition = state.Position;
-        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
-            parentNode.AddChild(actualNode);
-        return result;
-    }
-    private Boolean CheckRule_WhiteSpace(ASTNode parentNode, ParserState state)
-    {
-        Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(5, "WhiteSpace", "");
-        Boolean result =         CheckRegEx(actualNode, state, "[ \\t\\r\\n]");
         Int32 foundPosition = state.Position;
         if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
             parentNode.AddChild(actualNode);
@@ -466,83 +449,14 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    private Boolean CheckRule_CSIdentifier(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_Config(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(21, "CSIdentifier", "");
-        Boolean result =         
-            MakeTerminal(actualNode, state, 
-                (actualNode) => CheckAnd(actualNode, state, 
-                    (actualNode) => CheckRule_IdentStart(actualNode, state),
-                    (actualNode) => CheckAnd(actualNode, state, 
-                        (actualNode) => CheckRule_CSIdentCont(actualNode, state),
-                        (actualNode) => CheckRule_Spacing(actualNode, state)
-                    )
-                )
-            );
-        Int32 foundPosition = state.Position;
-        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
-            parentNode.AddChild(actualNode);
-        return result;
-    }
-    private Boolean CheckRule_IdentStart(ASTNode parentNode, ParserState state)
-    {
-        Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(23, "IdentStart", "");
-        Boolean result =         CheckRegEx(actualNode, state, "[a-zA-Z_]");
-        Int32 foundPosition = state.Position;
-        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
-            parentNode.AddChild(actualNode);
-        return result;
-    }
-    private Boolean CheckRule_CSIdentCont(ASTNode parentNode, ParserState state)
-    {
-        Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(20, "CSIdentCont", "");
-        Boolean result =         
-            CheckZeroOrMore(actualNode, state, 
-                (actualNode) => CheckRegEx(actualNode, state, "[a-zA-Z0-9_.]")
-            );
-        Int32 foundPosition = state.Position;
-        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
-            parentNode.AddChild(actualNode);
-        return result;
-    }
-    private Boolean CheckRule_LineEnd(ASTNode parentNode, ParserState state)
-    {
-        Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(8, "LineEnd", "");
-        Boolean result =         
-            Drop(actualNode, state, 
-                (actualNode) => CheckAnd(actualNode, state, 
-                    (actualNode) => CheckRule_Spacing(actualNode, state),
-                    (actualNode) => CheckText(actualNode, state, ";")
-                )
-            );
-        Int32 foundPosition = state.Position;
-        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
-            parentNode.AddChild(actualNode);
-        return result;
-    }
-    private Boolean CheckRule_ClassName(ASTNode parentNode, ParserState state)
-    {
-        Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(31, "ClassName", "");
+        ASTNode actualNode = new ASTNode(33, "Config", "");
         Boolean result =         
             CheckAnd(actualNode, state, 
-                (actualNode) => CheckRule_Spacing(actualNode, state),
-                (actualNode) => CheckAnd(actualNode, state, 
-                    (actualNode) => Drop(actualNode, state, 
-                        (actualNode) => CheckText(actualNode, state, "@class")
-                    ),
-                    (actualNode) => CheckAnd(actualNode, state, 
-                        (actualNode) => CheckRule_Spacing(actualNode, state),
-                        (actualNode) => CheckAnd(actualNode, state, 
-                            (actualNode) => CheckRule_CSIdentifier(actualNode, state),
-                            (actualNode) => CheckRule_LineEnd(actualNode, state)
-                        )
-                    )
-                )
+                (actualNode) => CheckRule_Namespace(actualNode, state),
+                (actualNode) => CheckRule_ClassName(actualNode, state)
             );
         Int32 foundPosition = state.Position;
         if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
@@ -582,13 +496,13 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    private Boolean CheckRule_IsTerminal(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_Dot(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(11, "IsTerminal", "");
+        ASTNode actualNode = new ASTNode(7, "Dot", "");
         Boolean result =         
             CheckAnd(actualNode, state, 
-                (actualNode) => CheckText(actualNode, state, "$"),
+                (actualNode) => CheckText(actualNode, state, "."),
                 (actualNode) => CheckRule_Spacing(actualNode, state)
             );
         Int32 foundPosition = state.Position;
@@ -610,38 +524,6 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    private Boolean CheckRule_Identifier(ASTNode parentNode, ParserState state)
-    {
-        Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(24, "Identifier", "");
-        Boolean result =         
-            MakeTerminal(actualNode, state, 
-                (actualNode) => CheckAnd(actualNode, state, 
-                    (actualNode) => CheckRule_IdentStart(actualNode, state),
-                    (actualNode) => CheckAnd(actualNode, state, 
-                        (actualNode) => CheckRule_IdentCont(actualNode, state),
-                        (actualNode) => CheckRule_Spacing(actualNode, state)
-                    )
-                )
-            );
-        Int32 foundPosition = state.Position;
-        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
-            parentNode.AddChild(actualNode);
-        return result;
-    }
-    private Boolean CheckRule_IdentCont(ASTNode parentNode, ParserState state)
-    {
-        Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(22, "IdentCont", "");
-        Boolean result =         
-            CheckZeroOrMore(actualNode, state, 
-                (actualNode) => CheckRegEx(actualNode, state, "[a-zA-Z0-9_]")
-            );
-        Int32 foundPosition = state.Position;
-        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
-            parentNode.AddChild(actualNode);
-        return result;
-    }
     private Boolean CheckRule_Equal(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
@@ -650,168 +532,6 @@ public class ParseidonParser
             CheckAnd(actualNode, state, 
                 (actualNode) => CheckText(actualNode, state, "="),
                 (actualNode) => CheckRule_Spacing(actualNode, state)
-            );
-        Int32 foundPosition = state.Position;
-        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
-            parentNode.AddChild(actualNode);
-        return result;
-    }
-    private Boolean CheckRule_Expression(ASTNode parentNode, ParserState state)
-    {
-        Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(29, "Expression", "");
-        Boolean result =         
-            CheckAnd(actualNode, state, 
-                (actualNode) => CheckRule_Sequence(actualNode, state),
-                (actualNode) => CheckZeroOrMore(actualNode, state, 
-                    (actualNode) => CheckAnd(actualNode, state, 
-                        (actualNode) => CheckRule_Or(actualNode, state),
-                        (actualNode) => CheckRule_Sequence(actualNode, state)
-                    )
-                )
-            );
-        Int32 foundPosition = state.Position;
-        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
-            parentNode.AddChild(actualNode);
-        return result;
-    }
-    private Boolean CheckRule_Sequence(ASTNode parentNode, ParserState state)
-    {
-        Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(28, "Sequence", "");
-        Boolean result =         
-            CheckZeroOrMore(actualNode, state, 
-                (actualNode) => CheckRule_Prefix(actualNode, state)
-            );
-        Int32 foundPosition = state.Position;
-        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
-            parentNode.AddChild(actualNode);
-        return result;
-    }
-    private Boolean CheckRule_Prefix(ASTNode parentNode, ParserState state)
-    {
-        Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(27, "Prefix", "");
-        Boolean result =         
-            CheckAnd(actualNode, state, 
-                (actualNode) => CheckRange(actualNode, state, 0, 1,
-                    (actualNode) => CheckRule_Drop(actualNode, state)
-                ),
-                (actualNode) => CheckRule_Suffix(actualNode, state)
-            );
-        Int32 foundPosition = state.Position;
-        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
-            parentNode.AddChild(actualNode);
-        return result;
-    }
-    private Boolean CheckRule_Suffix(ASTNode parentNode, ParserState state)
-    {
-        Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(26, "Suffix", "");
-        Boolean result =         
-            CheckAnd(actualNode, state, 
-                (actualNode) => CheckRule_Primary(actualNode, state),
-                (actualNode) => CheckRange(actualNode, state, 0, 1,
-                    (actualNode) => CheckOr(actualNode, state, 
-                        (actualNode) => CheckRule_Optional(actualNode, state),
-                        (actualNode) => CheckOr(actualNode, state, 
-                            (actualNode) => CheckRule_ZeroOrMore(actualNode, state),
-                            (actualNode) => CheckRule_OneOrMore(actualNode, state)
-                        )
-                    )
-                )
-            );
-        Int32 foundPosition = state.Position;
-        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
-            parentNode.AddChild(actualNode);
-        return result;
-    }
-    private Boolean CheckRule_Primary(ASTNode parentNode, ParserState state)
-    {
-        Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(25, "Primary", "");
-        Boolean result =         
-            CheckOr(actualNode, state, 
-                (actualNode) => CheckRule_Identifier(actualNode, state),
-                (actualNode) => CheckOr(actualNode, state, 
-                    (actualNode) => CheckRule_Literal(actualNode, state),
-                    (actualNode) => CheckOr(actualNode, state, 
-                        (actualNode) => CheckAnd(actualNode, state, 
-                            (actualNode) => Drop(actualNode, state, 
-                                (actualNode) => CheckRule_BracketOpen(actualNode, state)
-                            ),
-                            (actualNode) => CheckAnd(actualNode, state, 
-                                (actualNode) => CheckRule_Expression(actualNode, state),
-                                (actualNode) => Drop(actualNode, state, 
-                                    (actualNode) => CheckRule_BracketClose(actualNode, state)
-                                )
-                            )
-                        ),
-                        (actualNode) => CheckOr(actualNode, state, 
-                            (actualNode) => CheckRule_Regex(actualNode, state),
-                            (actualNode) => CheckRule_Dot(actualNode, state)
-                        )
-                    )
-                )
-            );
-        Int32 foundPosition = state.Position;
-        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
-            parentNode.AddChild(actualNode);
-        return result;
-    }
-    private Boolean CheckRule_Literal(ASTNode parentNode, ParserState state)
-    {
-        Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(19, "Literal", "");
-        Boolean result =         
-            MakeTerminal(actualNode, state, 
-                (actualNode) => CheckAnd(actualNode, state, 
-                    (actualNode) => CheckOr(actualNode, state, 
-                        (actualNode) => CheckAnd(actualNode, state, 
-                            (actualNode) => Drop(actualNode, state, 
-                                (actualNode) => CheckText(actualNode, state, "'")
-                            ),
-                            (actualNode) => CheckAnd(actualNode, state, 
-                                (actualNode) => CheckZeroOrMore(actualNode, state, 
-                                    (actualNode) => CheckRule_Char(actualNode, state)
-                                ),
-                                (actualNode) => Drop(actualNode, state, 
-                                    (actualNode) => CheckText(actualNode, state, "'")
-                                )
-                            )
-                        ),
-                        (actualNode) => CheckAnd(actualNode, state, 
-                            (actualNode) => CheckText(actualNode, state, "\""),
-                            (actualNode) => CheckAnd(actualNode, state, 
-                                (actualNode) => CheckZeroOrMore(actualNode, state, 
-                                    (actualNode) => CheckRule_Char(actualNode, state)
-                                ),
-                                (actualNode) => CheckText(actualNode, state, "\"")
-                            )
-                        )
-                    ),
-                    (actualNode) => CheckRule_Spacing(actualNode, state)
-                )
-            );
-        Int32 foundPosition = state.Position;
-        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
-            parentNode.AddChild(actualNode);
-        return result;
-    }
-    private Boolean CheckRule_Char(ASTNode parentNode, ParserState state)
-    {
-        Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(18, "Char", "");
-        Boolean result =         
-            CheckOr(actualNode, state, 
-                (actualNode) => CheckRegEx(actualNode, state, "[^'\\\\]"),
-                (actualNode) => CheckOr(actualNode, state, 
-                    (actualNode) => CheckText(actualNode, state, "\\'"),
-                    (actualNode) => CheckOr(actualNode, state, 
-                        (actualNode) => CheckText(actualNode, state, "\\\\"),
-                        (actualNode) => CheckRule_EscapeChars(actualNode, state)
-                    )
-                )
             );
         Int32 foundPosition = state.Position;
         if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
@@ -862,13 +582,90 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    private Boolean CheckRule_BracketOpen(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_Expression(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(1, "BracketOpen", "");
+        ASTNode actualNode = new ASTNode(29, "Expression", "");
         Boolean result =         
             CheckAnd(actualNode, state, 
-                (actualNode) => CheckText(actualNode, state, "("),
+                (actualNode) => CheckRule_Sequence(actualNode, state),
+                (actualNode) => CheckZeroOrMore(actualNode, state, 
+                    (actualNode) => CheckAnd(actualNode, state, 
+                        (actualNode) => CheckRule_Or(actualNode, state),
+                        (actualNode) => CheckRule_Sequence(actualNode, state)
+                    )
+                )
+            );
+        Int32 foundPosition = state.Position;
+        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
+            parentNode.AddChild(actualNode);
+        return result;
+    }
+    private Boolean CheckRule_Grammar(ASTNode parentNode, ParserState state)
+    {
+        Int32 oldPosition = state.Position;
+        ASTNode actualNode = new ASTNode(34, "Grammar", "");
+        Boolean result =         
+            CheckAnd(actualNode, state, 
+                (actualNode) => CheckRule_Config(actualNode, state),
+                (actualNode) => CheckOneOrMore(actualNode, state, 
+                    (actualNode) => CheckRule_Definition(actualNode, state)
+                )
+            );
+        Int32 foundPosition = state.Position;
+        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
+            parentNode.AddChild(actualNode);
+        return result;
+    }
+    private Boolean CheckRule_IdentCont(ASTNode parentNode, ParserState state)
+    {
+        Int32 oldPosition = state.Position;
+        ASTNode actualNode = new ASTNode(22, "IdentCont", "");
+        Boolean result =         
+            CheckZeroOrMore(actualNode, state, 
+                (actualNode) => CheckRegEx(actualNode, state, "[a-zA-Z0-9_]")
+            );
+        Int32 foundPosition = state.Position;
+        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
+            parentNode.AddChild(actualNode);
+        return result;
+    }
+    private Boolean CheckRule_IdentStart(ASTNode parentNode, ParserState state)
+    {
+        Int32 oldPosition = state.Position;
+        ASTNode actualNode = new ASTNode(23, "IdentStart", "");
+        Boolean result =         CheckRegEx(actualNode, state, "[a-zA-Z_]");
+        Int32 foundPosition = state.Position;
+        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
+            parentNode.AddChild(actualNode);
+        return result;
+    }
+    private Boolean CheckRule_Identifier(ASTNode parentNode, ParserState state)
+    {
+        Int32 oldPosition = state.Position;
+        ASTNode actualNode = new ASTNode(24, "Identifier", "");
+        Boolean result =         
+            MakeTerminal(actualNode, state, 
+                (actualNode) => CheckAnd(actualNode, state, 
+                    (actualNode) => CheckRule_IdentStart(actualNode, state),
+                    (actualNode) => CheckAnd(actualNode, state, 
+                        (actualNode) => CheckRule_IdentCont(actualNode, state),
+                        (actualNode) => CheckRule_Spacing(actualNode, state)
+                    )
+                )
+            );
+        Int32 foundPosition = state.Position;
+        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
+            parentNode.AddChild(actualNode);
+        return result;
+    }
+    private Boolean CheckRule_IsTerminal(ASTNode parentNode, ParserState state)
+    {
+        Int32 oldPosition = state.Position;
+        ASTNode actualNode = new ASTNode(11, "IsTerminal", "");
+        Boolean result =         
+            CheckAnd(actualNode, state, 
+                (actualNode) => CheckText(actualNode, state, "$"),
                 (actualNode) => CheckRule_Spacing(actualNode, state)
             );
         Int32 foundPosition = state.Position;
@@ -876,14 +673,197 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    private Boolean CheckRule_BracketClose(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_LineEnd(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(0, "BracketClose", "");
+        ASTNode actualNode = new ASTNode(8, "LineEnd", "");
+        Boolean result =         
+            Drop(actualNode, state, 
+                (actualNode) => CheckAnd(actualNode, state, 
+                    (actualNode) => CheckRule_Spacing(actualNode, state),
+                    (actualNode) => CheckText(actualNode, state, ";")
+                )
+            );
+        Int32 foundPosition = state.Position;
+        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
+            parentNode.AddChild(actualNode);
+        return result;
+    }
+    private Boolean CheckRule_Literal(ASTNode parentNode, ParserState state)
+    {
+        Int32 oldPosition = state.Position;
+        ASTNode actualNode = new ASTNode(19, "Literal", "");
+        Boolean result =         
+            MakeTerminal(actualNode, state, 
+                (actualNode) => CheckAnd(actualNode, state, 
+                    (actualNode) => CheckOr(actualNode, state, 
+                        (actualNode) => CheckAnd(actualNode, state, 
+                            (actualNode) => Drop(actualNode, state, 
+                                (actualNode) => CheckText(actualNode, state, "'")
+                            ),
+                            (actualNode) => CheckAnd(actualNode, state, 
+                                (actualNode) => CheckZeroOrMore(actualNode, state, 
+                                    (actualNode) => CheckRule_Char(actualNode, state)
+                                ),
+                                (actualNode) => Drop(actualNode, state, 
+                                    (actualNode) => CheckText(actualNode, state, "'")
+                                )
+                            )
+                        ),
+                        (actualNode) => CheckAnd(actualNode, state, 
+                            (actualNode) => CheckText(actualNode, state, "\""),
+                            (actualNode) => CheckAnd(actualNode, state, 
+                                (actualNode) => CheckZeroOrMore(actualNode, state, 
+                                    (actualNode) => CheckRule_Char(actualNode, state)
+                                ),
+                                (actualNode) => CheckText(actualNode, state, "\"")
+                            )
+                        )
+                    ),
+                    (actualNode) => CheckRule_Spacing(actualNode, state)
+                )
+            );
+        Int32 foundPosition = state.Position;
+        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
+            parentNode.AddChild(actualNode);
+        return result;
+    }
+    private Boolean CheckRule_Namespace(ASTNode parentNode, ParserState state)
+    {
+        Int32 oldPosition = state.Position;
+        ASTNode actualNode = new ASTNode(32, "Namespace", "");
         Boolean result =         
             CheckAnd(actualNode, state, 
-                (actualNode) => CheckText(actualNode, state, ")"),
+                (actualNode) => CheckRule_Spacing(actualNode, state),
+                (actualNode) => CheckAnd(actualNode, state, 
+                    (actualNode) => Drop(actualNode, state, 
+                        (actualNode) => CheckText(actualNode, state, "@namespace")
+                    ),
+                    (actualNode) => CheckAnd(actualNode, state, 
+                        (actualNode) => CheckRule_Spacing(actualNode, state),
+                        (actualNode) => CheckAnd(actualNode, state, 
+                            (actualNode) => CheckRule_CSIdentifier(actualNode, state),
+                            (actualNode) => CheckRule_LineEnd(actualNode, state)
+                        )
+                    )
+                )
+            );
+        Int32 foundPosition = state.Position;
+        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
+            parentNode.AddChild(actualNode);
+        return result;
+    }
+    private Boolean CheckRule_NewLine(ASTNode parentNode, ParserState state)
+    {
+        Int32 oldPosition = state.Position;
+        ASTNode actualNode = new ASTNode(4, "NewLine", "");
+        Boolean result =         CheckRegEx(actualNode, state, "[\\r]");
+        Int32 foundPosition = state.Position;
+        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
+            parentNode.AddChild(actualNode);
+        return result;
+    }
+    private Boolean CheckRule_Number(ASTNode parentNode, ParserState state)
+    {
+        Int32 oldPosition = state.Position;
+        ASTNode actualNode = new ASTNode(3, "Number", "");
+        Boolean result =         
+            CheckAnd(actualNode, state, 
+                (actualNode) => CheckRegEx(actualNode, state, "[1-9]"),
+                (actualNode) => CheckZeroOrMore(actualNode, state, 
+                    (actualNode) => CheckRegEx(actualNode, state, "[0-9]")
+                )
+            );
+        Int32 foundPosition = state.Position;
+        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
+            parentNode.AddChild(actualNode);
+        return result;
+    }
+    private Boolean CheckRule_OneOrMore(ASTNode parentNode, ParserState state)
+    {
+        Int32 oldPosition = state.Position;
+        ASTNode actualNode = new ASTNode(13, "OneOrMore", "");
+        Boolean result =         
+            CheckAnd(actualNode, state, 
+                (actualNode) => CheckText(actualNode, state, "+"),
                 (actualNode) => CheckRule_Spacing(actualNode, state)
+            );
+        Int32 foundPosition = state.Position;
+        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
+            parentNode.AddChild(actualNode);
+        return result;
+    }
+    private Boolean CheckRule_Optional(ASTNode parentNode, ParserState state)
+    {
+        Int32 oldPosition = state.Position;
+        ASTNode actualNode = new ASTNode(15, "Optional", "");
+        Boolean result =         
+            CheckAnd(actualNode, state, 
+                (actualNode) => CheckText(actualNode, state, "?"),
+                (actualNode) => CheckRule_Spacing(actualNode, state)
+            );
+        Int32 foundPosition = state.Position;
+        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
+            parentNode.AddChild(actualNode);
+        return result;
+    }
+    private Boolean CheckRule_Or(ASTNode parentNode, ParserState state)
+    {
+        Int32 oldPosition = state.Position;
+        ASTNode actualNode = new ASTNode(16, "Or", "");
+        Boolean result =         
+            CheckAnd(actualNode, state, 
+                (actualNode) => CheckText(actualNode, state, "/"),
+                (actualNode) => CheckRule_Spacing(actualNode, state)
+            );
+        Int32 foundPosition = state.Position;
+        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
+            parentNode.AddChild(actualNode);
+        return result;
+    }
+    private Boolean CheckRule_Prefix(ASTNode parentNode, ParserState state)
+    {
+        Int32 oldPosition = state.Position;
+        ASTNode actualNode = new ASTNode(27, "Prefix", "");
+        Boolean result =         
+            CheckAnd(actualNode, state, 
+                (actualNode) => CheckRange(actualNode, state, 0, 1,
+                    (actualNode) => CheckRule_Drop(actualNode, state)
+                ),
+                (actualNode) => CheckRule_Suffix(actualNode, state)
+            );
+        Int32 foundPosition = state.Position;
+        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
+            parentNode.AddChild(actualNode);
+        return result;
+    }
+    private Boolean CheckRule_Primary(ASTNode parentNode, ParserState state)
+    {
+        Int32 oldPosition = state.Position;
+        ASTNode actualNode = new ASTNode(25, "Primary", "");
+        Boolean result =         
+            CheckOr(actualNode, state, 
+                (actualNode) => CheckRule_Identifier(actualNode, state),
+                (actualNode) => CheckOr(actualNode, state, 
+                    (actualNode) => CheckRule_Literal(actualNode, state),
+                    (actualNode) => CheckOr(actualNode, state, 
+                        (actualNode) => CheckAnd(actualNode, state, 
+                            (actualNode) => Drop(actualNode, state, 
+                                (actualNode) => CheckRule_BracketOpen(actualNode, state)
+                            ),
+                            (actualNode) => CheckAnd(actualNode, state, 
+                                (actualNode) => CheckRule_Expression(actualNode, state),
+                                (actualNode) => Drop(actualNode, state, 
+                                    (actualNode) => CheckRule_BracketClose(actualNode, state)
+                                )
+                            )
+                        ),
+                        (actualNode) => CheckOr(actualNode, state, 
+                            (actualNode) => CheckRule_Regex(actualNode, state),
+                            (actualNode) => CheckRule_Dot(actualNode, state)
+                        )
+                    )
+                )
             );
         Int32 foundPosition = state.Position;
         if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
@@ -943,15 +923,33 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    private Boolean CheckRule_Number(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_Sequence(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(3, "Number", "");
+        ASTNode actualNode = new ASTNode(28, "Sequence", "");
         Boolean result =         
-            CheckAnd(actualNode, state, 
-                (actualNode) => CheckRegEx(actualNode, state, "[1-9]"),
+            CheckZeroOrMore(actualNode, state, 
+                (actualNode) => CheckRule_Prefix(actualNode, state)
+            );
+        Int32 foundPosition = state.Position;
+        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
+            parentNode.AddChild(actualNode);
+        return result;
+    }
+    private Boolean CheckRule_Spacing(ASTNode parentNode, ParserState state)
+    {
+        Int32 oldPosition = state.Position;
+        ASTNode actualNode = new ASTNode(6, "Spacing", "");
+        Boolean result =         
+            Drop(actualNode, state, 
                 (actualNode) => CheckZeroOrMore(actualNode, state, 
-                    (actualNode) => CheckRegEx(actualNode, state, "[0-9]")
+                    (actualNode) => CheckOr(actualNode, state, 
+                        (actualNode) => CheckRule_NewLine(actualNode, state),
+                        (actualNode) => CheckOr(actualNode, state, 
+                            (actualNode) => CheckRule_WhiteSpace(actualNode, state),
+                            (actualNode) => CheckRule_Comment(actualNode, state)
+                        )
+                    )
                 )
             );
         Int32 foundPosition = state.Position;
@@ -959,29 +957,33 @@ public class ParseidonParser
             parentNode.AddChild(actualNode);
         return result;
     }
-    private Boolean CheckRule_Dot(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_Suffix(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(7, "Dot", "");
+        ASTNode actualNode = new ASTNode(26, "Suffix", "");
         Boolean result =         
             CheckAnd(actualNode, state, 
-                (actualNode) => CheckText(actualNode, state, "."),
-                (actualNode) => CheckRule_Spacing(actualNode, state)
+                (actualNode) => CheckRule_Primary(actualNode, state),
+                (actualNode) => CheckRange(actualNode, state, 0, 1,
+                    (actualNode) => CheckOr(actualNode, state, 
+                        (actualNode) => CheckRule_Optional(actualNode, state),
+                        (actualNode) => CheckOr(actualNode, state, 
+                            (actualNode) => CheckRule_ZeroOrMore(actualNode, state),
+                            (actualNode) => CheckRule_OneOrMore(actualNode, state)
+                        )
+                    )
+                )
             );
         Int32 foundPosition = state.Position;
         if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
             parentNode.AddChild(actualNode);
         return result;
     }
-    private Boolean CheckRule_Optional(ASTNode parentNode, ParserState state)
+    private Boolean CheckRule_WhiteSpace(ASTNode parentNode, ParserState state)
     {
         Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(15, "Optional", "");
-        Boolean result =         
-            CheckAnd(actualNode, state, 
-                (actualNode) => CheckText(actualNode, state, "?"),
-                (actualNode) => CheckRule_Spacing(actualNode, state)
-            );
+        ASTNode actualNode = new ASTNode(5, "WhiteSpace", "");
+        Boolean result =         CheckRegEx(actualNode, state, "[ \\t\\r\\n]");
         Int32 foundPosition = state.Position;
         if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
             parentNode.AddChild(actualNode);
@@ -994,34 +996,6 @@ public class ParseidonParser
         Boolean result =         
             CheckAnd(actualNode, state, 
                 (actualNode) => CheckText(actualNode, state, "*"),
-                (actualNode) => CheckRule_Spacing(actualNode, state)
-            );
-        Int32 foundPosition = state.Position;
-        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
-            parentNode.AddChild(actualNode);
-        return result;
-    }
-    private Boolean CheckRule_OneOrMore(ASTNode parentNode, ParserState state)
-    {
-        Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(13, "OneOrMore", "");
-        Boolean result =         
-            CheckAnd(actualNode, state, 
-                (actualNode) => CheckText(actualNode, state, "+"),
-                (actualNode) => CheckRule_Spacing(actualNode, state)
-            );
-        Int32 foundPosition = state.Position;
-        if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
-            parentNode.AddChild(actualNode);
-        return result;
-    }
-    private Boolean CheckRule_Or(ASTNode parentNode, ParserState state)
-    {
-        Int32 oldPosition = state.Position;
-        ASTNode actualNode = new ASTNode(16, "Or", "");
-        Boolean result =         
-            CheckAnd(actualNode, state, 
-                (actualNode) => CheckText(actualNode, state, "/"),
                 (actualNode) => CheckRule_Spacing(actualNode, state)
             );
         Int32 foundPosition = state.Position;

@@ -5,4 +5,6 @@ public abstract class AbstractMarker : AbstractOneChildOperator
     public AbstractMarker(AbstractGrammarElement? element) : base(element)
     {
     }
+
+    public override bool IsStatic() => false;
 }
