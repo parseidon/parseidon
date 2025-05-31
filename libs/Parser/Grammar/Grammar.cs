@@ -22,11 +22,11 @@ public class Grammar : AbstractNamedElement
             {
             {{Indent(GetVisitorCode())}}
 
+            {{Indent(GetParseCode())}}
+
             {{Indent(GetBasicCode())}}
 
             {{Indent(GetCheckRuleCode())}}
-
-            {{Indent(GetParseCode())}}
             }
             """;
         return result;        
@@ -227,6 +227,13 @@ public class Grammar : AbstractNamedElement
     {
         String result =
             $$"""
+            public void Visit(Visitor visitor)
+            {
+                if(rootNode == null)
+                    throw new Exception("Root node is null");
+                visitor.Visit(rootNode);
+            }
+            
             public class ASTNode
             {
                 private List<ASTNode> _children { get; } = new List<ASTNode>();
@@ -298,7 +305,7 @@ public class Grammar : AbstractNamedElement
                 }            
             }
 
-            public class ParserState
+            private class ParserState
             {
                 public ParserState(String text)
                 {
@@ -464,13 +471,6 @@ public class Grammar : AbstractNamedElement
             {
                 parentNode.AddChild(new ASTNode(tokenId, "VIRTUAL", text));
                 return true;
-            }
-
-            public void Visit(Visitor visitor)
-            {
-                if(rootNode == null)
-                    throw new Exception("Root node is null");
-                visitor.Visit(rootNode);
             }
             """;
         return result;
