@@ -137,13 +137,6 @@ public class Grammar : AbstractNamedElement
         result.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
         return result;
     }
-    // private List<SimpleRule> GetUsedRulesWithASTNode()
-    // {
-    //     List<SimpleRule> result = new List<SimpleRule>();
-    //     foreach(SimpleRule rule in GetUsedRules())
-    //         result.Add(rule);
-    //     return result;
-    // }
 
     protected String GetCheckRuleCode()
     {
@@ -208,6 +201,7 @@ public class Grammar : AbstractNamedElement
             public class Visitor
             {
             {{Indent(visitorEvents)}}
+            
                 public virtual void Visit(ASTNode node)
                 {
                     if(node == null)
