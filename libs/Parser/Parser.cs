@@ -16,27 +16,21 @@ public class ParseidonParser
         public virtual void OnCSIdentifier(ParseidonParser.ASTNode node) {}
         public virtual void OnClassName(ParseidonParser.ASTNode node) {}
         public virtual void OnDefinition(ParseidonParser.ASTNode node) {}
-        // Static
         public virtual void OnDot(ParseidonParser.ASTNode node) {}
-        // Static
         public virtual void OnDrop(ParseidonParser.ASTNode node) {}
         public virtual void OnExpression(ParseidonParser.ASTNode node) {}
         public virtual void OnGrammar(ParseidonParser.ASTNode node) {}
         public virtual void OnIdentifier(ParseidonParser.ASTNode node) {}
-        // Static
         public virtual void OnIsTerminal(ParseidonParser.ASTNode node) {}
         public virtual void OnLiteral(ParseidonParser.ASTNode node) {}
         public virtual void OnNamespace(ParseidonParser.ASTNode node) {}
-        // Static
         public virtual void OnOneOrMore(ParseidonParser.ASTNode node) {}
-        // Static
         public virtual void OnOptional(ParseidonParser.ASTNode node) {}
         public virtual void OnPrefix(ParseidonParser.ASTNode node) {}
         public virtual void OnPrimary(ParseidonParser.ASTNode node) {}
         public virtual void OnRegex(ParseidonParser.ASTNode node) {}
         public virtual void OnSequence(ParseidonParser.ASTNode node) {}
         public virtual void OnSuffix(ParseidonParser.ASTNode node) {}
-        // Static
         public virtual void OnZeroOrMore(ParseidonParser.ASTNode node) {}
         public virtual void Visit(ASTNode node)
         {
