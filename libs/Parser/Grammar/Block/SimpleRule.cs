@@ -14,6 +14,6 @@ public class SimpleRule : AbstractNamedDefinitionElement
 
     public override String GetEventName() => $"On{Name.Humanize().Dehumanize()}";
 
-    public override bool IsStatic() => Definition is DropMarker ? true : Definition.IsStatic();
+    public override bool MatchesVariableText() => Definition is DropMarker ? false : Definition.MatchesVariableText();
 
 }

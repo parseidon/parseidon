@@ -19,7 +19,7 @@ public class DefinitionElement : AbstractDefinitionElement
         return Element.ToString(grammar);
     }
 
-    public override bool IsStatic() => Element!.IsStatic();
+    public override bool MatchesVariableText() => Element!.MatchesVariableText();
 
     internal override void IterateElements(Func<AbstractGrammarElement, Boolean> process)
     {

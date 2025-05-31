@@ -34,11 +34,11 @@ public class Grammar : AbstractNamedElement
     
     public override String ToString() => ToString(this);
 
-    public override bool IsStatic()
+    public override bool MatchesVariableText()
     {
-        Boolean result = true;
+        Boolean result = false;
         foreach (SimpleRule rule in Rules)
-            result = result && rule.IsStatic();
+            result = result || rule.MatchesVariableText();
         return result;
     }
 
@@ -98,7 +98,7 @@ public class Grammar : AbstractNamedElement
 
     private Boolean IterateRelevantGrammarRules(AbstractGrammarElement element, List<SimpleRule> rules, Boolean forceAdd)
     {
-        if ((element is SimpleRule rule) && (rules.IndexOf(rule) < 0) && !(rule.Definition is DropMarker) && (!rule.IsStatic() || forceAdd))
+        if ((element is SimpleRule rule) && (rules.IndexOf(rule) < 0) && !(rule.Definition is DropMarker) && (rule.MatchesVariableText() || forceAdd))
             rules.Add(rule);
         else
         if ((element is ReferenceElement referenceElement) && (FindRuleByName(referenceElement.ReferenceName) is SimpleRule referencedRule) && (rules.IndexOf(referencedRule) < 0))

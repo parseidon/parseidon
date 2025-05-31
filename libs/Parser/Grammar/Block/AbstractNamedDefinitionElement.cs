@@ -13,7 +13,7 @@ public abstract class AbstractNamedDefinitionElement : AbstractNamedElement
 
     public abstract String GetReferenceCode(Grammar grammar);
 
-    public override bool IsStatic() => Definition.IsStatic();
+    public override bool MatchesVariableText() => Definition.MatchesVariableText();
     
     internal override void IterateElements(Func<AbstractGrammarElement, Boolean> process)
     {

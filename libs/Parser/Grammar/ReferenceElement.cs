@@ -20,6 +20,6 @@ public class ReferenceElement : AbstractGrammarElement
         throw new Exception($"Can not find element '{ReferenceName}'");
     }
 
-    public override Boolean IsStatic() => true;
+    public override Boolean MatchesVariableText() => false;
 
 }

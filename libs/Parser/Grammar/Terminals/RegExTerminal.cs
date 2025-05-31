@@ -13,6 +13,6 @@ public class RegExTerminal : AbstractFinalTerminal
 
     public override String ToString(Grammar grammar) => $"CheckRegEx(actualNode, state, \"{ToLiteral(RegEx, false).Trim()}\")"; 
 
-    public override bool IsStatic() => false;
+    public override bool MatchesVariableText() => true;
 
 }

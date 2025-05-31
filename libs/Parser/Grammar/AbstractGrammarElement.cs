@@ -39,7 +39,7 @@ public abstract class AbstractGrammarElement
 
     public virtual String ToString(Grammar grammar) => throw new NotImplementedException($"Not implemented: {this.GetType().Name}.ToString()");
 
-    public virtual Boolean IsStatic() => true;
+    public virtual Boolean MatchesVariableText() => false;
 
     internal virtual void IterateElements(Func<AbstractGrammarElement, Boolean> process) => process(this);
 }

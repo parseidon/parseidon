@@ -16,6 +16,6 @@ public class AndOperator : AbstractTwoChildOperator
         return result;
     }
 
-    public override bool IsStatic() => (Left is null ? base.IsStatic() : Left.IsStatic()) && (Right is null ? base.IsStatic() : Right.IsStatic());
+    public override bool MatchesVariableText() => (Left is null ? base.MatchesVariableText() : Left.MatchesVariableText()) || (Right is null ? base.MatchesVariableText() : Right.MatchesVariableText());
 
 }

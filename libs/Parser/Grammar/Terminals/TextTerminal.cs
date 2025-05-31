@@ -11,6 +11,6 @@ public class TextTerminal : AbstractFinalTerminal
 
     public override String ToString(Grammar grammar) => $"CheckText(actualNode, state, \"{ToLiteral(Text, true)}\")";
 
-    public override bool IsStatic() => true;
+    public override bool MatchesVariableText() => false;
 
 }

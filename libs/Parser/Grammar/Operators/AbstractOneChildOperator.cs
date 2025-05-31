@@ -23,7 +23,7 @@ public abstract class AbstractOneChildOperator : AbstractOperator
         }
     }
 
-    public override bool IsStatic() => Element is null ? base.IsStatic() : Element.IsStatic();
+    public override bool MatchesVariableText() => Element is null ? base.MatchesVariableText() : Element.MatchesVariableText();
 
     internal override void IterateElements(Func<AbstractGrammarElement, Boolean> process)
     {

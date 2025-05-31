@@ -15,6 +15,6 @@ public class OneOrMoreOperator : AbstractOneChildOperator
         return result;
     }
 
-    public override bool IsStatic() => false;
+    public override bool MatchesVariableText() => true;
 
 }

@@ -6,5 +6,5 @@ public abstract class AbstractMarker : AbstractOneChildOperator
     {
     }
 
-    public override bool IsStatic() => false;
+    public override bool MatchesVariableText() => true;
 }
