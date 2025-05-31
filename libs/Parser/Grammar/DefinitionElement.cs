@@ -23,7 +23,7 @@ public class DefinitionElement : AbstractDefinitionElement
 
     internal override void IterateElements(Func<AbstractGrammarElement, Boolean> process)
     {
-        if(process(this));
+        if(process(this))
             Element.IterateElements(process);
     }
 

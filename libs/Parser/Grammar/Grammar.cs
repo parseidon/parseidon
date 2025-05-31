@@ -239,11 +239,11 @@ public class Grammar : AbstractNamedElement
                 private List<ASTNode> _children { get; } = new List<ASTNode>();
                 private ASTNode? _parent = null;
 
-                public String Text { get; set; }
-                public String Name { get; set; }
+                public String Text { get; internal set; }
+                public String Name { get; private set; }
                 public IReadOnlyList<ASTNode> Children { get => _children; } 
                 public Int32 TokenId { get; private set; }
-                public Int32 Position { get; set; }
+                public Int32 Position { get; internal set; }
                 public ASTNode? Parent { get => _parent; }            
 
                 internal ASTNode(Int32 tokenId, String name, String text)
