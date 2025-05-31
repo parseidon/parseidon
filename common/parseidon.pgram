@@ -47,7 +47,7 @@ Equal           = '=' Spacing;
 !LineEnd        = Spacing ';';
 Dot             = '.' Spacing;
 !Spacing        = (NewLine / WhiteSpace / Comment)* ;
-WhiteSpace     = [ \t\r\n];
+WhiteSpace      = [ \t\r\n];
 NewLine         = [\r];
 Number          = [1-9] [0-9]*;
 Comment         = '#' (![\r\n] .)* [\r\n];
