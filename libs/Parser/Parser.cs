@@ -32,6 +32,7 @@ public class ParseidonParser
         public virtual void OnSequence(ParseidonParser.ASTNode node) {}
         public virtual void OnSuffix(ParseidonParser.ASTNode node) {}
         public virtual void OnZeroOrMore(ParseidonParser.ASTNode node) {}
+    
         public virtual void Visit(ASTNode node)
         {
             if(node == null)
@@ -68,6 +69,21 @@ public class ParseidonParser
         }
     }
 
+    public void Parse(String text)
+    {
+        ParserState state = new ParserState(text);
+        ASTNode actualNode = new ASTNode(-1, "ROOT", "");            
+        if(CheckRule_Grammar(actualNode, state))
+            rootNode = actualNode;
+    }
+
+    public void Visit(Visitor visitor)
+    {
+        if(rootNode == null)
+            throw new Exception("Root node is null");
+        visitor.Visit(rootNode);
+    }
+    
     public class ASTNode
     {
         private List<ASTNode> _children { get; } = new List<ASTNode>();
@@ -139,14 +155,14 @@ public class ParseidonParser
         }            
     }
     
-    public class ParserState
+    private class ParserState
     {
         public ParserState(String text)
         {
             Text = text;
         }            
         public String Text { get; }
-        public Int32 Position { get; set; } = 0;
+        public Int32 Position { get; internal set; } = 0;
         public Boolean Eof => !(Position < Text.Length);
     }
     
@@ -305,13 +321,6 @@ public class ParseidonParser
     {
         parentNode.AddChild(new ASTNode(tokenId, "VIRTUAL", text));
         return true;
-    }
-    
-    public void Visit(Visitor visitor)
-    {
-        if(rootNode == null)
-            throw new Exception("Root node is null");
-        visitor.Visit(rootNode);
     }
 
     private Boolean CheckRule_BracketClose(ASTNode parentNode, ParserState state)
@@ -996,13 +1005,5 @@ public class ParseidonParser
         if(result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
             parentNode.AddChild(actualNode);
         return result;
-    }
-
-    public void Parse(String text)
-    {
-        ParserState state = new ParserState(text);
-        ASTNode actualNode = new ASTNode(-1, "ROOT", "");            
-        if(CheckRule_Grammar(actualNode, state))
-            rootNode = actualNode;
     }
 }

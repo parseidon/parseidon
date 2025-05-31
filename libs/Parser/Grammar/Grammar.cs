@@ -312,7 +312,7 @@ public class Grammar : AbstractNamedElement
                     Text = text;
                 }            
                 public String Text { get; }
-                public Int32 Position { get; set; } = 0;
+                public Int32 Position { get; internal set; } = 0;
                 public Boolean Eof => !(Position < Text.Length);
             }
 
