@@ -13,25 +13,25 @@ public class ParseidonParser
 {
     public class Visitor
     {
-        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessCSIdentifierNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
-        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessClassNameNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
-        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessDefinitionNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
-        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessDotNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
-        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessDropNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
-        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessExpressionNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
-        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessGrammarNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
-        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessIdentifierNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
-        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessIsTerminalNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
-        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessLiteralNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
-        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessNamespaceNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
-        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessOneOrMoreNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
-        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessOptionalNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
-        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessPrefixNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
-        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessPrimaryNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
-        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessRegexNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
-        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessSequenceNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
-        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessSuffixNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
-        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessZeroOrMoreNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessCSIdentifierNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessClassNameNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessDefinitionNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessDotNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessDropNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessExpressionNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessGrammarNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessIdentifierNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessIsTerminalNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessLiteralNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessNamespaceNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessOneOrMoreNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessOptionalNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessPrefixNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessPrimaryNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessRegexNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessSequenceNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessSuffixNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessZeroOrMoreNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages) => ProcessNodeResult.Success;
     
         public virtual ParseidonParser.Visitor.ProcessNodeResult Visit(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
         {
@@ -40,33 +40,33 @@ public class ParseidonParser
             Boolean result = true;
             foreach(ASTNode child in node.Children)
                 result = result && (Visit(child, messages) == ProcessNodeResult.Success);
-            result = result && (CallEvent(node.TokenId, node) == ProcessNodeResult.Success);
+            result = result && (CallEvent(node.TokenId, node, messages) == ProcessNodeResult.Success);
             return result ? ProcessNodeResult.Success : ProcessNodeResult.Error;
         }
     
-        public virtual ParseidonParser.Visitor.ProcessNodeResult CallEvent(Int32 tokenId, ParseidonParser.ASTNode node)
+        public virtual ParseidonParser.Visitor.ProcessNodeResult CallEvent(Int32 tokenId, ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
         {
             switch(tokenId)
             {
-                case 21: return ProcessCSIdentifierNode(node);
-                case 31: return ProcessClassNameNode(node);
-                case 30: return ProcessDefinitionNode(node);
-                case 7: return ProcessDotNode(node);
-                case 12: return ProcessDropNode(node);
-                case 29: return ProcessExpressionNode(node);
-                case 34: return ProcessGrammarNode(node);
-                case 24: return ProcessIdentifierNode(node);
-                case 11: return ProcessIsTerminalNode(node);
-                case 19: return ProcessLiteralNode(node);
-                case 32: return ProcessNamespaceNode(node);
-                case 13: return ProcessOneOrMoreNode(node);
-                case 15: return ProcessOptionalNode(node);
-                case 27: return ProcessPrefixNode(node);
-                case 25: return ProcessPrimaryNode(node);
-                case 17: return ProcessRegexNode(node);
-                case 28: return ProcessSequenceNode(node);
-                case 26: return ProcessSuffixNode(node);
-                case 14: return ProcessZeroOrMoreNode(node);
+                case 21: return ProcessCSIdentifierNode(node, messages);
+                case 31: return ProcessClassNameNode(node, messages);
+                case 30: return ProcessDefinitionNode(node, messages);
+                case 7: return ProcessDotNode(node, messages);
+                case 12: return ProcessDropNode(node, messages);
+                case 29: return ProcessExpressionNode(node, messages);
+                case 34: return ProcessGrammarNode(node, messages);
+                case 24: return ProcessIdentifierNode(node, messages);
+                case 11: return ProcessIsTerminalNode(node, messages);
+                case 19: return ProcessLiteralNode(node, messages);
+                case 32: return ProcessNamespaceNode(node, messages);
+                case 13: return ProcessOneOrMoreNode(node, messages);
+                case 15: return ProcessOptionalNode(node, messages);
+                case 27: return ProcessPrefixNode(node, messages);
+                case 25: return ProcessPrimaryNode(node, messages);
+                case 17: return ProcessRegexNode(node, messages);
+                case 28: return ProcessSequenceNode(node, messages);
+                case 26: return ProcessSuffixNode(node, messages);
+                case 14: return ProcessZeroOrMoreNode(node, messages);
             }
             return ProcessNodeResult.Success;
         }

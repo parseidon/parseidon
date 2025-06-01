@@ -216,10 +216,10 @@ public class Grammar : AbstractNamedElement
         String visitorEvents = "";
 
         foreach (SimpleRule rule in usedRules)
-            visitorEvents += $"public virtual {Name}.Visitor.ProcessNodeResult {GetEventName(rule)}({Name}.ASTNode node) => ProcessNodeResult.Success;\n";
+            visitorEvents += $"public virtual {Name}.Visitor.ProcessNodeResult {GetEventName(rule)}({Name}.ASTNode node, IList<{Name}.ParserMessage> messages) => ProcessNodeResult.Success;\n";
         String visitorCalls = "";
         foreach(SimpleRule rule in usedRules)
-            visitorCalls += $"case {GetElementIdOf(rule)}: return {GetEventName(rule)}(node);\n";
+            visitorCalls += $"case {GetElementIdOf(rule)}: return {GetEventName(rule)}(node, messages);\n";
 
         String result =
             $$"""
@@ -234,11 +234,11 @@ public class Grammar : AbstractNamedElement
                     Boolean result = true;
                     foreach(ASTNode child in node.Children)
                         result = result && (Visit(child, messages) == ProcessNodeResult.Success);
-                    result = result && (CallEvent(node.TokenId, node) == ProcessNodeResult.Success);
+                    result = result && (CallEvent(node.TokenId, node, messages) == ProcessNodeResult.Success);
                     return result ? ProcessNodeResult.Success : ProcessNodeResult.Error;
                 }
             
-                public virtual {{Name}}.Visitor.ProcessNodeResult CallEvent(Int32 tokenId, {{Name}}.ASTNode node)
+                public virtual {{Name}}.Visitor.ProcessNodeResult CallEvent(Int32 tokenId, {{Name}}.ASTNode node, IList<{{Name}}.ParserMessage> messages)
                 {
                     switch(tokenId)
                     {

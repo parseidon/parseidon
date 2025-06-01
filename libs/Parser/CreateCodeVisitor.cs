@@ -72,35 +72,35 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
         _stack.Push(element);
     }
 
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessGrammarNode(ParseidonParser.ASTNode node)
+    public override ParseidonParser.Visitor.ProcessNodeResult ProcessGrammarNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
     {
         List<SimpleRule> rules = PopList<SimpleRule>();
         _grammar = new Grammar.Grammar(_className, rules);
         return ParseidonParser.Visitor.ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessNamespaceNode(ParseidonParser.ASTNode node)
+    public override ParseidonParser.Visitor.ProcessNodeResult ProcessNamespaceNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
     {
         ReferenceElement name = Pop<ReferenceElement>();
         _namespace = name.ReferenceName;
         return ParseidonParser.Visitor.ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessClassNameNode(ParseidonParser.ASTNode node)
+    public override ParseidonParser.Visitor.ProcessNodeResult ProcessClassNameNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
     {
         ReferenceElement name = Pop<ReferenceElement>();
         _className = name.ReferenceName;
         return ParseidonParser.Visitor.ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessIsTerminalNode(ParseidonParser.ASTNode node)
+    public override ParseidonParser.Visitor.ProcessNodeResult ProcessIsTerminalNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
     {
         Push(new IsTerminalMarker(null));
         return ParseidonParser.Visitor.ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessDropNode(ParseidonParser.ASTNode node)
+    public override ParseidonParser.Visitor.ProcessNodeResult ProcessDropNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
     {
         Push(new DropMarker(null));
         return ParseidonParser.Visitor.ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessDefinitionNode(ParseidonParser.ASTNode node)
+    public override ParseidonParser.Visitor.ProcessNodeResult ProcessDefinitionNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
     {
         AbstractGrammarElement definition = Pop<AbstractGrammarElement>();
         ReferenceElement name = Pop<ReferenceElement>();
@@ -113,17 +113,17 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
         Push(new SimpleRule(name.ReferenceName, definition));
         return ParseidonParser.Visitor.ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessIdentifierNode(ParseidonParser.ASTNode node)
+    public override ParseidonParser.Visitor.ProcessNodeResult ProcessIdentifierNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
     {
         Push(new ReferenceElement(node.Text.Trim()));
         return ParseidonParser.Visitor.ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessCSIdentifierNode(ParseidonParser.ASTNode node)
+    public override ParseidonParser.Visitor.ProcessNodeResult ProcessCSIdentifierNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
     {
         Push(new ReferenceElement(node.Text.Trim()));
         return ParseidonParser.Visitor.ProcessNodeResult.Success;
     }    
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessExpressionNode(ParseidonParser.ASTNode node)
+    public override ParseidonParser.Visitor.ProcessNodeResult ProcessExpressionNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
     {
         List<AbstractDefinitionElement> elements = PopList<AbstractDefinitionElement>();
         if (elements.Count < 1)
@@ -144,7 +144,7 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
         }
         return ParseidonParser.Visitor.ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessSequenceNode(ParseidonParser.ASTNode node)
+    public override ParseidonParser.Visitor.ProcessNodeResult ProcessSequenceNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
     {
         List<AbstractDefinitionElement> elements = PopList<AbstractDefinitionElement>();
         if (elements.Count < 1)
@@ -165,7 +165,7 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
         }
         return ParseidonParser.Visitor.ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessPrefixNode(ParseidonParser.ASTNode node)
+    public override ParseidonParser.Visitor.ProcessNodeResult ProcessPrefixNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
     {
         AbstractGrammarElement element = Pop<AbstractGrammarElement>();
         AbstractMarker? marker = TryPop<AbstractMarker>();
@@ -178,7 +178,7 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
         Push(element);
         return ParseidonParser.Visitor.ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessSuffixNode(ParseidonParser.ASTNode node)
+    public override ParseidonParser.Visitor.ProcessNodeResult ProcessSuffixNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
     {
         AbstractOneChildOperator? suffixOperator = TryPop<AbstractOneChildOperator>();
         AbstractGrammarElement element = Pop<AbstractGrammarElement>();
@@ -190,37 +190,37 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
         Push(element);
         return ParseidonParser.Visitor.ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessPrimaryNode(ParseidonParser.ASTNode node)
+    public override ParseidonParser.Visitor.ProcessNodeResult ProcessPrimaryNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
     {
         Push(new DefinitionElement(Pop<AbstractGrammarElement>()));
         return ParseidonParser.Visitor.ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessLiteralNode(ParseidonParser.ASTNode node)
+    public override ParseidonParser.Visitor.ProcessNodeResult ProcessLiteralNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
     {
         Push(new TextTerminal(node.Text));
         return ParseidonParser.Visitor.ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessRegexNode(ParseidonParser.ASTNode node)
+    public override ParseidonParser.Visitor.ProcessNodeResult ProcessRegexNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
     {
         Push(new RegExTerminal(node.Text));
         return ParseidonParser.Visitor.ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessDotNode(ParseidonParser.ASTNode node)
+    public override ParseidonParser.Visitor.ProcessNodeResult ProcessDotNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
     {
         Push(new RegExTerminal("."));
         return ParseidonParser.Visitor.ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessOptionalNode(ParseidonParser.ASTNode node)
+    public override ParseidonParser.Visitor.ProcessNodeResult ProcessOptionalNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
     {
         Push(new OptionalOperator(null));
         return ParseidonParser.Visitor.ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessZeroOrMoreNode(ParseidonParser.ASTNode node)
+    public override ParseidonParser.Visitor.ProcessNodeResult ProcessZeroOrMoreNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
     {
         Push(new ZeroOrMoreOperator(null));
         return ParseidonParser.Visitor.ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessOneOrMoreNode(ParseidonParser.ASTNode node)
+    public override ParseidonParser.Visitor.ProcessNodeResult ProcessOneOrMoreNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
     {
         Push(new OneOrMoreOperator(null));
         return ParseidonParser.Visitor.ProcessNodeResult.Success;
