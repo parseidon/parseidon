@@ -5,7 +5,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>Parseidon.Helper</RootNamespace>
+    <RootNamespace>Parseidon.Cli</RootNamespace>
     <AssemblyName>parseidon</AssemblyName>    
   </PropertyGroup>
 
