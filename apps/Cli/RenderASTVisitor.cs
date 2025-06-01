@@ -7,7 +7,7 @@ public class RenderASTVisitor : ParseidonParser.Visitor
 {
     public String AST { get; private set; } = string.Empty;
 
-    public override void Visit(ParseidonParser.ASTNode node)
+    public override ParseidonParser.Visitor.ProcessNodeResult Visit(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
     {
         static void PrintNode(ParseidonParser.ASTNode node, bool[] crossings, StringBuilder stringBuilder)
         {
@@ -16,7 +16,7 @@ public class RenderASTVisitor : ParseidonParser.Visitor
             if (crossings.Length > 0)
                 stringBuilder.Append("- ");
             stringBuilder.Append($"{node.Name} ({node.TokenId}): ");
-            if(node.Text != "")
+            if (node.Text != "")
                 stringBuilder.Append(Microsoft.CodeAnalysis.CSharp.SymbolDisplay.FormatLiteral(node.Text, true));
             stringBuilder.AppendLine();
             for (int i = 0; i != node.Children.Count; i++)
@@ -31,5 +31,6 @@ public class RenderASTVisitor : ParseidonParser.Visitor
         StringBuilder stringBuilder = new StringBuilder();
         PrintNode(node, new bool[] { }, stringBuilder);
         AST = stringBuilder.ToString();
+        return ParseidonParser.Visitor.ProcessNodeResult.Success;
     }    
 }

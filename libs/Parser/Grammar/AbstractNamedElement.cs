@@ -7,6 +7,4 @@ public abstract class AbstractNamedElement : AbstractGrammarElement
         Name = name;
     }    
     public String Name { get; }
-
-    public virtual String GetEventName() => "";
 }

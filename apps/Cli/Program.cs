@@ -63,12 +63,12 @@ var result = CommandLine.Parser.Default.ParseArguments<CommandLineOptions>(args)
 
         String Text = System.IO.File.ReadAllText(GrammarFile);
         ParseidonParser Parser = new ParseidonParser();
-        Parser.Parse(Text);
+        ParseidonParser.ParseResult parseResult = Parser.Parse(Text);
         
         if (!string.IsNullOrEmpty(options.OutputFile) || options.ShowCode)
         {
             CreateCodeVisitor visitor = new CreateCodeVisitor();
-            Parser.Visit(visitor);
+            parseResult.Visit(visitor);
             if (!string.IsNullOrEmpty(options.OutputFile))
             {
                 if (File.Exists(options.OutputFile))
@@ -106,7 +106,7 @@ var result = CommandLine.Parser.Default.ParseArguments<CommandLineOptions>(args)
         if (!string.IsNullOrEmpty(options.ASTFile) || options.ShowAST)
         {
             RenderASTVisitor visitor = new RenderASTVisitor();
-            Parser.Visit(visitor);
+            parseResult.Visit(visitor);
             if (!string.IsNullOrEmpty(options.ASTFile))
             {
                 File.WriteAllText(options.ASTFile, visitor.AST);

@@ -13,77 +13,112 @@ public class ParseidonParser
 {
     public class Visitor
     {
-        public virtual void OnCSIdentifier(ParseidonParser.ASTNode node) {}
-        public virtual void OnClassName(ParseidonParser.ASTNode node) {}
-        public virtual void OnDefinition(ParseidonParser.ASTNode node) {}
-        public virtual void OnDot(ParseidonParser.ASTNode node) {}
-        public virtual void OnDrop(ParseidonParser.ASTNode node) {}
-        public virtual void OnExpression(ParseidonParser.ASTNode node) {}
-        public virtual void OnGrammar(ParseidonParser.ASTNode node) {}
-        public virtual void OnIdentifier(ParseidonParser.ASTNode node) {}
-        public virtual void OnIsTerminal(ParseidonParser.ASTNode node) {}
-        public virtual void OnLiteral(ParseidonParser.ASTNode node) {}
-        public virtual void OnNamespace(ParseidonParser.ASTNode node) {}
-        public virtual void OnOneOrMore(ParseidonParser.ASTNode node) {}
-        public virtual void OnOptional(ParseidonParser.ASTNode node) {}
-        public virtual void OnPrefix(ParseidonParser.ASTNode node) {}
-        public virtual void OnPrimary(ParseidonParser.ASTNode node) {}
-        public virtual void OnRegex(ParseidonParser.ASTNode node) {}
-        public virtual void OnSequence(ParseidonParser.ASTNode node) {}
-        public virtual void OnSuffix(ParseidonParser.ASTNode node) {}
-        public virtual void OnZeroOrMore(ParseidonParser.ASTNode node) {}
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessCSIdentifierNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessClassNameNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessDefinitionNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessDotNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessDropNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessExpressionNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessGrammarNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessIdentifierNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessIsTerminalNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessLiteralNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessNamespaceNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessOneOrMoreNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessOptionalNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessPrefixNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessPrimaryNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessRegexNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessSequenceNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessSuffixNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
+        public virtual ParseidonParser.Visitor.ProcessNodeResult ProcessZeroOrMoreNode(ParseidonParser.ASTNode node) => ProcessNodeResult.Success;
     
-        public virtual void Visit(ASTNode node)
+        public virtual ParseidonParser.Visitor.ProcessNodeResult Visit(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
         {
             if(node == null)
-                return;
+                return ProcessNodeResult.Error;
+            Boolean result = true;
             foreach(ASTNode child in node.Children)
-                Visit(child);
-            CallEvent(node.TokenId, node);
+                result = result && (Visit(child, messages) == ProcessNodeResult.Success);
+            result = result && (CallEvent(node.TokenId, node) == ProcessNodeResult.Success);
+            return result ? ProcessNodeResult.Success : ProcessNodeResult.Error;
         }
     
-        public virtual void CallEvent(Int32 tokenId, ASTNode node)
+        public virtual ParseidonParser.Visitor.ProcessNodeResult CallEvent(Int32 tokenId, ParseidonParser.ASTNode node)
         {
             switch(tokenId)
             {
-                case 21: OnCSIdentifier(node); break;
-                case 31: OnClassName(node); break;
-                case 30: OnDefinition(node); break;
-                case 7: OnDot(node); break;
-                case 12: OnDrop(node); break;
-                case 29: OnExpression(node); break;
-                case 34: OnGrammar(node); break;
-                case 24: OnIdentifier(node); break;
-                case 11: OnIsTerminal(node); break;
-                case 19: OnLiteral(node); break;
-                case 32: OnNamespace(node); break;
-                case 13: OnOneOrMore(node); break;
-                case 15: OnOptional(node); break;
-                case 27: OnPrefix(node); break;
-                case 25: OnPrimary(node); break;
-                case 17: OnRegex(node); break;
-                case 28: OnSequence(node); break;
-                case 26: OnSuffix(node); break;
-                case 14: OnZeroOrMore(node); break;
+                case 21: return ProcessCSIdentifierNode(node);
+                case 31: return ProcessClassNameNode(node);
+                case 30: return ProcessDefinitionNode(node);
+                case 7: return ProcessDotNode(node);
+                case 12: return ProcessDropNode(node);
+                case 29: return ProcessExpressionNode(node);
+                case 34: return ProcessGrammarNode(node);
+                case 24: return ProcessIdentifierNode(node);
+                case 11: return ProcessIsTerminalNode(node);
+                case 19: return ProcessLiteralNode(node);
+                case 32: return ProcessNamespaceNode(node);
+                case 13: return ProcessOneOrMoreNode(node);
+                case 15: return ProcessOptionalNode(node);
+                case 27: return ProcessPrefixNode(node);
+                case 25: return ProcessPrimaryNode(node);
+                case 17: return ProcessRegexNode(node);
+                case 28: return ProcessSequenceNode(node);
+                case 26: return ProcessSuffixNode(node);
+                case 14: return ProcessZeroOrMoreNode(node);
             }
+            return ProcessNodeResult.Success;
+        }
+    
+        public class VisitResult
+        {
+            public VisitResult(Boolean successful, IReadOnlyList<ParserMessage> messages)
+            {
+                Successful = successful;
+                Messages = messages;
+            }
+    
+            public Boolean Successful { get; }
+            public IReadOnlyList<ParserMessage> Messages { get; }
+        }
+    
+        public enum ProcessNodeResult
+        {
+            Success,
+            Error
         }
     }
 
-    public void Parse(String text)
+    public ParseResult Parse(String text)
     {
         ParserState state = new ParserState(text);
-        ASTNode actualNode = new ASTNode(-1, "ROOT", "");            
-        if(CheckRule_Grammar(actualNode, state))
-            rootNode = actualNode;
-    }
-
-    public void Visit(Visitor visitor)
-    {
-        if(rootNode == null)
-            throw new Exception("Root node is null");
-        visitor.Visit(rootNode);
+        ASTNode actualNode = new ASTNode(-1, "ROOT", "");
+        Boolean successful = CheckRule_Grammar(actualNode, state);
+        return new ParseResult(successful ? actualNode : null, state.Messages);
     }
     
+    public class ParseResult
+    {
+        public ParseResult(ASTNode? rootNode, IReadOnlyList<ParserMessage> messages)
+        {
+            RootNode = rootNode;
+            Messages = new List<ParserMessage>(messages);
+        }
+    
+        public Boolean Successful { get => RootNode is not null; }
+        public ASTNode? RootNode { get; }
+        public IReadOnlyList<ParserMessage> Messages { get; }
+    
+        public Visitor.VisitResult? Visit(Visitor visitor)
+        {
+            if(visitor is null)
+                throw new ArgumentNullException(nameof(visitor));
+            List<ParserMessage> visitMessages = new List<ParserMessage>();
+            return new Visitor.VisitResult(Successful ? visitor.Visit(RootNode!, visitMessages) == Visitor.ProcessNodeResult.Success : false, visitMessages);
+        }
+    }
+
     public class ASTNode
     {
         private List<ASTNode> _children { get; } = new List<ASTNode>();
@@ -94,7 +129,7 @@ public class ParseidonParser
         public IReadOnlyList<ASTNode> Children { get => _children; } 
         public Int32 TokenId { get; private set; }
         public Int32 Position { get; internal set; }
-        public ASTNode? Parent { get => _parent; }            
+        public ASTNode? Parent { get => _parent; }
     
         internal ASTNode(Int32 tokenId, String name, String text)
         {
@@ -152,7 +187,29 @@ public class ParseidonParser
         internal void ClearChildren()
         {
             _children.Clear();
-        }            
+        }
+    }
+    
+    public class ParserMessage
+    {
+        public enum MessageType
+        {
+            Warning,
+            Error
+        }
+    
+        public ParserMessage(String message, MessageType type, UInt32 row, UInt32 collumn)
+        {
+            Message = message;
+            Row = row;
+            Collumn = collumn;
+            Type = type;
+        }
+    
+        public String Message { get; }
+        public UInt32 Row { get; }
+        public UInt32 Collumn { get; }
+        public MessageType Type { get; }
     }
     
     private class ParserState
@@ -160,13 +217,12 @@ public class ParseidonParser
         public ParserState(String text)
         {
             Text = text;
-        }            
+        }
         public String Text { get; }
         public Int32 Position { get; internal set; } = 0;
         public Boolean Eof => !(Position < Text.Length);
+        public List<ParserMessage> Messages { get; } = new List<ParserMessage>();
     }
-    
-    private ASTNode? rootNode = null;
     
     private Boolean CheckRegEx(ASTNode parentNode, ParserState state, String regEx)
     {

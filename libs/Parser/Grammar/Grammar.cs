@@ -1,4 +1,5 @@
 using System.Text;
+using Humanizer;
 using Parseidon.Parser.Grammar.Block;
 using Parseidon.Parser.Grammar.Operators;
 
@@ -164,15 +165,36 @@ public class Grammar : AbstractNamedElement
 
     protected String GetParseCode()
     {
-        SimpleRule axiomRule = GetRootRule();
+        SimpleRule rootRule = GetRootRule();
         String result =
             $$"""
-            public void Parse(String text)
+            public ParseResult Parse(String text)
             {
                 ParserState state = new ParserState(text);
-                ASTNode actualNode = new ASTNode(-1, "ROOT", "");            
-                if({{axiomRule.GetReferenceCode(this)}})
-                    rootNode = actualNode;
+                ASTNode actualNode = new ASTNode(-1, "ROOT", "");
+                Boolean successful = {{rootRule.GetReferenceCode(this)}};
+                return new ParseResult(successful ? actualNode : null, state.Messages);
+            }
+
+            public class ParseResult
+            {
+                public ParseResult(ASTNode? rootNode, IReadOnlyList<ParserMessage> messages)
+                {
+                    RootNode = rootNode;
+                    Messages = new List<ParserMessage>(messages);
+                }
+
+                public Boolean Successful { get => RootNode is not null; }
+                public ASTNode? RootNode { get; }
+                public IReadOnlyList<ParserMessage> Messages { get; }
+
+                public Visitor.VisitResult? Visit(Visitor visitor)
+                {
+                    if(visitor is null)
+                        throw new ArgumentNullException(nameof(visitor));
+                    List<ParserMessage> visitMessages = new List<ParserMessage>();
+                    return new Visitor.VisitResult(Successful ? visitor.Visit(RootNode!, visitMessages) == Visitor.ProcessNodeResult.Success : false, visitMessages);
+                }
             }
             """;
         return result;
@@ -188,13 +210,16 @@ public class Grammar : AbstractNamedElement
 
     protected String GetVisitorCode()
     {
+        String GetEventName(SimpleRule rule) => $"Process{rule.Name.Humanize().Dehumanize()}Node";
+
         List<SimpleRule> usedRules = GetRelevantGrammarRules();
         String visitorEvents = "";
-        foreach(AbstractNamedElement element in usedRules)
-            visitorEvents += $"public virtual void {element.GetEventName()}({Name}.ASTNode node) {{}}\n";
+
+        foreach (SimpleRule rule in usedRules)
+            visitorEvents += $"public virtual {Name}.Visitor.ProcessNodeResult {GetEventName(rule)}({Name}.ASTNode node) => ProcessNodeResult.Success;\n";
         String visitorCalls = "";
-        foreach(AbstractNamedElement element in usedRules)
-            visitorCalls += $"case {GetElementIdOf(element)}: {element.GetEventName()}(node); break;\n";
+        foreach(SimpleRule rule in usedRules)
+            visitorCalls += $"case {GetElementIdOf(rule)}: return {GetEventName(rule)}(node);\n";
 
         String result =
             $$"""
@@ -202,21 +227,42 @@ public class Grammar : AbstractNamedElement
             {
             {{Indent(visitorEvents)}}
             
-                public virtual void Visit(ASTNode node)
+                public virtual {{Name}}.Visitor.ProcessNodeResult Visit({{Name}}.ASTNode node, IList<{{Name}}.ParserMessage> messages)
                 {
                     if(node == null)
-                        return;
+                        return ProcessNodeResult.Error;
+                    Boolean result = true;
                     foreach(ASTNode child in node.Children)
-                        Visit(child);
-                    CallEvent(node.TokenId, node);
+                        result = result && (Visit(child, messages) == ProcessNodeResult.Success);
+                    result = result && (CallEvent(node.TokenId, node) == ProcessNodeResult.Success);
+                    return result ? ProcessNodeResult.Success : ProcessNodeResult.Error;
                 }
             
-                public virtual void CallEvent(Int32 tokenId, ASTNode node)
+                public virtual {{Name}}.Visitor.ProcessNodeResult CallEvent(Int32 tokenId, {{Name}}.ASTNode node)
                 {
                     switch(tokenId)
                     {
             {{Indent(Indent(Indent(visitorCalls)))}}
                     }
+                    return ProcessNodeResult.Success;
+                }
+
+                public class VisitResult
+                {
+                    public VisitResult(Boolean successful, IReadOnlyList<ParserMessage> messages)
+                    {
+                        Successful = successful;
+                        Messages = messages;
+                    }
+
+                    public Boolean Successful { get; }
+                    public IReadOnlyList<ParserMessage> Messages { get; }
+                }
+
+                public enum ProcessNodeResult
+                {
+                    Success,
+                    Error
                 }
             }
             """;
@@ -227,13 +273,6 @@ public class Grammar : AbstractNamedElement
     {
         String result =
             $$"""
-            public void Visit(Visitor visitor)
-            {
-                if(rootNode == null)
-                    throw new Exception("Root node is null");
-                visitor.Visit(rootNode);
-            }
-            
             public class ASTNode
             {
                 private List<ASTNode> _children { get; } = new List<ASTNode>();
@@ -244,7 +283,7 @@ public class Grammar : AbstractNamedElement
                 public IReadOnlyList<ASTNode> Children { get => _children; } 
                 public Int32 TokenId { get; private set; }
                 public Int32 Position { get; internal set; }
-                public ASTNode? Parent { get => _parent; }            
+                public ASTNode? Parent { get => _parent; }
 
                 internal ASTNode(Int32 tokenId, String name, String text)
                 {
@@ -302,7 +341,29 @@ public class Grammar : AbstractNamedElement
                 internal void ClearChildren()
                 {
                     _children.Clear();
-                }            
+                }
+            }
+
+            public class ParserMessage
+            {
+                public enum MessageType
+                {
+                    Warning,
+                    Error
+                }
+
+                public ParserMessage(String message, MessageType type, UInt32 row, UInt32 collumn)
+                {
+                    Message = message;
+                    Row = row;
+                    Collumn = collumn;
+                    Type = type;
+                }
+
+                public String Message { get; }
+                public UInt32 Row { get; }
+                public UInt32 Collumn { get; }
+                public MessageType Type { get; }
             }
 
             private class ParserState
@@ -310,13 +371,12 @@ public class Grammar : AbstractNamedElement
                 public ParserState(String text)
                 {
                     Text = text;
-                }            
+                }
                 public String Text { get; }
                 public Int32 Position { get; internal set; } = 0;
                 public Boolean Eof => !(Position < Text.Length);
+                public List<ParserMessage> Messages { get; } = new List<ParserMessage>();
             }
-
-            private ASTNode? rootNode = null;
 
             private Boolean CheckRegEx(ASTNode parentNode, ParserState state, String regEx)
             {
