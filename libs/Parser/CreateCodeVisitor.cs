@@ -10,24 +10,14 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
 {
     private String _namespace = String.Empty;
     private String _className = String.Empty;
+    private String? _visitorResultType;
     private Grammar.Grammar? _grammar;
 
     private ScopedStack<AbstractGrammarElement> _stack = new ScopedStack<AbstractGrammarElement>();
 
     public string Code
     {
-        get
-        {
-            if (_grammar != null)
-                return $$"""
-                using System.Text.RegularExpressions;
-
-                namespace {{_namespace}};
-
-                {{_grammar.ToString()}}
-                """;
-            return "";
-        }
+        get => _grammar is not null ? _grammar.ToString() : "";
     }
 
     public override ParseidonParser.Visitor.ProcessNodeResult Visit(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
@@ -75,7 +65,7 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
     public override ParseidonParser.Visitor.ProcessNodeResult ProcessGrammarNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
     {
         List<SimpleRule> rules = PopList<SimpleRule>();
-        _grammar = new Grammar.Grammar(_className, rules);
+        _grammar = new Grammar.Grammar(_namespace, _className, _visitorResultType, rules);
         return ParseidonParser.Visitor.ProcessNodeResult.Success;
     }
     public override ParseidonParser.Visitor.ProcessNodeResult ProcessNamespaceNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
@@ -88,6 +78,12 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
     {
         ReferenceElement name = Pop<ReferenceElement>();
         _className = name.ReferenceName;
+        return ParseidonParser.Visitor.ProcessNodeResult.Success;
+    }
+    public override ParseidonParser.Visitor.ProcessNodeResult ProcessVisitorResultNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
+    {
+        ReferenceElement name = Pop<ReferenceElement>();
+        _visitorResultType = name.ReferenceName;
         return ParseidonParser.Visitor.ProcessNodeResult.Success;
     }
     public override ParseidonParser.Visitor.ProcessNodeResult ProcessIsTerminalNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)

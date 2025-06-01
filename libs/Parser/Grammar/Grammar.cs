@@ -7,30 +7,39 @@ namespace Parseidon.Parser.Grammar;
 
 public class Grammar : AbstractNamedElement
 {
-    public Grammar(String name, List<SimpleRule> rules) : base(name)
+    private String _namespace;
+    private String? _visitorResultType;
+
+    public Grammar(String nameSpace, String className, String? visitorResultType, List<SimpleRule> rules) : base(className)
     {
         Rules = rules;
         Rules.ForEach((element) => element.Parent = this);
+        _namespace = nameSpace;
+        _visitorResultType = visitorResultType;
     }
 
     public List<SimpleRule> Rules { get; }
 
     public override String ToString(Grammar grammar) 
     {
-        String result =
+        return
             $$"""
-            public class {{Name}}
+            using System.Text.RegularExpressions;
+
+            namespace {{_namespace}}
             {
-            {{Indent(GetVisitorCode())}}
+                public class {{Name}}
+                {
+            {{Indent(Indent(GetVisitorCode()))}}
 
-            {{Indent(GetParseCode())}}
+            {{Indent(Indent(GetParseCode()))}}
 
-            {{Indent(GetBasicCode())}}
+            {{Indent(Indent(GetBasicCode()))}}
 
-            {{Indent(GetCheckRuleCode())}}
+            {{Indent(Indent(GetCheckRuleCode()))}}
+                }
             }
             """;
-        return result;        
     }
     
     public override String ToString() => ToString(this);
@@ -193,7 +202,7 @@ public class Grammar : AbstractNamedElement
                     if(visitor is null)
                         throw new ArgumentNullException(nameof(visitor));
                     List<ParserMessage> visitMessages = new List<ParserMessage>();
-                    return new Visitor.VisitResult(Successful ? visitor.Visit(RootNode!, visitMessages) == Visitor.ProcessNodeResult.Success : false, visitMessages);
+                    return new Visitor.VisitResult(Successful ? visitor.Visit(RootNode!, visitMessages) == Visitor.ProcessNodeResult.Success : false, {{(_visitorResultType is null ? String.Empty : "visitor.GetResult(visitMessages), ")}}visitMessages);
                 }
             }
             """;
@@ -220,7 +229,6 @@ public class Grammar : AbstractNamedElement
         String visitorCalls = "";
         foreach(SimpleRule rule in usedRules)
             visitorCalls += $"case {GetElementIdOf(rule)}: return {GetEventName(rule)}(node, messages);\n";
-
         String result =
             $$"""
             public class Visitor
@@ -247,15 +255,19 @@ public class Grammar : AbstractNamedElement
                     return ProcessNodeResult.Success;
                 }
 
+                {{(_visitorResultType is null ? String.Empty : $"public virtual {_visitorResultType}? GetResult(IList<{Name}.ParserMessage> messages) => null;")}}
+
                 public class VisitResult
                 {
-                    public VisitResult(Boolean successful, IReadOnlyList<ParserMessage> messages)
+                    public VisitResult(Boolean successful, {{(_visitorResultType is null ? String.Empty : $"{_visitorResultType}? result, ")}}IReadOnlyList<ParserMessage> messages)
                     {
                         Successful = successful;
                         Messages = messages;
+                        {{(_visitorResultType is null ? String.Empty : $"Result = result;")}}
                     }
 
                     public Boolean Successful { get; }
+                    {{(_visitorResultType is null ? String.Empty : $"public {_visitorResultType}? Result {{ get; }}")}}
                     public IReadOnlyList<ParserMessage> Messages { get; }
                 }
 
