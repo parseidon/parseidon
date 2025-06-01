@@ -68,7 +68,7 @@ var result = CommandLine.Parser.Default.ParseArguments<CommandLineOptions>(args)
         if (!string.IsNullOrEmpty(options.OutputFile) || options.ShowCode)
         {
             CreateCodeVisitor visitor = new CreateCodeVisitor();
-            parseResult.Visit(visitor);
+            ParseidonParser.Visitor.VisitResult? visitorResult = parseResult.Visit(visitor);
             if (!string.IsNullOrEmpty(options.OutputFile))
             {
                 if (File.Exists(options.OutputFile))
@@ -80,7 +80,7 @@ var result = CommandLine.Parser.Default.ParseArguments<CommandLineOptions>(args)
                     if (options.Verbose)
                         Console.WriteLine($"Die Datei {options.OutputFile} existiert bereits. Eine Sicherungskopie wurde erstellt.");
                 }
-                String code = visitor.Code;
+                String code = visitorResult?.Result ?? "";
                 code =
                     $"""
                     //****************************************//
@@ -99,24 +99,24 @@ var result = CommandLine.Parser.Default.ParseArguments<CommandLineOptions>(args)
             if (options.ShowCode)
             {
                 Console.WriteLine("Generierter Code:");
-                Console.WriteLine(visitor.Code);
+                Console.WriteLine(visitorResult?.Result ?? "");
             }
         }
 
         if (!string.IsNullOrEmpty(options.ASTFile) || options.ShowAST)
         {
             RenderASTVisitor visitor = new RenderASTVisitor();
-            parseResult.Visit(visitor);
+            ParseidonParser.Visitor.VisitResult? visitorResult = parseResult.Visit(visitor);
             if (!string.IsNullOrEmpty(options.ASTFile))
             {
-                File.WriteAllText(options.ASTFile, visitor.AST);
+                File.WriteAllText(options.ASTFile, visitorResult?.Result ?? "");
                 if (options.Verbose)
                     Console.WriteLine($"AST wurde in die Datei {options.ASTFile} geschrieben.");
             }       
             if (options.ShowAST)
             {
                 Console.WriteLine("AST:");
-                Console.WriteLine(visitor.AST);
+                Console.WriteLine(visitorResult?.Result ?? "");
             }             
         }
     }

@@ -5,7 +5,7 @@ namespace Parseidon.Cli;
 
 public class RenderASTVisitor : ParseidonParser.Visitor
 {
-    public String AST { get; private set; } = string.Empty;
+    private String? _ast ;
 
     public override ParseidonParser.Visitor.ProcessNodeResult Visit(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
     {
@@ -30,7 +30,12 @@ public class RenderASTVisitor : ParseidonParser.Visitor
 
         StringBuilder stringBuilder = new StringBuilder();
         PrintNode(node, new bool[] { }, stringBuilder);
-        AST = stringBuilder.ToString();
+        _ast = stringBuilder.ToString();
         return ParseidonParser.Visitor.ProcessNodeResult.Success;
-    }    
+    }
+
+    public override String? GetResult(IList<ParseidonParser.ParserMessage> messages)
+    {
+        return _ast;
+    }
 }

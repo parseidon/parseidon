@@ -15,11 +15,6 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
 
     private ScopedStack<AbstractGrammarElement> _stack = new ScopedStack<AbstractGrammarElement>();
 
-    public string Code
-    {
-        get => _grammar is not null ? _grammar.ToString() : "";
-    }
-
     public override ParseidonParser.Visitor.ProcessNodeResult Visit(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
     {
         _stack.EnterScope();
@@ -60,6 +55,11 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
     private void Push(AbstractGrammarElement element)
     {
         _stack.Push(element);
+    }
+
+    public override String? GetResult(IList<ParseidonParser.ParserMessage> messages)
+    {
+        return _grammar is not null ? _grammar.ToString() : null;
     }
 
     public override ParseidonParser.Visitor.ProcessNodeResult ProcessGrammarNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
