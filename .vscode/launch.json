@@ -5,34 +5,34 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch CLI",
+            "name": "CLI: Parser to Output",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "dotnet: build",
             "program": "${workspaceFolder}/Output/bin/apps/Parseidon.Cli/Debug/net9.0/Parseidon.dll",
-            "args": ["-g", "${workspaceFolder}/common/parseidon.pgram", "-s", "-a", "${workspaceFolder}/Output/ast.yaml", "-o", "${workspaceFolder}/Output/Parser.cs"],
+            "args": ["parser", "${workspaceFolder}/common/parseidon.pgram", "${workspaceFolder}/Output/Parser.cs", "-o", "backup"],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "console": "internalConsole"
         },
         {
-            "name": "Create Parser",
+            "name": "CLI: Override Parser",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "dotnet: build",
             "program": "${workspaceFolder}/Output/bin/apps/Parseidon.Cli/Debug/net9.0/Parseidon.dll",
-            "args": ["-g", "${workspaceFolder}/common/parseidon.pgram", "-o", "${workspaceFolder}/libs/Parser/Parser.cs"],
+            "args": ["parser", "${workspaceFolder}/common/parseidon.pgram", "${workspaceFolder}/libs/Parser/Parser.cs", "-o", "backup"],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "console": "internalConsole"
         },
         {
-            "name": "Create AST",
+            "name": "CLI: Create AST",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "dotnet: build",
             "program": "${workspaceFolder}/Output/bin/apps/Parseidon.Cli/Debug/net9.0/Parseidon.dll",
-            "args": ["-g", "${workspaceFolder}/common/parseidon.pgram", "-s", "-a", "${workspaceFolder}/Output/ast.yaml"],
+            "args": ["ast", "${workspaceFolder}/common/parseidon.pgram", "${workspaceFolder}/Output/ast.yaml"],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "console": "internalConsole"
