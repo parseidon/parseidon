@@ -197,7 +197,7 @@ public class Grammar : AbstractNamedElement
                 public ASTNode? RootNode { get; }
                 public IReadOnlyList<ParserMessage> Messages { get; }
 
-                public Visitor.VisitResult? Visit(Visitor visitor)
+                public Visitor.VisitResult Visit(Visitor visitor)
                 {
                     if(visitor is null)
                         throw new ArgumentNullException(nameof(visitor));

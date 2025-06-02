@@ -54,9 +54,9 @@ static void CreateParser(FileInfo grammarFile, FileInfo outputFile, String overr
     if (parseResult.Successful)
     {
         CreateCodeVisitor visitor = new CreateCodeVisitor();
-        ParseidonParser.Visitor.VisitResult? visitorResult = parseResult.Visit(visitor);
+        ParseidonParser.Visitor.VisitResult visitorResult = parseResult.Visit(visitor);
 
-        String code = visitorResult?.Result ?? "";
+        String code = visitorResult.Result ?? "";
         code =
             $"""
             //****************************************//
