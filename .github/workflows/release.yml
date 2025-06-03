@@ -1,0 +1,33 @@
+name: Build and Publish NuGet Package
+
+on:
+  push:
+    tags:
+      - 'v*' # z.B. v1.0.0
+  workflow_dispatch:
+
+jobs:
+  build_and_publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build -c Release --no-restore
+
+      - name: Pack
+        run: dotnet pack -c Release --no-build --output ./nupkgs
+
+      - name: Publish to NuGet
+        run: dotnet nuget push ./nupkgs/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
