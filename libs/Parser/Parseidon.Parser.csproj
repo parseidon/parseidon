@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\helper\Parseidon.Helper.csproj" />
+    <ProjectReference Include="..\Helper\Parseidon.Helper.csproj" />
   </ItemGroup>
 
 </Project>

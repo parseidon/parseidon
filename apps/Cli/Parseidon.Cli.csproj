@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\libs\parser\Parseidon.Parser.csproj" />
+    <ProjectReference Include="..\..\libs\Parser\Parseidon.Parser.csproj" />
   </ItemGroup>
 
 </Project>
