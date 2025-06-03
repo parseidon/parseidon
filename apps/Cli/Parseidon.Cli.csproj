@@ -6,7 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>Parseidon.Cli</RootNamespace>
-    <AssemblyName>parseidon</AssemblyName>
+    <AssemblyName>dotnet-parseidon</AssemblyName>
+    <PackageId>dotnet-parseidon</PackageId>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>dotnet-parseidon</ToolCommandName>    
   </PropertyGroup>
 
   <ItemGroup>
