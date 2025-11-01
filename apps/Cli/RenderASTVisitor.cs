@@ -1,11 +1,12 @@
 using System.Text;
+using Parseidon.Helper;
 using Parseidon.Parser;
 
 namespace Parseidon.Cli;
 
 public class RenderASTVisitor : ParseidonParser.Visitor
 {
-    private String? _ast ;
+    private String? _ast;
 
     public override ParseidonParser.Visitor.ProcessNodeResult Visit(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
     {
@@ -17,7 +18,7 @@ public class RenderASTVisitor : ParseidonParser.Visitor
                 stringBuilder.Append("- ");
             stringBuilder.Append($"{node.Name} ({node.TokenId}): ");
             if (node.Text != "")
-                stringBuilder.Append(Microsoft.CodeAnalysis.CSharp.SymbolDisplay.FormatLiteral(node.Text, true));
+                stringBuilder.Append(node.Text.EscapeStringLiteral());
             stringBuilder.AppendLine();
             for (int i = 0; i != node.Children.Count; i++)
             {

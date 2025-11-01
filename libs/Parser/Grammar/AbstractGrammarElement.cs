@@ -1,4 +1,3 @@
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Parseidon.Helper;
 using Parseidon.Parser.Grammar.Block;
 
@@ -34,7 +33,7 @@ public abstract class AbstractGrammarElement
     {
         if (isEscaped)
             valueTextForCompiler = valueTextForCompiler.ReplaceAll("\\'", "'").ReplaceAll("\\\"", "\"").ReplaceAll("\\\\", "\\");
-        return Microsoft.CodeAnalysis.CSharp.SymbolDisplay.FormatLiteral(valueTextForCompiler, false).ReplaceAll("\"", "\\\"");
+        return valueTextForCompiler.EscapeStringLiteral().ReplaceAll("\"", "\\\"");
     }
 
     public virtual String ToString(Grammar grammar) => throw new NotImplementedException($"Not implemented: {this.GetType().Name}.ToString()");

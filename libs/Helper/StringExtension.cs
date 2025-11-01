@@ -28,4 +28,23 @@ public static class StringExtensions
         }
         return input;
     }
+
+    public static string EscapeStringLiteral(this string value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return "\"\"";
+
+        return "\"" + value
+            .Replace("\\", "\\\\")  // Backslash
+            .Replace("\"", "\\\"")  // Anführungszeichen
+            .Replace("\r", "\\r")   // Carriage Return
+            .Replace("\n", "\\n")   // New Line
+            .Replace("\t", "\\t")   // Tab
+            .Replace("\0", "\\0")   // Null-Zeichen
+            .Replace("\a", "\\a")   // Alert (Bell)
+            .Replace("\b", "\\b")   // Backspace
+            .Replace("\f", "\\f")   // Form Feed
+            .Replace("\v", "\\v")   // Vertical Tab
+            + "\"";
+    }
 }
