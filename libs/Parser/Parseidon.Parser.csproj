@@ -6,6 +6,22 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>Parseidon.Parser</RootNamespace>
+
+    <!-- Versionsinformationen -->
+    <Version>1.0.1</Version>
+    <AssemblyVersion>1.0.1.0</AssemblyVersion>
+    <FileVersion>1.0.1.0</FileVersion>
+
+    <!-- NuGet-Paket bauen und Versionen automatisch aus Git-Tags ableiten -->
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>Parseidon.Parser</PackageId>
+    <PackageDescription>Parser generator library for creating parsers for Domain Specific Languages (DSLs) in .NET.</PackageDescription>
+    <Authors>parseidon</Authors>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/parseidon/parseidon</RepositoryUrl>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <PackageTags>parser;generator;dsl;compiler;grammar</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
