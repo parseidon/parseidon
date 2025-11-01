@@ -18,11 +18,14 @@
 
     <!-- NuGet Package Metadaten -->
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>dotnet-parseidon</PackageId>
     <PackageDescription>Command-line tool for the Parseidon parser generator.</PackageDescription>
     <Authors>parseidon</Authors>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/parseidon/parseidon</RepositoryUrl>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <PackageTags>parser;generator;dsl;compiler;grammar</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>

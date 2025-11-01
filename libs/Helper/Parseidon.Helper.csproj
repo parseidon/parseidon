@@ -14,12 +14,14 @@
 
     <!-- NuGet Package Metadaten -->
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>Parseidon.Helper</PackageId>
     <PackageDescription>Helper packages used for parseidon parser.</PackageDescription>
     <Authors>parseidon</Authors>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/parseidon/parseidon</RepositoryUrl>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
-
+    <PackageTags>parser;generator;dsl;compiler;grammar</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
 </Project>
