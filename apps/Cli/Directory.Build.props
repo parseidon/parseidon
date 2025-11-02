@@ -1,6 +1,9 @@
 <Project>
   <PropertyGroup>
-    <BaseOutputPath>$(ProjectDir)../../Output/bin/apps/$(MSBuildProjectName)/</BaseOutputPath>
-    <BaseIntermediateOutputPath>$(ProjectDir)../../Output/obj/apps/$(MSBuildProjectName)/</BaseIntermediateOutputPath>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputPath>$(ProjectDir)../../Output/bin/$(MSBuildProjectName)/$(Configuration)/</OutputPath>
+    <BaseIntermediateOutputPath>$(ProjectDir)../../Output/obj/$(MSBuildProjectName)/</BaseIntermediateOutputPath>
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)/</IntermediateOutputPath>
   </PropertyGroup>
 </Project>
