@@ -9,7 +9,7 @@
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <IsRoslynComponent>true</IsRoslynComponent>
 
-    <!-- Versionsinformationen -->
+    <!-- Version information -->
     <Version>1.0.0</Version>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
@@ -43,8 +43,8 @@
     <ProjectReference Include="..\Parser\Parseidon.Parser.csproj" PrivateAssets="all" />
     <ProjectReference Include="..\Helper\Parseidon.Helper.csproj" PrivateAssets="all" />
     
-    <!-- Include Humanizer explicitly since Parser depends on it - NOT using PrivateAssets to ensure it's copied -->
-    <PackageReference Include="Humanizer" Version="2.14.1" GeneratePathProperty="true" />
+    <!-- Include Humanizer explicitly since Parser depends on it -->
+    <PackageReference Include="Humanizer.Core" Version="2.14.1" GeneratePathProperty="true" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -60,7 +60,7 @@
     <!-- Include dependencies explicitly - they need to be in analyzers/dotnet/cs for the generator to load them -->
     <None Include="$(OutputPath)Parseidon.Parser.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     <None Include="$(OutputPath)Parseidon.Helper.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Include="$(NuGetPackageRoot)humanizer.core\2.14.1\lib\netstandard2.0\Humanizer.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="$(PkgHumanizer_Core)\lib\netstandard2.0\Humanizer.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
 
   <!-- Make dependencies available to the generator at runtime -->

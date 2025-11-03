@@ -1,6 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System.Collections.Immutable;
+using System.IO;
 using System.Text;
 
 namespace Parseidon.SourceGen;
