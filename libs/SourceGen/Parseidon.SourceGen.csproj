@@ -17,6 +17,12 @@
         <IncludeBuildOutput>false</IncludeBuildOutput>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <!-- Don't create .snupkg for this project -->
+        <IncludeSymbols>false</IncludeSymbols>
+        <SymbolPackageFormat></SymbolPackageFormat>
+    </PropertyGroup>
+
     <ItemGroup>
         <!-- Roslyn SDK for source generators -->
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" PrivateAssets="all" />
