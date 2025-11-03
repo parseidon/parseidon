@@ -1,0 +1,9 @@
+@namespace Parseidon.SourceGenExample.Generated;
+@class CalculatorParser;
+
+Grammar     = Spacing Expression;
+Expression  = Term (('+' / '-') Term)*;
+Term        = Factor (('*' / '/') Factor)*;
+Factor      = Number / '(' Expression ')';
+$Number     = [0-9]+ Spacing;
+!Spacing    = [ \t\r\n]*;
