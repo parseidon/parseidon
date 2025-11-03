@@ -2,6 +2,9 @@ name: Build and Publish NuGet Package
 
 on:
   workflow_dispatch:
+  push:
+    branches: ["main"]
+    tags: ["v*"]
 
 jobs:
   build_and_publish:
@@ -13,7 +16,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: "9.0.x"
 
       - name: Restore dependencies
         run: dotnet restore
@@ -24,7 +27,14 @@ jobs:
       - name: Pack
         run: dotnet pack -c Release --no-build --output ./nupkgs
 
-      - name: Publish to NuGet
-        run: dotnet nuget push ./nupkgs/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+      - name: Publish NuGet package
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: dotnet nuget push ./nupkgs/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+
+      - name: Publish symbol package
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: dotnet nuget push ./nupkgs/*.snupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
