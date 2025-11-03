@@ -20,10 +20,12 @@ public class Grammar : AbstractNamedElement
 
     public List<SimpleRule> Rules { get; }
 
-    public override String ToString(Grammar grammar) 
+    public override String ToString(Grammar grammar)
     {
         return
             $$"""
+            #nullable enable
+            
             using System.Text.RegularExpressions;
 
             namespace {{_namespace}}
@@ -41,7 +43,7 @@ public class Grammar : AbstractNamedElement
             }
             """;
     }
-    
+
     public override String ToString() => ToString(this);
 
     public override bool MatchesVariableText()
@@ -54,7 +56,7 @@ public class Grammar : AbstractNamedElement
 
     internal override void IterateElements(Func<AbstractGrammarElement, Boolean> process)
     {
-        if(process(this))
+        if (process(this))
             foreach (SimpleRule rule in Rules)
                 rule.IterateElements(process);
     }
@@ -66,11 +68,11 @@ public class Grammar : AbstractNamedElement
             if (element.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
                 return element;
         return null;
-    }    
-    
+    }
+
     public Int32 GetElementIdOf(AbstractNamedElement element)
     {
-        if((element is SimpleRule) && (Rules.IndexOf((SimpleRule)element) >= 0))
+        if ((element is SimpleRule) && (Rules.IndexOf((SimpleRule)element) >= 0))
             return Rules.IndexOf((SimpleRule)element);
         throw new Exception($"Can not find identifier '{element.Name}'!");
     }
@@ -78,7 +80,7 @@ public class Grammar : AbstractNamedElement
     public SimpleRule GetRootRule()
     {
         String? axiomName = "Grammar";
-        if(axiomName == null)
+        if (axiomName == null)
             throw new Exception("Grammar must have axiom option!");
         SimpleRule? rule = FindRuleByName(axiomName);
         if (rule is null)
@@ -227,7 +229,7 @@ public class Grammar : AbstractNamedElement
         foreach (SimpleRule rule in usedRules)
             visitorEvents += $"public virtual {Name}.Visitor.ProcessNodeResult {GetEventName(rule)}({Name}.ASTNode node, IList<{Name}.ParserMessage> messages) => ProcessNodeResult.Success;\n";
         String visitorCalls = "";
-        foreach(SimpleRule rule in usedRules)
+        foreach (SimpleRule rule in usedRules)
             visitorCalls += $"case {GetElementIdOf(rule)}: return {GetEventName(rule)}(node, messages);\n";
         String result =
             $$"""
@@ -278,7 +280,7 @@ public class Grammar : AbstractNamedElement
                 }
             }
             """;
-        return result;   
+        return result;
     }
 
     protected String GetBasicCode()
