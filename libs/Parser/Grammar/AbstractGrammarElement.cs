@@ -33,7 +33,7 @@ public abstract class AbstractGrammarElement
     {
         if (isEscaped)
             valueTextForCompiler = valueTextForCompiler.ReplaceAll("\\'", "'").ReplaceAll("\\\"", "\"").ReplaceAll("\\\\", "\\");
-        return valueTextForCompiler.EscapeStringLiteral().ReplaceAll("\"", "\\\"");
+        return valueTextForCompiler.FormatLiteral(false).ReplaceAll("\"", "\\\"");
     }
 
     public virtual String ToString(Grammar grammar) => throw new NotImplementedException($"Not implemented: {this.GetType().Name}.ToString()");

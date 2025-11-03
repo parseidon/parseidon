@@ -18,7 +18,7 @@ public class RenderASTVisitor : ParseidonParser.Visitor
                 stringBuilder.Append("- ");
             stringBuilder.Append($"{node.Name} ({node.TokenId}): ");
             if (node.Text != "")
-                stringBuilder.Append(node.Text.EscapeStringLiteral());
+                stringBuilder.Append(node.Text.FormatLiteral(true));
             stringBuilder.AppendLine();
             for (int i = 0; i != node.Children.Count; i++)
             {
