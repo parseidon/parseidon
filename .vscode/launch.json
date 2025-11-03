@@ -9,8 +9,14 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "dotnet: build",
-            "program": "${workspaceFolder}/Output/bin/apps/Parseidon.Cli/Debug/net9.0/dotnet-parseidon.dll",
-            "args": ["parser", "${workspaceFolder}/common/parseidon.pgram", "${workspaceFolder}/Output/Parser.cs", "-o", "backup"],
+            "program": "${workspaceFolder}/Output/bin/Parseidon.Cli/Debug/net9.0/dotnet-parseidon.dll",
+            "args": [
+                "parser",
+                "${workspaceFolder}/common/parseidon.pgram",
+                "${workspaceFolder}/Output/Parser.cs",
+                "-o",
+                "backup"
+            ],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "console": "internalConsole"
@@ -20,8 +26,14 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "dotnet: build",
-            "program": "${workspaceFolder}/Output/bin/apps/Parseidon.Cli/Debug/net9.0/dotnet-parseidon.dll",
-            "args": ["parser", "${workspaceFolder}/common/parseidon.pgram", "${workspaceFolder}/libs/Parser/Parser.cs", "-o", "backup"],
+            "program": "${workspaceFolder}/Output/bin/Parseidon.Cli/Debug/net9.0/dotnet-parseidon.dll",
+            "args": [
+                "parser",
+                "${workspaceFolder}/common/parseidon.pgram",
+                "${workspaceFolder}/libs/Parser/Parser.cs",
+                "-o",
+                "backup"
+            ],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "console": "internalConsole"
@@ -31,8 +43,12 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "dotnet: build",
-            "program": "${workspaceFolder}/Output/bin/apps/Parseidon.Cli/Debug/net9.0/dotnet-parseidon.dll",
-            "args": ["ast", "${workspaceFolder}/common/parseidon.pgram", "${workspaceFolder}/Output/ast.yaml"],
+            "program": "${workspaceFolder}/Output/bin/Parseidon.Cli/Debug/net9.0/dotnet-parseidon.dll",
+            "args": [
+                "ast",
+                "${workspaceFolder}/common/parseidon.pgram",
+                "${workspaceFolder}/Output/ast.yaml"
+            ],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "console": "internalConsole"
