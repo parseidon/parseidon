@@ -1,0 +1,73 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>12.0</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Parseidon.SourceGen</RootNamespace>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <IsRoslynComponent>true</IsRoslynComponent>
+
+    <!-- Version information -->
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+
+    <!-- NuGet Package Metadaten -->
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>Parseidon.SourceGen</PackageId>
+    <PackageDescription>Source generator for Parseidon grammar files (*.pgram). Automatically generates parsers at compile time.</PackageDescription>
+    <Authors>parseidon</Authors>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/parseidon/parseidon</RepositoryUrl>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <PackageTags>parser;generator;dsl;compiler;grammar;source-generator;roslyn</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    
+    <!-- Source generator should not be a transitive dependency -->
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Roslyn SDK for source generators -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Reference to Parseidon.Parser - needs special handling for source generators -->
+    <ProjectReference Include="..\Parser\Parseidon.Parser.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\Helper\Parseidon.Helper.csproj" PrivateAssets="all" />
+    
+    <!-- Include Humanizer explicitly since Parser depends on it -->
+    <PackageReference Include="Humanizer.Core" Version="2.14.1" GeneratePathProperty="true" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>
+  </PropertyGroup>
+
+  <!-- Package the generator assembly and its dependencies -->
+  <ItemGroup>
+    <!-- Include the generator in both locations for proper packaging -->
+    <None Include="$(OutputPath)$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="$(OutputPath)$(AssemblyName).dll" Pack="true" PackagePath="lib/netstandard2.0" Visible="false" />
+    
+    <!-- Include dependencies explicitly - they need to be in analyzers/dotnet/cs for the generator to load them -->
+    <None Include="$(OutputPath)Parseidon.Parser.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="$(OutputPath)Parseidon.Helper.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="$(PkgHumanizer_Core)\lib\netstandard2.0\Humanizer.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+  </ItemGroup>
+
+  <!-- Make dependencies available to the generator at runtime -->
+  <Target Name="GetDependencyTargetPaths" AfterTargets="ResolveReferences">
+    <ItemGroup>
+      <TargetPathWithTargetPlatformMoniker Include="@(ReferencePath)" IncludeRuntimeDependency="false" />
+    </ItemGroup>
+  </Target>
+
+</Project>
