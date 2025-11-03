@@ -3,9 +3,13 @@
 	"tasks": [
 		{
 			"type": "shell",
-			"label": "dotnet: build (color)",
+			"label": "dotnet: clean+build",
 			"command": "dotnet",
 			"args": [
+				"clean",
+				"--nologo",
+				"&&",
+				"dotnet",
 				"build",
 				"--nologo",
 				"--verbosity",
