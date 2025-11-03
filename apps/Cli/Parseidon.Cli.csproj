@@ -11,21 +11,8 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>dotnet-parseidon</ToolCommandName>
 
-    <!-- Versionsinformationen -->
-    <Version>1.0.1</Version>
-    <AssemblyVersion>1.0.1.0</AssemblyVersion>
-    <FileVersion>1.0.1.0</FileVersion>
-
-    <!-- NuGet Package Metadaten -->
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>dotnet-parseidon</PackageId>
     <PackageDescription>Command-line tool for the Parseidon parser generator.</PackageDescription>
-    <Authors>parseidon</Authors>
-    <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/parseidon/parseidon</RepositoryUrl>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <PackageTags>parser;generator;dsl;compiler;grammar</PackageTags>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
