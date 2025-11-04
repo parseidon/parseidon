@@ -118,7 +118,7 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
     {
         Push(new ReferenceElement(node.Text.Trim()));
         return ParseidonParser.Visitor.ProcessNodeResult.Success;
-    }    
+    }
     public override ParseidonParser.Visitor.ProcessNodeResult ProcessExpressionNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
     {
         List<AbstractDefinitionElement> elements = PopList<AbstractDefinitionElement>();
