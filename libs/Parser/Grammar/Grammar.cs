@@ -25,7 +25,8 @@ public class Grammar : AbstractNamedElement
         return
             $$"""
             #nullable enable
-            
+
+            using System.Text;
             using System.Text.RegularExpressions;
 
             namespace {{_namespace}}
@@ -386,10 +387,137 @@ public class Grammar : AbstractNamedElement
                 {
                     Text = text;
                 }
+
+                private Int32 _errorSuppressionDepth;
+                private Int32 _lastErrorPosition = -1;
+                private String? _lastExpected;
+                private String? _lastActual;
+
                 public String Text { get; }
                 public Int32 Position { get; internal set; } = 0;
                 public Boolean Eof => !(Position < Text.Length);
                 public List<ParserMessage> Messages { get; } = new List<ParserMessage>();
+                public Boolean AreErrorsSuppressed => _errorSuppressionDepth > 0;
+
+                public ErrorSuppressionScope SuppressErrors()
+                {
+                    BeginErrorSuppression();
+                    return new ErrorSuppressionScope(this);
+                }
+
+                public void BeginErrorSuppression() => _errorSuppressionDepth++;
+
+                public void EndErrorSuppression()
+                {
+                    if (_errorSuppressionDepth > 0)
+                        _errorSuppressionDepth--;
+                }
+
+                public void ReportFailure(String expected, Int32 position, String? actual)
+                {
+                    if (AreErrorsSuppressed)
+                        return;
+
+                    if ((_lastErrorPosition == position) &&
+                        String.Equals(_lastExpected, expected, StringComparison.Ordinal) &&
+                        String.Equals(_lastActual, actual, StringComparison.Ordinal))
+                    {
+                        return;
+                    }
+
+                    _lastErrorPosition = position;
+                    _lastExpected = expected;
+                    _lastActual = actual;
+
+                    (UInt32 Row, UInt32 Column) location = CalculateLocation(position);
+                    String message = actual is null
+                        ? $"Expected {expected}."
+                        : $"Expected {expected}, but {actual}.";
+                    Messages.Add(new ParserMessage(message, ParserMessage.MessageType.Error, location.Row, location.Column));
+                }
+
+                private (UInt32 Row, UInt32 Column) CalculateLocation(Int32 position)
+                {
+                    Int32 row = 1;
+                    Int32 column = 1;
+                    Int32 limit = position;
+                    if (limit > Text.Length)
+                        limit = Text.Length;
+
+                    for (Int32 index = 0; index < limit; index++)
+                    {
+                        if (Text[index] == '\n')
+                        {
+                            row++;
+                            column = 1;
+                        }
+                        else
+                        {
+                            column++;
+                        }
+                    }
+
+                    return ((UInt32)row, (UInt32)column);
+                }
+
+                public readonly struct ErrorSuppressionScope : IDisposable
+                {
+                    private readonly ParserState _state;
+
+                    internal ErrorSuppressionScope(ParserState state)
+                    {
+                        _state = state;
+                    }
+
+                    public void Dispose()
+                    {
+                        _state.EndErrorSuppression();
+                    }
+                }
+            }
+
+            private static String DescribeLiteral(String value)
+            {
+                if (value.Length == 0)
+                    return "\"\"";
+
+                StringBuilder builder = new StringBuilder(value.Length + 2);
+                builder.Append('\"');
+                foreach(Char character in value)
+                {
+                    builder.Append(EscapeCharacter(character));
+                }
+                builder.Append('\"');
+                return builder.ToString();
+            }
+
+            private static String DescribeCharacter(Char value) => $"'{EscapeCharacter(value)}'";
+
+            private static String DescribePattern(String value)
+            {
+                StringBuilder builder = new StringBuilder(value.Length + 2);
+                builder.Append('/');
+                foreach(Char character in value)
+                {
+                    builder.Append(EscapeCharacter(character));
+                }
+                builder.Append('/');
+                return builder.ToString();
+            }
+
+            private static String EscapeCharacter(Char value)
+            {
+                return value switch
+                {
+                    '\r' => "\\r",
+                    '\n' => "\\n",
+                    '\t' => "\\t",
+                    '\\' => "\\\\",
+                    '"' => "\\\"",
+                    '\'' => "\\'",
+                    _ when Char.IsControl(value) => $"\\x{((Int32)value):X2}",
+                    _ => value.ToString()
+                };
             }
 
             private Boolean CheckRegEx(ASTNode parentNode, ParserState state, String regEx)
@@ -401,7 +529,13 @@ public class Grammar : AbstractNamedElement
                     parentNode.AddChild(new ASTNode(-1, "REGEX", state.Text.Substring(oldPosition, state.Position - oldPosition)));
                     return true;
                 }
+
+                Int32 failurePosition = state.Position < state.Text.Length ? state.Position : state.Text.Length;
                 state.Position = oldPosition;
+                String actual = failurePosition < state.Text.Length
+                    ? $"found {DescribeCharacter(state.Text[failurePosition])}"
+                    : "found end of input";
+                state.ReportFailure($"input matching regex {DescribePattern(regEx)}", oldPosition, actual);
                 return false;
             }
 
@@ -413,7 +547,12 @@ public class Grammar : AbstractNamedElement
                 {
                     if(state.Eof || (state.Text[state.Position] != text[position]))
                     {
+                        Int32 failurePosition = state.Position < state.Text.Length ? state.Position : state.Text.Length;
                         state.Position = oldPosition;
+                        String actual = failurePosition < state.Text.Length
+                            ? $"found {DescribeLiteral(state.Text.Substring(oldPosition, failurePosition - oldPosition + 1))}"
+                            : "found end of input";
+                        state.ReportFailure($"text {DescribeLiteral(text)}", oldPosition, actual);
                         return false;
                     }
                     position++;
@@ -444,17 +583,17 @@ public class Grammar : AbstractNamedElement
             private Boolean CheckOr(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> leftCheck, Func<ASTNode, Boolean> rightCheck)
             {
                 Int32 oldPosition = state.Position;
-                if(leftCheck(parentNode))
-                    return true;
-                if(rightCheck(parentNode))
-                    return true;
+                using(state.SuppressErrors())
+                {
+                    if(leftCheck(parentNode))
+                        return true;
+                }
                 state.Position = oldPosition;
-                return false;
+                return rightCheck(parentNode);
             }
 
             private Boolean Drop(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> check)
             {
-                Int32 oldPosition = state.Position;
                 ASTNode tempNode = new ASTNode(-1, "", "");
                 return check(tempNode);
             }
@@ -462,28 +601,48 @@ public class Grammar : AbstractNamedElement
             private Boolean CheckOneOrMore(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> check)
             {
                 Int32 oldPosition = state.Position;
-                if(check(parentNode))
+                if(!check(parentNode))
+                    return false;
+
+                oldPosition = state.Position;
+                while(!state.Eof)
                 {
-                    oldPosition = state.Position;
-                    while(check(parentNode))
+                    Int32 snapshot = state.Position;
+                    using(state.SuppressErrors())
                     {
-                        oldPosition = state.Position;
+                        if(!check(parentNode))
+                        {
+                            state.Position = snapshot;
+                            break;
+                        }
                     }
-                    state.Position = oldPosition;
-                    return true;
+                    if (state.Position == snapshot)
+                        break;
+                    oldPosition = state.Position;
                 }
                 state.Position = oldPosition;
-                return false;
+                return true;
             }
 
             private Boolean CheckZeroOrMore(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> check)
             {
-                Int32 oldPosition = state.Position;
-                while((!state.Eof) && check(parentNode))
+                Int32 lastSuccessfulPosition = state.Position;
+                while((!state.Eof))
                 {
-                    oldPosition = state.Position;
+                    Int32 snapshot = state.Position;
+                    using(state.SuppressErrors())
+                    {
+                        if(!check(parentNode))
+                        {
+                            state.Position = snapshot;
+                            break;
+                        }
+                    }
+                    if (state.Position == snapshot)
+                        break;
+                    lastSuccessfulPosition = state.Position;
                 }
-                state.Position = oldPosition;
+                state.Position = lastSuccessfulPosition;
                 return true;
             }
 
@@ -493,8 +652,11 @@ public class Grammar : AbstractNamedElement
                 if(leftCheck(parentNode))
                 {
                     state.Position = oldPosition;
-                    if(rightCheck(parentNode))
-                        return true;
+                    using(state.SuppressErrors())
+                    {
+                        if(rightCheck(parentNode))
+                            return true;
+                    }
                 }
                 state.Position = oldPosition;
                 return false;
@@ -504,13 +666,35 @@ public class Grammar : AbstractNamedElement
             {
                 Int32 oldPosition = state.Position;
                 Int32 count = 0;
-                while((count <= maxCount) && check(parentNode))
+
+                while(count < minCount)
                 {
-                    oldPosition = state.Position;
+                    if(!check(parentNode))
+                    {
+                        state.Position = oldPosition;
+                        return false;
+                    }
                     count++;
+                    oldPosition = state.Position;
                 }
-                if(count >= minCount)
-                    return true;
+
+                while((count < maxCount) && !state.Eof)
+                {
+                    Int32 snapshot = state.Position;
+                    using(state.SuppressErrors())
+                    {
+                        if(!check(parentNode))
+                        {
+                            state.Position = snapshot;
+                            break;
+                        }
+                    }
+                    if (state.Position == snapshot)
+                        break;
+                    count++;
+                    oldPosition = state.Position;
+                }
+
                 state.Position = oldPosition;
                 return true;
             }
@@ -519,7 +703,7 @@ public class Grammar : AbstractNamedElement
             {
                 Int32 oldPosition = state.Position;
                 ASTNode tempNode = new ASTNode(-1, "", "");
-                Boolean result =  check(tempNode);
+                Boolean result = check(tempNode);
                 if (result)
                 {
                     tempNode.Text = tempNode.GetText();
