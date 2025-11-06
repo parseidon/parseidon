@@ -53,18 +53,16 @@ static void RunParser(FileInfo grammarFile, FileInfo outputFile, String override
     ValidateFileInput(grammarFile, outputFile, overrideOption);
     ParseidonParser Parser = new ParseidonParser();
     ParseResult parseResult = Parser.Parse(File.ReadAllText(grammarFile.FullName));
+    IVisitResult? visitResult = null;
     if (parseResult.Successful)
-    {
-        IVisitResult visitResult = processResult(parseResult);
-        if (!visitResult.Successful)
-            ProcessMessages(visitResult.Messages);
-    }
-    else
-        ProcessMessages(parseResult.Messages);
+        visitResult = processResult(parseResult);
+    ProcessMessages(visitResult?.Messages);
+    ProcessMessages(parseResult.Messages);
 }
 
-static void ProcessMessages(IReadOnlyList<ParserMessage> messages)
+static void ProcessMessages(IReadOnlyList<ParserMessage>? messages)
 {
+    if (messages == null) return;
     foreach (var message in messages)
         PrintMessage(message.Type, $"({message.Row}:{message.Column}) {message.Message}");
     Environment.Exit(1);
