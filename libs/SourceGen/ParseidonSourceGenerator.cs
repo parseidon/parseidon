@@ -1,5 +1,6 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using Parseidon.Parser;
 using System.Collections.Immutable;
 using System.IO;
 using System.Text;
@@ -70,13 +71,13 @@ public class ParseidonSourceGenerator : IIncrementalGenerator
                 }
 
                 // Generate code using the visitor
-                var visitor = new Parser.CreateCodeVisitor();
+                CreateCodeVisitor visitor = new Parser.CreateCodeVisitor();
                 var visitResult = parseResult.Visit(visitor);
 
-                if (visitResult.Successful && visitResult.Result != null)
+                if (visitResult.Successful && visitResult is CreateCodeVisitor.IGetCode)
                 {
                     // Add the generated source to the compilation
-                    var sourceText = SourceText.From(visitResult.Result, Encoding.UTF8);
+                    var sourceText = SourceText.From((visitResult as CreateCodeVisitor.IGetCode)!.Code ?? String.Empty, Encoding.UTF8);
                     context.AddSource($"{fileName}.g.cs", sourceText);
                 }
                 else

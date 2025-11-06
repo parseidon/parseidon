@@ -6,36 +6,48 @@ using Parseidon.Parser.Grammar.Terminals;
 
 namespace Parseidon.Parser;
 
-public class CreateCodeVisitor : ParseidonParser.Visitor
+public class CreateCodeVisitor : INodeVisitor
 {
-    private String _namespace = String.Empty;
-    private String _className = String.Empty;
-    private String? _visitorResultType;
-    private Grammar.Grammar? _grammar;
-
-    private ScopedStack<AbstractGrammarElement> _stack = new ScopedStack<AbstractGrammarElement>();
-
-    public override ParseidonParser.Visitor.ProcessNodeResult Visit(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
+    public interface IGetCode
     {
-        _stack.EnterScope();
-        ParseidonParser.Visitor.ProcessNodeResult result = base.Visit(node, messages);
-        _stack.ExitScope();
-        return result;
+        String? Code { get; }
     }
 
-    private T Pop<T>() where T : AbstractGrammarElement
+    private class CreateCodeVisitorContext
     {
-        AbstractGrammarElement lastElement = _stack.Pop();
+        internal ScopedStack<AbstractGrammarElement> Stack { get; } = new ScopedStack<AbstractGrammarElement>();
+        internal String Namespace { get; set; } = String.Empty;
+        internal String ClassName { get; set; } = String.Empty;
+        internal Grammar.Grammar? Grammar { get; set; }
+    }
+
+    private class CreateCodeVisitResult : IVisitResult, IGetCode
+    {
+        public CreateCodeVisitResult(Boolean successful, IReadOnlyList<ParserMessage> messages, String? code)
+        {
+            Successful = successful;
+            Messages = messages;
+            Code = code;
+        }
+
+        public Boolean Successful { get; }
+        public IReadOnlyList<ParserMessage> Messages { get; }
+        public String? Code { get; }
+    }
+
+    private T Pop<T>(CreateCodeVisitorContext context) where T : AbstractGrammarElement
+    {
+        AbstractGrammarElement lastElement = context.Stack.Pop();
         if (!(lastElement is T))
             throw new Exception("Expected " + typeof(T).Name + " GOT " + ((Type)lastElement.GetType()).Name);
         return (T)lastElement;
     }
 
-    private T? TryPop<T>() where T : AbstractGrammarElement
+    private T? TryPop<T>(CreateCodeVisitorContext context) where T : AbstractGrammarElement
     {
-        if (_stack.TryPeek() is T)
+        if (context.Stack.TryPeek() is T)
         {
-            AbstractGrammarElement lastElement = _stack.Pop();
+            AbstractGrammarElement lastElement = context.Stack.Pop();
             if (!(lastElement is T))
                 throw new Exception("Expected " + typeof(T).Name + " GOT " + ((Type)lastElement.GetType()).Name);
             return (T)lastElement;
@@ -44,89 +56,87 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
             return null;
     }
 
-    private List<T> PopList<T>() where T : AbstractGrammarElement
+    private List<T> PopList<T>(CreateCodeVisitorContext context) where T : AbstractGrammarElement
     {
         List<T> resultList = new List<T>();
-        while (_stack.TryPeek() is T)
-            resultList.Add((T)_stack.Pop());
+        while (context.Stack.TryPeek() is T)
+            resultList.Add((T)context.Stack.Pop());
         return resultList;
     }
 
-    private void Push(AbstractGrammarElement element)
+    private void Push(CreateCodeVisitorContext context, AbstractGrammarElement element)
     {
-        _stack.Push(element);
+        context.Stack.Push(element);
     }
 
-    public override String? GetResult(IList<ParseidonParser.ParserMessage> messages)
+    public ProcessNodeResult ProcessGrammarNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
-        return _grammar is not null ? _grammar.ToString() : null;
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        List<SimpleRule> rules = PopList<SimpleRule>(typedContext);
+        typedContext.Grammar = new Grammar.Grammar(typedContext.Namespace, typedContext.ClassName, rules);
+        return ProcessNodeResult.Success;
     }
-
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessGrammarNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
+    public ProcessNodeResult ProcessNamespaceNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
-        List<SimpleRule> rules = PopList<SimpleRule>();
-        _grammar = new Grammar.Grammar(_namespace, _className, _visitorResultType, rules);
-        return ParseidonParser.Visitor.ProcessNodeResult.Success;
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        ReferenceElement name = Pop<ReferenceElement>(typedContext);
+        typedContext.Namespace = name.ReferenceName;
+        return ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessNamespaceNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
+    public ProcessNodeResult ProcessClassNameNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
-        ReferenceElement name = Pop<ReferenceElement>();
-        _namespace = name.ReferenceName;
-        return ParseidonParser.Visitor.ProcessNodeResult.Success;
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        ReferenceElement name = Pop<ReferenceElement>(typedContext);
+        typedContext.ClassName = name.ReferenceName;
+        return ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessClassNameNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
+    public ProcessNodeResult ProcessIsTerminalNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
-        ReferenceElement name = Pop<ReferenceElement>();
-        _className = name.ReferenceName;
-        return ParseidonParser.Visitor.ProcessNodeResult.Success;
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        Push(typedContext, new IsTerminalMarker(null));
+        return ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessVisitorResultNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
+    public ProcessNodeResult ProcessDropNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
-        ReferenceElement name = Pop<ReferenceElement>();
-        _visitorResultType = name.ReferenceName;
-        return ParseidonParser.Visitor.ProcessNodeResult.Success;
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        Push(typedContext, new DropMarker(null));
+        return ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessIsTerminalNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
+    public ProcessNodeResult ProcessDefinitionNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
-        Push(new IsTerminalMarker(null));
-        return ParseidonParser.Visitor.ProcessNodeResult.Success;
-    }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessDropNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
-    {
-        Push(new DropMarker(null));
-        return ParseidonParser.Visitor.ProcessNodeResult.Success;
-    }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessDefinitionNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
-    {
-        AbstractGrammarElement definition = Pop<AbstractGrammarElement>();
-        ReferenceElement name = Pop<ReferenceElement>();
-        AbstractMarker? marker = TryPop<AbstractMarker>();
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        AbstractGrammarElement definition = Pop<AbstractGrammarElement>(typedContext);
+        ReferenceElement name = Pop<ReferenceElement>(typedContext);
+        AbstractMarker? marker = TryPop<AbstractMarker>(typedContext);
         if (marker is not null)
         {
             marker.Element = definition;
             definition = marker;
         }
-        Push(new SimpleRule(name.ReferenceName, definition));
-        return ParseidonParser.Visitor.ProcessNodeResult.Success;
+        Push(typedContext, new SimpleRule(name.ReferenceName, definition));
+        return ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessIdentifierNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
+    public ProcessNodeResult ProcessIdentifierNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
-        Push(new ReferenceElement(node.Text.Trim()));
-        return ParseidonParser.Visitor.ProcessNodeResult.Success;
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        Push(typedContext, new ReferenceElement(node.Text.Trim()));
+        return ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessCSIdentifierNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
+    public ProcessNodeResult ProcessCSIdentifierNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
-        Push(new ReferenceElement(node.Text.Trim()));
-        return ParseidonParser.Visitor.ProcessNodeResult.Success;
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        Push(typedContext, new ReferenceElement(node.Text.Trim()));
+        return ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessExpressionNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
+    public ProcessNodeResult ProcessExpressionNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
-        List<AbstractDefinitionElement> elements = PopList<AbstractDefinitionElement>();
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        List<AbstractDefinitionElement> elements = PopList<AbstractDefinitionElement>(typedContext);
         if (elements.Count < 1)
             throw new Exception("There must be an expression");
         else if (elements.Count == 1)
         {
-            Push(elements[0]);
+            Push(typedContext, elements[0]);
         }
         else
         {
@@ -136,18 +146,19 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
                 AbstractGrammarElement leftElement = new OrOperator(elements[i], rightElement);
                 rightElement = leftElement;
             }
-            Push(rightElement);
+            Push(typedContext, rightElement);
         }
-        return ParseidonParser.Visitor.ProcessNodeResult.Success;
+        return ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessSequenceNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
+    public ProcessNodeResult ProcessSequenceNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
-        List<AbstractDefinitionElement> elements = PopList<AbstractDefinitionElement>();
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        List<AbstractDefinitionElement> elements = PopList<AbstractDefinitionElement>(typedContext);
         if (elements.Count < 1)
             throw new Exception("There must be an expression");
         else if (elements.Count == 1)
         {
-            Push(elements[0]);
+            Push(typedContext, elements[0]);
         }
         else
         {
@@ -157,69 +168,101 @@ public class CreateCodeVisitor : ParseidonParser.Visitor
                 AbstractGrammarElement leftElement = new AndOperator(elements[i], rightElement);
                 rightElement = leftElement;
             }
-            Push(rightElement);
+            Push(typedContext, rightElement);
         }
-        return ParseidonParser.Visitor.ProcessNodeResult.Success;
+        return ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessPrefixNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
+    public ProcessNodeResult ProcessPrefixNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
-        AbstractGrammarElement element = Pop<AbstractGrammarElement>();
-        AbstractMarker? marker = TryPop<AbstractMarker>();
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        AbstractGrammarElement element = Pop<AbstractGrammarElement>(typedContext);
+        AbstractMarker? marker = TryPop<AbstractMarker>(typedContext);
         // element.Drop = marker is DropMarker;
         if (marker is not null)
         {
             marker.Element = element;
             element = marker;
         }
-        Push(element);
-        return ParseidonParser.Visitor.ProcessNodeResult.Success;
+        Push(typedContext, element);
+        return ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessSuffixNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
+    public ProcessNodeResult ProcessSuffixNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
-        AbstractOneChildOperator? suffixOperator = TryPop<AbstractOneChildOperator>();
-        AbstractGrammarElement element = Pop<AbstractGrammarElement>();
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        AbstractOneChildOperator? suffixOperator = TryPop<AbstractOneChildOperator>(typedContext);
+        AbstractGrammarElement element = Pop<AbstractGrammarElement>(typedContext);
         if (suffixOperator is not null)
         {
             suffixOperator.Element = element;
             element = suffixOperator;
         }
-        Push(element);
-        return ParseidonParser.Visitor.ProcessNodeResult.Success;
+        Push(typedContext, element);
+        return ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessPrimaryNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
+    public ProcessNodeResult ProcessPrimaryNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
-        Push(new DefinitionElement(Pop<AbstractGrammarElement>()));
-        return ParseidonParser.Visitor.ProcessNodeResult.Success;
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        Push(typedContext, new DefinitionElement(Pop<AbstractGrammarElement>(typedContext)));
+        return ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessLiteralNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
+    public ProcessNodeResult ProcessLiteralNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
-        Push(new TextTerminal(node.Text));
-        return ParseidonParser.Visitor.ProcessNodeResult.Success;
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        Push(typedContext, new TextTerminal(node.Text));
+        return ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessRegexNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
+    public ProcessNodeResult ProcessRegexNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
-        Push(new RegExTerminal(node.Text));
-        return ParseidonParser.Visitor.ProcessNodeResult.Success;
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        Push(typedContext, new RegExTerminal(node.Text));
+        return ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessDotNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
+    public ProcessNodeResult ProcessDotNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
-        Push(new RegExTerminal("."));
-        return ParseidonParser.Visitor.ProcessNodeResult.Success;
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        Push(typedContext, new RegExTerminal("."));
+        return ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessOptionalNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
+    public ProcessNodeResult ProcessOptionalNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
-        Push(new OptionalOperator(null));
-        return ParseidonParser.Visitor.ProcessNodeResult.Success;
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        Push(typedContext, new OptionalOperator(null));
+        return ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessZeroOrMoreNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
+    public ProcessNodeResult ProcessZeroOrMoreNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
-        Push(new ZeroOrMoreOperator(null));
-        return ParseidonParser.Visitor.ProcessNodeResult.Success;
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        Push(typedContext, new ZeroOrMoreOperator(null));
+        return ProcessNodeResult.Success;
     }
-    public override ParseidonParser.Visitor.ProcessNodeResult ProcessOneOrMoreNode(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
+    public ProcessNodeResult ProcessOneOrMoreNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
-        Push(new OneOrMoreOperator(null));
-        return ParseidonParser.Visitor.ProcessNodeResult.Success;
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        Push(typedContext, new OneOrMoreOperator(null));
+        return ProcessNodeResult.Success;
+    }
+
+    public void BeginVisit(Object context, ASTNode node)
+    {
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        typedContext.Stack.EnterScope();
+    }
+
+    public void EndVisit(Object context, ASTNode node)
+    {
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        typedContext.Stack.ExitScope();
+    }
+
+    public object GetContext(ParseResult parseResult)
+    {
+        return new CreateCodeVisitorContext();
+    }
+
+    public IVisitResult GetResult(object context, Boolean successful, IReadOnlyList<ParserMessage> messages)
+    {
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        return new CreateCodeVisitResult(successful, messages, typedContext.Grammar is not null ? typedContext.Grammar.ToString() : String.Empty);
     }
 }
 

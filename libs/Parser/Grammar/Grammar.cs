@@ -8,14 +8,12 @@ namespace Parseidon.Parser.Grammar;
 public class Grammar : AbstractNamedElement
 {
     private String _namespace;
-    private String? _visitorResultType;
 
-    public Grammar(String nameSpace, String className, String? visitorResultType, List<SimpleRule> rules) : base(className)
+    public Grammar(String nameSpace, String className, List<SimpleRule> rules) : base(className)
     {
         Rules = rules;
         Rules.ForEach((element) => element.Parent = this);
         _namespace = nameSpace;
-        _visitorResultType = visitorResultType;
     }
 
     public List<SimpleRule> Rules { get; }
@@ -31,10 +29,14 @@ public class Grammar : AbstractNamedElement
 
             namespace {{_namespace}}
             {
+            {{Indent(GetIVisitorCode())}}
+
+            {{Indent(GetParseResultCode())}}
+
+            {{Indent(GetGlobalClassesCode())}}
+
                 public class {{Name}}
                 {
-            {{Indent(Indent(GetVisitorCode()))}}
-
             {{Indent(Indent(GetParseCode()))}}
 
             {{Indent(Indent(GetBasicCode()))}}
@@ -175,6 +177,94 @@ public class Grammar : AbstractNamedElement
         return builder.ToString();
     }
 
+    protected String GetParseResultCode()
+    {
+        String GetEventName(SimpleRule rule) => $"Process{rule.Name.Humanize().Dehumanize()}Node";
+        SimpleRule rootRule = GetRootRule();
+        List<SimpleRule> usedRules = GetRelevantGrammarRules();
+        String visitorCalls = "";
+        foreach (SimpleRule rule in usedRules)
+            visitorCalls += $"case {GetElementIdOf(rule)}: return visitor.{GetEventName(rule)}(context, node, messages);\n";
+
+        String result =
+            $$"""
+            public class ParseResult
+            {
+                private class EmptyResult : IVisitResult
+                {
+                    public EmptyResult(Boolean successful, IReadOnlyList<ParserMessage> messages)
+                    {
+                        Successful = successful;
+                        Messages = messages;
+                    }
+                    public Boolean Successful { get; }
+                    public IReadOnlyList<ParserMessage> Messages { get; }
+                }
+
+                public ParseResult(ASTNode? rootNode, IReadOnlyList<ParserMessage> messages)
+                {
+                    RootNode = rootNode;
+                    Messages = new List<ParserMessage>(messages);
+                }
+
+                public Boolean Successful { get => RootNode is not null; }
+                public ASTNode? RootNode { get; }
+                public IReadOnlyList<ParserMessage> Messages { get; }
+
+                public IVisitResult Visit(IVisitor visitor)
+                {
+                    if (visitor is null)
+                        throw new ArgumentNullException(nameof(visitor));
+                    List<ParserMessage> visitMessages = new List<ParserMessage>();
+                    if (Successful)
+                    {
+                        try
+                        {
+                            Object context = visitor.GetContext(this);
+                            if (visitor is INodeVisitor)
+                                DoVisit(context, (visitor as INodeVisitor)!, RootNode!, visitMessages);
+                            return visitor.GetResult(context, true, visitMessages);
+                        }
+                        catch (Exception ex)
+                        {
+                            visitMessages.Add(new ParserMessage(ex.Message, ParserMessage.MessageType.Error, 0, 0));
+                        }
+                    }
+                    return new EmptyResult(false, visitMessages);;
+                }
+
+                private ProcessNodeResult DoVisit(Object context, INodeVisitor visitor, ASTNode node, IList<ParserMessage> messages)
+                {
+                    visitor.BeginVisit(context, node);
+                    try
+                    {
+                        if (node == null)
+                            return ProcessNodeResult.Error;
+                        Boolean result = true;
+                        foreach (ASTNode child in node.Children)
+                            result = result && (DoVisit(context, visitor, child, messages) == ProcessNodeResult.Success);
+                        result = result && (CallEvent(context, visitor, node.TokenId, node, messages) == ProcessNodeResult.Success);
+                        return result ? ProcessNodeResult.Success : ProcessNodeResult.Error;
+                    }
+                    finally
+                    {
+                        visitor.EndVisit(context, node);
+                    }
+                }        
+
+                private ProcessNodeResult CallEvent(Object context, INodeVisitor visitor, Int32 tokenId, ASTNode node, IList<ParserMessage> messages)
+                {
+                    switch(tokenId)
+                    {
+            {{Indent(Indent(Indent(visitorCalls)))}}
+                    }
+                    return ProcessNodeResult.Success;
+                }                        
+            }
+            """;
+        return result;
+    }
+
     protected String GetParseCode()
     {
         SimpleRule rootRule = GetRootRule();
@@ -186,27 +276,6 @@ public class Grammar : AbstractNamedElement
                 ASTNode actualNode = new ASTNode(-1, "ROOT", "");
                 Boolean successful = {{rootRule.GetReferenceCode(this)}};
                 return new ParseResult(successful ? actualNode : null, state.Messages);
-            }
-
-            public class ParseResult
-            {
-                public ParseResult(ASTNode? rootNode, IReadOnlyList<ParserMessage> messages)
-                {
-                    RootNode = rootNode;
-                    Messages = new List<ParserMessage>(messages);
-                }
-
-                public Boolean Successful { get => RootNode is not null; }
-                public ASTNode? RootNode { get; }
-                public IReadOnlyList<ParserMessage> Messages { get; }
-
-                public Visitor.VisitResult Visit(Visitor visitor)
-                {
-                    if(visitor is null)
-                        throw new ArgumentNullException(nameof(visitor));
-                    List<ParserMessage> visitMessages = new List<ParserMessage>();
-                    return new Visitor.VisitResult(Successful ? visitor.Visit(RootNode!, visitMessages) == Visitor.ProcessNodeResult.Success : false, {{(_visitorResultType is null ? String.Empty : "visitor.GetResult(visitMessages), ")}}visitMessages);
-                }
             }
             """;
         return result;
@@ -220,66 +289,40 @@ public class Grammar : AbstractNamedElement
         return Indent(Indent(result));
     }
 
-    protected String GetVisitorCode()
+    protected String GetIVisitorCode()
     {
         String GetEventName(SimpleRule rule) => $"Process{rule.Name.Humanize().Dehumanize()}Node";
-
         List<SimpleRule> usedRules = GetRelevantGrammarRules();
         String visitorEvents = "";
-
         foreach (SimpleRule rule in usedRules)
-            visitorEvents += $"public virtual {Name}.Visitor.ProcessNodeResult {GetEventName(rule)}({Name}.ASTNode node, IList<{Name}.ParserMessage> messages) => ProcessNodeResult.Success;\n";
-        String visitorCalls = "";
-        foreach (SimpleRule rule in usedRules)
-            visitorCalls += $"case {GetElementIdOf(rule)}: return {GetEventName(rule)}(node, messages);\n";
+            visitorEvents += $"ProcessNodeResult {GetEventName(rule)}(Object context, ASTNode node, IList<ParserMessage> messages);\n";
         String result =
             $$"""
-            public class Visitor
+            public interface IVisitResult
+            {
+                Boolean Successful { get; }
+                IReadOnlyList<ParserMessage> Messages { get; }
+            }
+            
+            public interface IVisitor
+            {
+                Object GetContext(ParseResult parseResult);
+                IVisitResult GetResult(Object context, Boolean successful, IReadOnlyList<ParserMessage> messages);
+            }
+
+            public interface INodeVisitor : IVisitor
             {
             {{Indent(visitorEvents)}}
-            
-                public virtual {{Name}}.Visitor.ProcessNodeResult Visit({{Name}}.ASTNode node, IList<{{Name}}.ParserMessage> messages)
-                {
-                    if(node == null)
-                        return ProcessNodeResult.Error;
-                    Boolean result = true;
-                    foreach(ASTNode child in node.Children)
-                        result = result && (Visit(child, messages) == ProcessNodeResult.Success);
-                    result = result && (CallEvent(node.TokenId, node, messages) == ProcessNodeResult.Success);
-                    return result ? ProcessNodeResult.Success : ProcessNodeResult.Error;
-                }
-            
-                public virtual {{Name}}.Visitor.ProcessNodeResult CallEvent(Int32 tokenId, {{Name}}.ASTNode node, IList<{{Name}}.ParserMessage> messages)
-                {
-                    switch(tokenId)
-                    {
-            {{Indent(Indent(Indent(visitorCalls)))}}
-                    }
-                    return ProcessNodeResult.Success;
-                }
+                void BeginVisit(Object context, ASTNode node);
+                void EndVisit(Object context, ASTNode node);
+            }   
 
-                {{(_visitorResultType is null ? String.Empty : $"public virtual {_visitorResultType}? GetResult(IList<{Name}.ParserMessage> messages) => null;")}}
+            public enum ProcessNodeResult
+            {
+                Success,
+                Error
+            }            
 
-                public class VisitResult
-                {
-                    public VisitResult(Boolean successful, {{(_visitorResultType is null ? String.Empty : $"{_visitorResultType}? result, ")}}IReadOnlyList<ParserMessage> messages)
-                    {
-                        Successful = successful;
-                        Messages = messages;
-                        {{(_visitorResultType is null ? String.Empty : $"Result = result;")}}
-                    }
-
-                    public Boolean Successful { get; }
-                    {{(_visitorResultType is null ? String.Empty : $"public {_visitorResultType}? Result {{ get; }}")}}
-                    public IReadOnlyList<ParserMessage> Messages { get; }
-                }
-
-                public enum ProcessNodeResult
-                {
-                    Success,
-                    Error
-                }
-            }
             """;
         return result;
     }
@@ -288,99 +331,6 @@ public class Grammar : AbstractNamedElement
     {
         String result =
             $$"""
-            public class ASTNode
-            {
-                private List<ASTNode> _children { get; } = new List<ASTNode>();
-                private ASTNode? _parent = null;
-
-                public String Text { get; internal set; }
-                public String Name { get; private set; }
-                public IReadOnlyList<ASTNode> Children { get => _children; } 
-                public Int32 TokenId { get; private set; }
-                public Int32 Position { get; internal set; }
-                public ASTNode? Parent { get => _parent; }
-
-                internal ASTNode(Int32 tokenId, String name, String text)
-                {
-                    Text = text;
-                    TokenId = tokenId;
-                    Name = name;
-                }
-
-                internal void AssignFrom(ASTNode node)
-                {
-                    Int32 nodeIndex = _children.IndexOf(node);
-                    if (nodeIndex >= 0)
-                    {
-                        Text = node.Text;
-                        TokenId = node.TokenId;
-                        Position = node.Position;
-                        List<ASTNode> tempChildren = new List<ASTNode>(node.Children);
-                        foreach(ASTNode child in tempChildren)
-                        {
-                            child.SetParent(this, nodeIndex);
-                            nodeIndex++;
-                        }
-                        _children.Remove(node);
-                    }
-                }
-                 
-                internal String GetText()
-                {
-                    if (Children.Count > 0)
-                        return String.Join("", Children.Select(x => x.GetText()));
-                    else
-                        return Text;
-                }
-
-                internal void SetParent(ASTNode? parent, Int32 index = -1)
-                {
-                    if(_parent != null)
-                        _parent._children.Remove(this);
-                    _parent = parent;
-                    if(_parent != null)
-                    {
-                        if(index < 0)
-                            _parent._children.Add(this);
-                        else
-                            _parent._children.Insert(index, this);
-                    }
-                }
-                
-                internal void AddChild(ASTNode? child)
-                {
-                    if(child != null)
-                        _children.Add(child);
-                }
-            
-                internal void ClearChildren()
-                {
-                    _children.Clear();
-                }
-            }
-
-            public class ParserMessage
-            {
-                public enum MessageType
-                {
-                    Warning,
-                    Error
-                }
-
-                public ParserMessage(String message, MessageType type, UInt32 row, UInt32 collumn)
-                {
-                    Message = message;
-                    Row = row;
-                    Collumn = collumn;
-                    Type = type;
-                }
-
-                public String Message { get; }
-                public UInt32 Row { get; }
-                public UInt32 Collumn { get; }
-                public MessageType Type { get; }
-            }
-
             private class ParserState
             {
                 public ParserState(String text)
@@ -733,4 +683,105 @@ public class Grammar : AbstractNamedElement
             """;
         return result;
     }
+
+    protected String GetGlobalClassesCode()
+    {
+        String result =
+            $$"""
+            public class ASTNode
+            {
+                private List<ASTNode> _children { get; } = new List<ASTNode>();
+                private ASTNode? _parent = null;
+
+                public String Text { get; internal set; }
+                public String Name { get; private set; }
+                public IReadOnlyList<ASTNode> Children { get => _children; } 
+                public Int32 TokenId { get; private set; }
+                public Int32 Position { get; internal set; }
+                public ASTNode? Parent { get => _parent; }
+
+                internal ASTNode(Int32 tokenId, String name, String text)
+                {
+                    Text = text;
+                    TokenId = tokenId;
+                    Name = name;
+                }
+
+                internal void AssignFrom(ASTNode node)
+                {
+                    Int32 nodeIndex = _children.IndexOf(node);
+                    if (nodeIndex >= 0)
+                    {
+                        Text = node.Text;
+                        TokenId = node.TokenId;
+                        Position = node.Position;
+                        List<ASTNode> tempChildren = new List<ASTNode>(node.Children);
+                        foreach(ASTNode child in tempChildren)
+                        {
+                            child.SetParent(this, nodeIndex);
+                            nodeIndex++;
+                        }
+                        _children.Remove(node);
+                    }
+                }
+                 
+                internal String GetText()
+                {
+                    if (Children.Count > 0)
+                        return String.Join("", Children.Select(x => x.GetText()));
+                    else
+                        return Text;
+                }
+
+                internal void SetParent(ASTNode? parent, Int32 index = -1)
+                {
+                    if(_parent != null)
+                        _parent._children.Remove(this);
+                    _parent = parent;
+                    if(_parent != null)
+                    {
+                        if(index < 0)
+                            _parent._children.Add(this);
+                        else
+                            _parent._children.Insert(index, this);
+                    }
+                }
+                
+                internal void AddChild(ASTNode? child)
+                {
+                    if(child != null)
+                        _children.Add(child);
+                }
+            
+                internal void ClearChildren()
+                {
+                    _children.Clear();
+                }
+            }
+
+            public class ParserMessage
+            {
+                public enum MessageType
+                {
+                    Warning,
+                    Error
+                }
+
+                public ParserMessage(String message, MessageType type, UInt32 row, UInt32 collumn)
+                {
+                    Message = message;
+                    Row = row;
+                    Collumn = collumn;
+                    Type = type;
+                }
+
+                public String Message { get; }
+                public UInt32 Row { get; }
+                public UInt32 Collumn { get; }
+                public MessageType Type { get; }
+            }
+            """;
+        return result;
+    }
+
 }

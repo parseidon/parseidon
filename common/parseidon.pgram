@@ -1,12 +1,10 @@
 @namespace Parseidon.Parser;
 @class ParseidonParser;
-@visitorresult String;
 
 Grammar         = Config Definition+;
-Config          = Namespace ClassName VisitorResult?;
+Config          = Namespace ClassName;
 Namespace       = Spacing !'@namespace' Spacing CSIdentifier LineEnd;
 ClassName       = Spacing !'@class' Spacing CSIdentifier LineEnd;
-VisitorResult   = Spacing !'@visitorresult' Spacing CSIdentifier LineEnd;
 Definition      = Spacing (IsTerminal / Drop)? Identifier !Equal Expression LineEnd;
 Expression      = Sequence (Or Sequence)*;
 Sequence        = Prefix*;

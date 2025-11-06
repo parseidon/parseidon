@@ -4,13 +4,45 @@ using Parseidon.Parser;
 
 namespace Parseidon.Cli;
 
-public class RenderASTVisitor : ParseidonParser.Visitor
+public class RenderASTVisitor : IVisitor
 {
-    private String? _ast;
-
-    public override ParseidonParser.Visitor.ProcessNodeResult Visit(ParseidonParser.ASTNode node, IList<ParseidonParser.ParserMessage> messages)
+    public interface IGetAST
     {
-        static void PrintNode(ParseidonParser.ASTNode node, bool[] crossings, StringBuilder stringBuilder)
+        String? AST { get; }
+    }
+
+    private class RenderASTVisitorContext
+    {
+        public RenderASTVisitorContext(ParseResult parseResult)
+        {
+            ParseResult = parseResult;
+        }
+
+        public ParseResult ParseResult { get; }
+    }
+
+    private class RenderASTVisitorResult : IVisitResult, IGetAST
+    {
+        public RenderASTVisitorResult(Boolean successful, IReadOnlyList<ParserMessage> messages, String? ast)
+        {
+            Successful = successful;
+            Messages = messages;
+            AST = ast;
+        }
+
+        public Boolean Successful { get; }
+        public IReadOnlyList<ParserMessage> Messages { get; }
+        public String? AST { get; }
+    }
+
+    public Object GetContext(ParseResult parseResult)
+    {
+        return new RenderASTVisitorContext(parseResult);
+    }
+
+    public IVisitResult GetResult(object context, bool successful, IReadOnlyList<ParserMessage> messages)
+    {
+        static void PrintNode(ASTNode node, bool[] crossings, StringBuilder stringBuilder)
         {
             for (int i = 0; i < crossings.Length - 1; i++)
                 stringBuilder.Append(crossings[i] ? "  " : "  ");
@@ -29,14 +61,10 @@ public class RenderASTVisitor : ParseidonParser.Visitor
             }
         }
 
+        var typedContext = context as RenderASTVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
         StringBuilder stringBuilder = new StringBuilder();
-        PrintNode(node, new bool[] { }, stringBuilder);
-        _ast = stringBuilder.ToString();
-        return ParseidonParser.Visitor.ProcessNodeResult.Success;
-    }
-
-    public override String? GetResult(IList<ParseidonParser.ParserMessage> messages)
-    {
-        return _ast;
+        if (typedContext.ParseResult is not null)
+            PrintNode(typedContext.ParseResult.RootNode!, new bool[] { }, stringBuilder);
+        return new RenderASTVisitorResult(successful, messages, stringBuilder.ToString());
     }
 }
