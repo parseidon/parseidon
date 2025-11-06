@@ -382,6 +382,7 @@ public class Grammar : AbstractNamedElement
                 private Int32 _lastErrorPosition = -1;
                 private String? _lastExpected;
                 private String? _lastActual;
+                private readonly List<String> _terminalNames = new List<String>();
 
                 internal String Text { get; }
                 internal Int32 Position { get; set; } = 0;
@@ -389,6 +390,28 @@ public class Grammar : AbstractNamedElement
                 internal List<ParserMessage> Messages { get; } = new List<ParserMessage>();
                 internal Boolean AreErrorsSuppressed => _errorSuppressionDepth > 0;
                 internal MessageContext MessageContext { get; }
+
+                private String? GetCurrentTerminalName()
+                {
+                    return _terminalNames.Count > 0 ? _terminalNames[_terminalNames.Count - 1] : null;
+                }
+
+                public TerminalScope EnterTerminal(String? ruleName)
+                {
+                    Boolean pushed = false;
+                    if (!String.IsNullOrWhiteSpace(ruleName))
+                    {
+                        _terminalNames.Add(ruleName!);
+                        pushed = true;
+                    }
+                    return new TerminalScope(this, pushed);
+                }
+
+                private void LeaveTerminal(Boolean shouldPop)
+                {
+                    if (shouldPop && (_terminalNames.Count > 0))
+                        _terminalNames.RemoveAt(_terminalNames.Count - 1);
+                }
 
                 public ErrorSuppressionScope SuppressErrors()
                 {
@@ -408,6 +431,10 @@ public class Grammar : AbstractNamedElement
                 {
                     if (AreErrorsSuppressed)
                         return;
+
+                    String? terminalOverride = GetCurrentTerminalName();
+                    if (!String.IsNullOrWhiteSpace(terminalOverride))
+                        expected = terminalOverride!;
 
                     if ((_lastErrorPosition == position) &&
                         String.Equals(_lastExpected, expected, StringComparison.Ordinal) &&
@@ -439,6 +466,23 @@ public class Grammar : AbstractNamedElement
                     public void Dispose()
                     {
                         _state.EndErrorSuppression();
+                    }
+                }
+
+                public readonly struct TerminalScope : IDisposable
+                {
+                    private readonly ParserState _state;
+                    private readonly Boolean _shouldPop;
+
+                    internal TerminalScope(ParserState state, Boolean shouldPop)
+                    {
+                        _state = state;
+                        _shouldPop = shouldPop;
+                    }
+
+                    public void Dispose()
+                    {
+                        _state.LeaveTerminal(_shouldPop);
                     }
                 }
             }
@@ -669,15 +713,18 @@ public class Grammar : AbstractNamedElement
             private Boolean MakeTerminal(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> check)
             {
                 Int32 oldPosition = state.Position;
-                ASTNode tempNode = new ASTNode(-1, "", "", state.Position);
-                Boolean result = check(tempNode);
-                if (result)
+                using (state.EnterTerminal(parentNode.Name))
                 {
-                    tempNode.Text = tempNode.GetText();
-                    tempNode.ClearChildren();
-                    parentNode.Text = tempNode.GetText();
+                    ASTNode tempNode = new ASTNode(-1, "", "", state.Position);
+                    Boolean result = check(tempNode);
+                    if (result)
+                    {
+                        tempNode.Text = tempNode.GetText();
+                        tempNode.ClearChildren();
+                        parentNode.Text = tempNode.GetText();
+                    }
+                    return result;
                 }
-                return result;
             }
 
             private Boolean PromoteAction(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> check)
