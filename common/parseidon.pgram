@@ -2,56 +2,56 @@
 @class ParseidonParser;
 @rootnode Grammar;
 
-Grammar         = Config Definition+;
-Config          = Namespace ClassName RootNode;
-Namespace       = Spacing !'@namespace' Spacing CSIdentifier LineEnd;
-ClassName       = Spacing !'@class' Spacing CSIdentifier LineEnd;
-RootNode        = Spacing !'@rootnode' Spacing Identifier LineEnd;
-Definition      = Spacing (IsTerminal / Drop)? Identifier !Equal Expression LineEnd;
-Expression      = Sequence (Or Sequence)*;
-Sequence        = Prefix*;
-Prefix          = Drop? Suffix;
-Suffix          = Primary (Optional / ZeroOrMore / OneOrMore)?;
-Primary         = Identifier
-                / Literal
-                / !BracketOpen Expression !BracketClose
-                / Regex
-                / Dot;  
-$Identifier     = IdentStart IdentCont Spacing;
-IdentStart      = [a-zA-Z_];
-IdentCont       = [a-zA-Z0-9_]*;
-$CSIdentifier   = IdentStart CSIdentCont Spacing;
-CSIdentCont     = [a-zA-Z0-9_.]*;
-$Literal        = ((!'\'' Char*  !'\'') / ('"' Char* '"')) Spacing ;
-Char            = [^'\\] / '\\\'' / '\\\\' / EscapeChars;
-$Regex          = '[' ( [^\\\[\]] / '\\[' / '\\]' / '\\-' / '\\^' / '\\\\' / EscapeChars )+ ']' ('{' Number '}')? Spacing;
+Grammar             = Config Definition+;
+Config              = Namespace ClassName RootNode;
+Namespace           = Spacing !'@namespace' Spacing CSharpIdentifier LineEnd;
+ClassName           = Spacing !'@class' Spacing CSharpIdentifier LineEnd;
+RootNode            = Spacing !'@rootnode' Spacing Identifier LineEnd;
+Definition          = Spacing (IsTerminal / Drop)? Identifier !Equal Expression LineEnd;
+Expression          = Sequence (Or Sequence)*;
+Sequence            = Prefix*;
+Prefix              = Drop? Suffix;
+Suffix              = Primary (Optional / ZeroOrMore / OneOrMore)?;
+Primary             = Identifier
+                    / Literal
+                    / !BracketOpen Expression !BracketClose
+                    / Regex
+                    / Dot;  
+$Identifier         = IdentStart IdentCont Spacing;
+IdentStart          = [a-zA-Z_];
+IdentCont           = [a-zA-Z0-9_]*;
+$CSharpIdentifier   = IdentStart CSharpIdentCont Spacing;
+CSharpIdentCont     = [a-zA-Z0-9_.]*;
+$Literal            = ((!'\'' Char*  !'\'') / ('"' Char* '"')) Spacing ;
+Char                = [^'\\] / '\\\'' / '\\\\' / EscapeChars;
+$Regex              = '[' ( [^\\\[\]] / '\\[' / '\\]' / '\\-' / '\\^' / '\\\\' / EscapeChars )+ ']' ('{' Number '}')? Spacing;
 
-Or              = '/' Spacing;
-Optional        = '?' Spacing;
-ZeroOrMore      = '*' Spacing;
-OneOrMore       = '+' Spacing;
-Drop            = '!' Spacing;
-IsTerminal      = '$' Spacing;
+Or                  = '/' Spacing;
+Optional            = '?' Spacing;
+ZeroOrMore          = '*' Spacing;
+OneOrMore           = '+' Spacing;
+Drop                = '!' Spacing;
+IsTerminal          = '$' Spacing;
 
-EscapeChars     = '\\0'
-                / '\\a'
-                / '\\b' 
-                / '\\f'
-                / '\\n'
-                / '\\r'
-                / '\\t' 
-                / '\\v' 
-                / ('\\u' [0-9a-fA-F]{4})
-                / ('\\u' [0-9a-fA-F]{8})
-                ;
+EscapeChars         = '\\0'
+                    / '\\a'
+                    / '\\b' 
+                    / '\\f'
+                    / '\\n'
+                    / '\\r'
+                    / '\\t' 
+                    / '\\v' 
+                    / ('\\u' [0-9a-fA-F]{4})
+                    / ('\\u' [0-9a-fA-F]{8})
+                    ;
 
-Equal           = '=' Spacing;
-!LineEnd        = Spacing ';';
-Dot             = '.' Spacing;
-!Spacing        = (NewLine / WhiteSpace / Comment)* ;
-WhiteSpace      = [ \t\r\n];
-NewLine         = [\r];
-Number          = [1-9] [0-9]*;
-Comment         = '#' (![\r\n] .)* [\r\n];
-BracketOpen     = '(' Spacing;
-BracketClose    = ')' Spacing;
+Equal               = '=' Spacing;
+!LineEnd            = Spacing ';';
+Dot                 = '.' Spacing;
+!Spacing            = (NewLine / WhiteSpace / Comment)* ;
+WhiteSpace          = [ \t\r\n];
+NewLine             = [\r];
+Number              = [1-9] [0-9]*;
+Comment             = '#' (![\r\n] .)* [\r\n];
+BracketOpen         = '(' Spacing;
+BracketClose        = ')' Spacing;

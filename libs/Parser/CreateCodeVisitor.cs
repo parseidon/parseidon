@@ -136,7 +136,7 @@ public class CreateCodeVisitor : INodeVisitor
         Push(typedContext, new ReferenceElement(node.Text.Trim(), typedContext.MessageContext, node));
         return ProcessNodeResult.Success;
     }
-    public ProcessNodeResult ProcessCSIdentifierNode(Object context, ASTNode node, IList<ParserMessage> messages)
+    public ProcessNodeResult ProcessCSharpIdentifierNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
         Push(typedContext, new ReferenceElement(node.Text.Trim(), typedContext.MessageContext, node));
