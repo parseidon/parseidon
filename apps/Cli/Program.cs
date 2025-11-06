@@ -48,13 +48,17 @@ astCommand.SetHandler(
 
 return await rootCommand.InvokeAsync(args);
 
-static void RunParser(FileInfo grammarFile, FileInfo outputFile, String overrideOption, Action<ParseResult> processResult)
+static void RunParser(FileInfo grammarFile, FileInfo outputFile, String overrideOption, Func<ParseResult, IVisitResult> processResult)
 {
     ValidateFileInput(grammarFile, outputFile, overrideOption);
     ParseidonParser Parser = new ParseidonParser();
     ParseResult parseResult = Parser.Parse(File.ReadAllText(grammarFile.FullName));
     if (parseResult.Successful)
-        processResult(parseResult);
+    {
+        IVisitResult visitResult = processResult(parseResult);
+        if (!visitResult.Successful)
+            ProcessMessages(visitResult.Messages);
+    }
     else
         ProcessMessages(parseResult.Messages);
 }
@@ -62,7 +66,7 @@ static void RunParser(FileInfo grammarFile, FileInfo outputFile, String override
 static void ProcessMessages(IReadOnlyList<ParserMessage> messages)
 {
     foreach (var message in messages)
-        PrintMessage(message.Type, $"({message.Row}:{message.Collumn}) {message.Message}");
+        PrintMessage(message.Type, $"({message.Row}:{message.Column}) {message.Message}");
     Environment.Exit(1);
 }
 
@@ -73,14 +77,14 @@ static void PrintMessage(ParserMessage.MessageType messageType, String message)
     AnsiConsole.MarkupLine($"[{color}]{messageTypeText}: {Markup.Escape(message)}[/]");
 }
 
-static void CreateParser(ParseResult parseResult, FileInfo outputFile, String overrideOption, String parserNamespace, String parserClassname)
+static IVisitResult CreateParser(ParseResult parseResult, FileInfo outputFile, String overrideOption, String parserNamespace, String parserClassname)
 {
     IVisitor visitor = new CreateCodeVisitor();
-    IVisitResult visitorResult = parseResult.Visit(visitor);
+    IVisitResult visitResult = parseResult.Visit(visitor);
 
-    if (visitorResult.Successful && visitorResult is CreateCodeVisitor.IGetCode)
+    if (visitResult.Successful && visitResult is CreateCodeVisitor.IGetCode)
     {
-        String code = (visitorResult as CreateCodeVisitor.IGetCode)!.Code ?? "";
+        String code = (visitResult as CreateCodeVisitor.IGetCode)!.Code ?? "";
         code =
             $"""
         //****************************************//
@@ -104,9 +108,10 @@ static void CreateParser(ParseResult parseResult, FileInfo outputFile, String ov
         File.WriteAllText(outputFile.FullName, code);
         AnsiConsole.MarkupLine($"[green] The parser '{outputFile.FullName}' is sucessfully created![/]");
     }
+    return visitResult;
 }
 
-static void CreateAST(ParseResult parseResult, FileInfo outputFile, String overrideOption)
+static IVisitResult CreateAST(ParseResult parseResult, FileInfo outputFile, String overrideOption)
 {
     RenderASTVisitor visitor = new RenderASTVisitor();
     IVisitResult visitResult = parseResult.Visit(visitor);
@@ -115,6 +120,7 @@ static void CreateAST(ParseResult parseResult, FileInfo outputFile, String overr
         File.WriteAllText(outputFile.FullName, (visitResult as RenderASTVisitor.IGetAST)!.AST ?? "");
         AnsiConsole.MarkupLine($"[green] The AST-file '{outputFile.FullName}' is sucessfully created![/]");
     }
+    return visitResult;
 }
 
 static void ValidateFileInput(FileInfo grammarFile, FileInfo outputFile, String overrideOption)

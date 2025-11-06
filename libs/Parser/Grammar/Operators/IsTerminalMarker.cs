@@ -2,9 +2,7 @@ namespace Parseidon.Parser.Grammar.Operators;
 
 public class IsTerminalMarker : AbstractMarker
 {
-    public IsTerminalMarker(AbstractGrammarElement? element) : base(element)
-    {
-    }
+    public IsTerminalMarker(AbstractGrammarElement? element, MessageContext messageContext, ASTNode node) : base(element, messageContext, node) { }
 
     public override String ToString(Grammar grammar)
     {
@@ -12,6 +10,6 @@ public class IsTerminalMarker : AbstractMarker
         result += $"MakeTerminal(actualNode, state, \n";
         result += Indent($"(actualNode) => {Element?.ToString(grammar)}") + "\n";
         result += ")";
-        return result; 
-    }       
+        return result;
+    }
 }

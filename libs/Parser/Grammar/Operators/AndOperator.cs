@@ -2,9 +2,7 @@ namespace Parseidon.Parser.Grammar.Operators;
 
 public class AndOperator : AbstractTwoChildOperator
 {
-    public AndOperator(AbstractGrammarElement? left, AbstractGrammarElement? right) : base(left, right)
-    {
-    }
+    public AndOperator(AbstractGrammarElement? left, AbstractGrammarElement? right, MessageContext messageContext, ASTNode node) : base(left, right, messageContext, node) { }
 
     public override String ToString(Grammar grammar)
     {

@@ -5,7 +5,7 @@ namespace Parseidon.Parser.Grammar.Operators;
 public abstract class AbstractOneChildOperator : AbstractOperator
 {
     private AbstractGrammarElement? _element;
-    protected AbstractOneChildOperator(AbstractGrammarElement? element)
+    protected AbstractOneChildOperator(AbstractGrammarElement? element, MessageContext messageContext, ASTNode node) : base(messageContext, node)
     {
         Element = element;
     }
@@ -27,7 +27,7 @@ public abstract class AbstractOneChildOperator : AbstractOperator
 
     internal override void IterateElements(Func<AbstractGrammarElement, Boolean> process)
     {
-        if(process(this))
+        if (process(this))
             Element!.IterateElements(process);
     }
 }

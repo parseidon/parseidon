@@ -4,10 +4,10 @@ namespace Parseidon.Parser.Grammar;
 
 public class DefinitionElement : AbstractDefinitionElement
 {
-    public DefinitionElement(AbstractGrammarElement? element)
+    public DefinitionElement(AbstractGrammarElement? element, MessageContext messageContext, ASTNode node) : base(messageContext, node)
     {
         if (element == null)
-            throw new Exception("No child element!");
+            throw GetException("No child element!");
         Element = element;
         Element.Parent = this;
     }
@@ -23,7 +23,7 @@ public class DefinitionElement : AbstractDefinitionElement
 
     internal override void IterateElements(Func<AbstractGrammarElement, Boolean> process)
     {
-        if(process(this))
+        if (process(this))
             Element.IterateElements(process);
     }
 

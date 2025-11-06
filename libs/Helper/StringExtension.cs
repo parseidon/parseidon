@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Parseidon.Helper;
 
@@ -167,5 +168,10 @@ public static class StringExtensions
         }
 
         return false;
+    }
+
+    public static String TrimLineEndWhitespace(this String input)
+    {
+        return Regex.Replace(input, @"[ \t]+(?=\r?$)", String.Empty, RegexOptions.Multiline);
     }
 }

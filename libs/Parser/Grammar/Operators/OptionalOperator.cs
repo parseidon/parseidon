@@ -2,9 +2,7 @@ namespace Parseidon.Parser.Grammar.Operators;
 
 public class OptionalOperator : AbstractOneChildOperator
 {
-    public OptionalOperator(AbstractGrammarElement? element) : base(element)
-    {
-    }
+    public OptionalOperator(AbstractGrammarElement? element, MessageContext messageContext, ASTNode node) : base(element, messageContext, node) { }
 
     public override String ToString(Grammar grammar)
     {

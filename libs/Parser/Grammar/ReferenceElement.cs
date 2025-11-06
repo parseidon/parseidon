@@ -6,7 +6,7 @@ namespace Parseidon.Parser.Grammar;
 
 public class ReferenceElement : AbstractGrammarElement
 {
-    public ReferenceElement(String referenceName)
+    public ReferenceElement(String referenceName, MessageContext messageContext, ASTNode node) : base(messageContext, node)
     {
         ReferenceName = referenceName;
     }
@@ -17,7 +17,7 @@ public class ReferenceElement : AbstractGrammarElement
     {
         if (grammar.FindRuleByName(ReferenceName) is SimpleRule referencedRule)
             return referencedRule.GetReferenceCode(grammar);
-        throw new Exception($"Can not find element '{ReferenceName}'");
+        throw GetException($"Can not find element '{ReferenceName}'");
     }
 
     public override Boolean MatchesVariableText() => false;

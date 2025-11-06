@@ -3,9 +3,7 @@ namespace Parseidon.Parser.Grammar.Operators;
 public class DropMarker : AbstractMarker
 {
     // public override String ToString(Grammar grammar) => "true";    
-    public DropMarker(AbstractGrammarElement? element) : base(element)
-    {
-    }
+    public DropMarker(AbstractGrammarElement? element, MessageContext messageContext, ASTNode node) : base(element, messageContext, node) { }
 
     public override String ToString(Grammar grammar)
     {
@@ -14,5 +12,5 @@ public class DropMarker : AbstractMarker
         result += Indent($"(actualNode) => {Element?.ToString(grammar)}") + "\n";
         result += ")";
         return result;
-    }    
+    }
 }
