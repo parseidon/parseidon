@@ -23,6 +23,7 @@ public class CreateCodeVisitor : INodeVisitor
         internal ScopedStack<AbstractGrammarElement> Stack { get; } = new ScopedStack<AbstractGrammarElement>();
         internal String Namespace { get; set; } = String.Empty;
         internal String ClassName { get; set; } = String.Empty;
+        internal String RootNodeName { get; set; } = String.Empty;
         internal Grammar.Grammar? Grammar { get; set; }
         internal MessageContext MessageContext { get; set; }
     }
@@ -79,7 +80,7 @@ public class CreateCodeVisitor : INodeVisitor
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
         List<SimpleRule> rules = PopList<SimpleRule>(typedContext);
-        typedContext.Grammar = new Grammar.Grammar(typedContext.Namespace, typedContext.ClassName, rules, typedContext.MessageContext, node);
+        typedContext.Grammar = new Grammar.Grammar(typedContext.Namespace, typedContext.ClassName, typedContext.RootNodeName, rules, typedContext.MessageContext, node);
         return ProcessNodeResult.Success;
     }
     public ProcessNodeResult ProcessNamespaceNode(Object context, ASTNode node, IList<ParserMessage> messages)
@@ -94,6 +95,13 @@ public class CreateCodeVisitor : INodeVisitor
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
         ReferenceElement name = Pop<ReferenceElement>(typedContext);
         typedContext.ClassName = name.ReferenceName;
+        return ProcessNodeResult.Success;
+    }
+    public ProcessNodeResult ProcessRootNodeNode(Object context, ASTNode node, IList<ParserMessage> messages)
+    {
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        ReferenceElement name = Pop<ReferenceElement>(typedContext);
+        typedContext.RootNodeName = name.ReferenceName;
         return ProcessNodeResult.Success;
     }
     public ProcessNodeResult ProcessIsTerminalNode(Object context, ASTNode node, IList<ParserMessage> messages)

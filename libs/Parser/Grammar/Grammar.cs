@@ -9,12 +9,14 @@ namespace Parseidon.Parser.Grammar;
 public class Grammar : AbstractNamedElement
 {
     private String _namespace;
+    private String _rootRuleName;
 
-    public Grammar(String nameSpace, String className, List<SimpleRule> rules, MessageContext messageContext, ASTNode node) : base(className, messageContext, node)
+    public Grammar(String nameSpace, String className, String rootRuleName, List<SimpleRule> rules, MessageContext messageContext, ASTNode node) : base(className, messageContext, node)
     {
         Rules = rules;
         Rules.ForEach((element) => element.Parent = this);
         _namespace = nameSpace;
+        _rootRuleName = String.IsNullOrWhiteSpace(rootRuleName) ? "Grammar" : rootRuleName;
     }
 
     public List<SimpleRule> Rules { get; }
@@ -83,8 +85,8 @@ public class Grammar : AbstractNamedElement
 
     public SimpleRule GetRootRule()
     {
-        String? axiomName = "Grammar";
-        if (axiomName == null)
+        String? axiomName = _rootRuleName;
+        if (String.IsNullOrWhiteSpace(axiomName))
             throw GetException("Grammar must have axiom option!");
         SimpleRule? rule = FindRuleByName(axiomName);
         if (rule is null)

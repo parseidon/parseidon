@@ -1,10 +1,12 @@
 @namespace Parseidon.Parser;
 @class ParseidonParser;
+@rootnode Grammar;
 
 Grammar         = Config Definition+;
-Config          = Namespace ClassName;
+Config          = Namespace ClassName RootNode;
 Namespace       = Spacing !'@namespace' Spacing CSIdentifier LineEnd;
 ClassName       = Spacing !'@class' Spacing CSIdentifier LineEnd;
+RootNode        = Spacing !'@rootnode' Spacing Identifier LineEnd;
 Definition      = Spacing (IsTerminal / Drop)? Identifier !Equal Expression LineEnd;
 Expression      = Sequence (Or Sequence)*;
 Sequence        = Prefix*;
