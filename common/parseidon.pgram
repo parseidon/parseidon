@@ -34,10 +34,10 @@ Optional            = '?' Spacing;
 ZeroOrMore          = '*' Spacing;
 OneOrMore           = '+' Spacing;
 Drop                = '-' Spacing;
-IsTerminal          = '$' Spacing;
+IsTerminal          = '$' '$'? Spacing;
 
 EscapeChars         = '\\' [\\0abfnrtv"'?];
-UnicodeChars        = '\\u' [0-9a-fA-F]{4};
+$$UnicodeChars        = '\\u' [0-9a-fA-F]{4};
 
 Equal               = '=' Spacing;
 -LineEnd            = Spacing ';';

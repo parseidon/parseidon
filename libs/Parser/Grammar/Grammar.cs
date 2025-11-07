@@ -534,9 +534,9 @@ public class Grammar : AbstractNamedElement
             private Boolean CheckRegEx(ASTNode parentNode, ParserState state, String regEx, Int32 quantifier)
             {
                 Int32 oldPosition = state.Position;
-                if ((state.Position < state.Text.Length) && Regex.Match(state.Text.Substring(state.Position, quantifier), regEx).Success)
+                if ((state.Position < state.Text.Length) && (Regex.Match(state.Text.Substring(state.Position, quantifier), $"{regEx}{{"{{{"}}quantifier{{"}}}"}}") is Match regexMatch) && regexMatch.Success)
                 {
-                    state.Position++;
+                    state.Position += regexMatch.Length;
                     parentNode.AddChild(new ASTNode(-1, "REGEX", state.Text.Substring(oldPosition, state.Position - oldPosition), state.Position));
                     return true;
                 }
@@ -710,7 +710,7 @@ public class Grammar : AbstractNamedElement
                 return true;
             }
 
-            private Boolean MakeTerminal(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> check)
+            private Boolean MakeTerminal(ASTNode parentNode, ParserState state, Boolean doNotEscape, Func<ASTNode, Boolean> check)
             {
                 Int32 oldPosition = state.Position;
                 using (state.EnterTerminal(parentNode.Name))
@@ -722,6 +722,8 @@ public class Grammar : AbstractNamedElement
                         tempNode.Text = tempNode.GetText();
                         tempNode.ClearChildren();
                         parentNode.Text = tempNode.GetText();
+                        if (doNotEscape)
+                            parentNode.Text = Regex.Unescape(parentNode.Text);
                     }
                     return result;
                 }

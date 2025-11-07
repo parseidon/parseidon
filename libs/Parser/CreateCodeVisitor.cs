@@ -107,7 +107,7 @@ public class CreateCodeVisitor : INodeVisitor
     public ProcessNodeResult ProcessIsTerminalNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
-        Push(typedContext, new IsTerminalMarker(null, typedContext.MessageContext, node));
+        Push(typedContext, new IsTerminalMarker(node.Children.Count == 2, null, typedContext.MessageContext, node));
         return ProcessNodeResult.Success;
     }
     public ProcessNodeResult ProcessDropNode(Object context, ASTNode node, IList<ParserMessage> messages)
