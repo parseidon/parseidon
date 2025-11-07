@@ -531,10 +531,10 @@ public class Grammar : AbstractNamedElement
                 };
             }
 
-            private Boolean CheckRegEx(ASTNode parentNode, ParserState state, String regEx)
+            private Boolean CheckRegEx(ASTNode parentNode, ParserState state, String regEx, Int32 quantifier)
             {
                 Int32 oldPosition = state.Position;
-                if ((state.Position < state.Text.Length) && Regex.Match(state.Text[state.Position].ToString(), regEx).Success)
+                if ((state.Position < state.Text.Length) && Regex.Match(state.Text.Substring(state.Position, quantifier), regEx).Success)
                 {
                     state.Position++;
                     parentNode.AddChild(new ASTNode(-1, "REGEX", state.Text.Substring(oldPosition, state.Position - oldPosition), state.Position));

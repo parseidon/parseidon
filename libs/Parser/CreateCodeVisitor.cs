@@ -234,13 +234,15 @@ public class CreateCodeVisitor : INodeVisitor
     public ProcessNodeResult ProcessRegexNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
-        Push(typedContext, new RegExTerminal(node.Text, typedContext.MessageContext, node));
+        NumberTerminal? quantifier = TryPop<NumberTerminal>(typedContext);
+        TextTerminal expression = Pop<TextTerminal>(typedContext);
+        Push(typedContext, new RegExTerminal(expression.Text, quantifier?.Number ?? 1, typedContext.MessageContext, node));
         return ProcessNodeResult.Success;
     }
     public ProcessNodeResult ProcessDotNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
-        Push(typedContext, new RegExTerminal(".", typedContext.MessageContext, node));
+        Push(typedContext, new RegExTerminal(".", 1, typedContext.MessageContext, node));
         return ProcessNodeResult.Success;
     }
     public ProcessNodeResult ProcessOptionalNode(Object context, ASTNode node, IList<ParserMessage> messages)
@@ -283,6 +285,21 @@ public class CreateCodeVisitor : INodeVisitor
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
         return new CreateCodeVisitResult(successful, messages, typedContext.Grammar is not null ? typedContext.Grammar.ToString() : String.Empty);
+    }
+
+
+    public ProcessNodeResult ProcessNumberNode(object context, ASTNode node, IList<ParserMessage> messages)
+    {
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        Push(typedContext, new NumberTerminal(Int32.Parse(node.Text), typedContext.MessageContext, node));
+        return ProcessNodeResult.Success;
+    }
+
+    public ProcessNodeResult ProcessRegularExpressionNode(object context, ASTNode node, IList<ParserMessage> messages)
+    {
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        Push(typedContext, new TextTerminal(node.Text, typedContext.MessageContext, node));
+        return ProcessNodeResult.Success;
     }
 }
 
