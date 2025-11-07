@@ -24,7 +24,9 @@ $CSharpIdentifier   = IdentStart CSharpIdentCont Spacing;
 CSharpIdentCont     = [a-zA-Z0-9_.]*;
 $Literal            = ((-'\'' Char*  -'\'') / ('"' Char* '"')) Spacing ;
 Char                = [^'\\] / '\\\'' / '\\\\' / EscapeChars;
-$Regex              = '[' ( [^\\\[\]] / '\\[' / '\\]' / '\\-' / '\\^' / '\\\\' / EscapeChars )+ ']' ('{' Number '}')? Spacing;
+$Regex              = '[' BracketContent+ ']' Quantifier? Spacing;
+BracketContent      = ('\\' [.\\\[\]-^]) / [^\[\\\]] / EscapeChars;
+Quantifier          = '{' Number '}';
 
 Or                  = '/' Spacing;
 Optional            = '?' Spacing;
@@ -48,7 +50,7 @@ EscapeChars         = '\\0'
 Equal               = '=' Spacing;
 -LineEnd            = Spacing ';';
 Dot                 = '.' Spacing;
--Spacing            = (NewLine / WhiteSpace / Comment)* ;
+-Spacing            = (NewLine / WhiteSpace / Comment)*;
 WhiteSpace          = [ \t\r\n];
 NewLine             = [\r];
 Number              = '0' / ([1-9] [0-9]*);
