@@ -378,17 +378,11 @@ public class Grammar : AbstractNamedElement
                     MessageContext = messageContext;
                 }
 
-                private Int32 _errorSuppressionDepth;
-                private Int32 _lastErrorPosition = -1;
-                private String? _lastExpected;
-                private String? _lastActual;
                 private readonly List<String> _terminalNames = new List<String>();
-
                 internal String Text { get; }
                 internal Int32 Position { get; set; } = 0;
                 internal Boolean Eof => !(Position < Text.Length);
                 internal List<ParserMessage> Messages { get; } = new List<ParserMessage>();
-                internal Boolean AreErrorsSuppressed => _errorSuppressionDepth > 0;
                 internal MessageContext MessageContext { get; }
 
                 private String? GetCurrentTerminalName()
@@ -411,62 +405,6 @@ public class Grammar : AbstractNamedElement
                 {
                     if (shouldPop && (_terminalNames.Count > 0))
                         _terminalNames.RemoveAt(_terminalNames.Count - 1);
-                }
-
-                public ErrorSuppressionScope SuppressErrors()
-                {
-                    BeginErrorSuppression();
-                    return new ErrorSuppressionScope(this);
-                }
-
-                public void BeginErrorSuppression() => _errorSuppressionDepth++;
-
-                public void EndErrorSuppression()
-                {
-                    if (_errorSuppressionDepth > 0)
-                        _errorSuppressionDepth--;
-                }
-
-                public void ReportFailure(String expected, Int32 position, String? actual)
-                {
-                    if (AreErrorsSuppressed)
-                        return;
-
-                    String? terminalOverride = GetCurrentTerminalName();
-                    if (!String.IsNullOrWhiteSpace(terminalOverride))
-                        expected = terminalOverride!;
-
-                    if ((_lastErrorPosition == position) &&
-                        String.Equals(_lastExpected, expected, StringComparison.Ordinal) &&
-                        String.Equals(_lastActual, actual, StringComparison.Ordinal))
-                    {
-                        return;
-                    }
-
-                    _lastErrorPosition = position;
-                    _lastExpected = expected;
-                    _lastActual = actual;
-
-                    (UInt32 Row, UInt32 Column) location = MessageContext.CalculateLocation(position);
-                    String message = actual is null
-                        ? $"Expected {expected}."
-                        : $"Expected {expected}, but {actual}.";
-                    Messages.Add(new ParserMessage(message, ParserMessage.MessageType.Error, location.Row, location.Column));
-                }
-
-                public readonly struct ErrorSuppressionScope : IDisposable
-                {
-                    private readonly ParserState _state;
-
-                    internal ErrorSuppressionScope(ParserState state)
-                    {
-                        _state = state;
-                    }
-
-                    public void Dispose()
-                    {
-                        _state.EndErrorSuppression();
-                    }
                 }
 
                 public readonly struct TerminalScope : IDisposable
@@ -546,7 +484,7 @@ public class Grammar : AbstractNamedElement
                 String actual = failurePosition < state.Text.Length
                     ? $"found {DescribeCharacter(state.Text[failurePosition])}"
                     : "found end of input";
-                state.ReportFailure($"input matching regex {DescribePattern(regEx)}", oldPosition, actual);
+                //state.ReportFailure($"input matching regex {DescribePattern(regEx)}", oldPosition, actual);
                 return false;
             }
 
@@ -563,7 +501,7 @@ public class Grammar : AbstractNamedElement
                         String actual = failurePosition < state.Text.Length
                             ? $"found {DescribeLiteral(state.Text.Substring(oldPosition, failurePosition - oldPosition + 1))}"
                             : "found end of input";
-                        state.ReportFailure($"text {DescribeLiteral(text)}", oldPosition, actual);
+                        //state.ReportFailure($"text {DescribeLiteral(text)}", oldPosition, actual);
                         return false;
                     }
                     position++;
@@ -594,11 +532,8 @@ public class Grammar : AbstractNamedElement
             private Boolean CheckOr(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> leftCheck, Func<ASTNode, Boolean> rightCheck)
             {
                 Int32 oldPosition = state.Position;
-                using (state.SuppressErrors())
-                {
-                    if (leftCheck(parentNode))
-                        return true;
-                }
+                if (leftCheck(parentNode))
+                    return true;
                 state.Position = oldPosition;
                 return rightCheck(parentNode);
             }
@@ -619,13 +554,10 @@ public class Grammar : AbstractNamedElement
                 while (!state.Eof)
                 {
                     Int32 snapshot = state.Position;
-                    using (state.SuppressErrors())
+                    if (!check(parentNode))
                     {
-                        if (!check(parentNode))
-                        {
-                            state.Position = snapshot;
-                            break;
-                        }
+                        state.Position = snapshot;
+                        break;
                     }
                     if (state.Position == snapshot)
                         break;
@@ -641,13 +573,10 @@ public class Grammar : AbstractNamedElement
                 while ((!state.Eof))
                 {
                     Int32 snapshot = state.Position;
-                    using (state.SuppressErrors())
+                    if (!check(parentNode))
                     {
-                        if (!check(parentNode))
-                        {
-                            state.Position = snapshot;
-                            break;
-                        }
+                        state.Position = snapshot;
+                        break;
                     }
                     if (state.Position == snapshot)
                         break;
@@ -663,11 +592,8 @@ public class Grammar : AbstractNamedElement
                 if (leftCheck(parentNode))
                 {
                     state.Position = oldPosition;
-                    using (state.SuppressErrors())
-                    {
-                        if (rightCheck(parentNode))
-                            return true;
-                    }
+                    if (rightCheck(parentNode))
+                        return true;
                 }
                 state.Position = oldPosition;
                 return false;
@@ -692,13 +618,10 @@ public class Grammar : AbstractNamedElement
                 while ((count < maxCount) && !state.Eof)
                 {
                     Int32 snapshot = state.Position;
-                    using (state.SuppressErrors())
+                    if (!check(parentNode))
                     {
-                        if (!check(parentNode))
-                        {
-                            state.Position = snapshot;
-                            break;
-                        }
+                        state.Position = snapshot;
+                        break;
                     }
                     if (state.Position == snapshot)
                         break;
