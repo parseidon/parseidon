@@ -266,7 +266,7 @@ public class Grammar : AbstractNamedElement
                         }
                         catch (GrammarException ex)
                         {
-                            visitMessages.Add(new ParserMessage(ex.Message, ParserMessage.MessageType.Error, ex.Row, ex.Column));
+                            visitMessages.Add(new ParserMessage(ex.Message, ParserMessage.MessageType.Error, (ex.Row, ex.Column)));
                         }
                     }
                     return new EmptyResult(false, visitMessages);
@@ -313,7 +313,9 @@ public class Grammar : AbstractNamedElement
             {
                 ParserState state = new ParserState(text, new MessageContext(text));
                 ASTNode actualNode = new ASTNode(-1, "ROOT", "", 0);
-                Boolean successful = {{rootRule.GetReferenceCode(this)}};
+                Boolean successful = {{rootRule.GetReferenceCode(this)}} && state.Position == text.Length - 1;
+                if (successful)
+                    state.NoError(state.Position);
                 return new ParseResult(successful ? actualNode : null, state.MessageContext, state.Messages);
             }
             """;
@@ -375,15 +377,29 @@ public class Grammar : AbstractNamedElement
                 public ParserState(String text, MessageContext messageContext)
                 {
                     Text = text;
+                    TextLength = Text.Length;
                     MessageContext = messageContext;
                 }
 
                 private readonly List<String> _terminalNames = new List<String>();
+                private Int32 _lastErrorPosition;
+                private List<String> _errorExpectations = new List<String>();
+                private List<ParserMessage> _messages = new List<ParserMessage>();
+
                 internal String Text { get; }
+                internal Int32 TextLength { get; }
                 internal Int32 Position { get; set; } = 0;
                 internal Boolean Eof => !(Position < Text.Length);
-                internal List<ParserMessage> Messages { get; } = new List<ParserMessage>();
                 internal MessageContext MessageContext { get; }
+                internal IReadOnlyList<ParserMessage> Messages
+                {
+                    get
+                    {
+                        var tempMessages = new List<ParserMessage>(_messages);
+                        _errorExpectations.ForEach((expectation) => tempMessages.Add(new ParserMessage(expectation, ParserMessage.MessageType.Error, MessageContext.CalculateLocation(_lastErrorPosition))));
+                        return tempMessages;
+                    }
+                }
 
                 private String? GetCurrentTerminalName()
                 {
@@ -422,6 +438,24 @@ public class Grammar : AbstractNamedElement
                     {
                         _state.LeaveTerminal(_shouldPop);
                     }
+                }
+
+                public void ReportError(String message, Int32 position)
+                {
+                    if ((position >= _lastErrorPosition) && (position < TextLength))
+                    {
+                        if (position > _lastErrorPosition)
+                            NoError(position);
+                        if (!_errorExpectations.Contains(message))
+                            _errorExpectations.Add(message);
+                        _lastErrorPosition = position;
+                    }
+                }
+
+                public void NoError(Int32 position)
+                {
+                    if (position >= _lastErrorPosition)
+                        _errorExpectations.Clear();
                 }
             }
 
@@ -476,6 +510,7 @@ public class Grammar : AbstractNamedElement
                 {
                     state.Position += regexMatch.Length;
                     parentNode.AddChild(new ASTNode(-1, "REGEX", state.Text.Substring(oldPosition, state.Position - oldPosition), state.Position));
+                    state.NoError(state.Position);
                     return true;
                 }
 
@@ -484,7 +519,7 @@ public class Grammar : AbstractNamedElement
                 String actual = failurePosition < state.Text.Length
                     ? $"found {DescribeCharacter(state.Text[failurePosition])}"
                     : "found end of input";
-                //state.ReportFailure($"input matching regex {DescribePattern(regEx)}", oldPosition, actual);
+                state.ReportError($"Expected input matching regex {DescribePattern(regEx)}, {actual}", oldPosition);
                 return false;
             }
 
@@ -501,13 +536,14 @@ public class Grammar : AbstractNamedElement
                         String actual = failurePosition < state.Text.Length
                             ? $"found {DescribeLiteral(state.Text.Substring(oldPosition, failurePosition - oldPosition + 1))}"
                             : "found end of input";
-                        //state.ReportFailure($"text {DescribeLiteral(text)}", oldPosition, actual);
+                        state.ReportError($"Expected {DescribeLiteral(text)}, {actual}", oldPosition);
                         return false;
                     }
                     position++;
                     state.Position++;
                 }
                 parentNode.AddChild(new ASTNode(-1, "TEXT", state.Text.Substring(oldPosition, state.Position - oldPosition), state.Position));
+                state.NoError(state.Position);
                 return true;
             }
 
@@ -769,11 +805,11 @@ public class Grammar : AbstractNamedElement
                     Error
                 }
 
-                public ParserMessage(String message, MessageType type, UInt32 row, UInt32 column)
+                public ParserMessage(String message, MessageType type, (UInt32 row, UInt32 column) position)
                 {
                     Message = message;
-                    Row = row;
-                    Column = column;
+                    Row = position.row;
+                    Column = position.column;
                     Type = type;
                 }
 
