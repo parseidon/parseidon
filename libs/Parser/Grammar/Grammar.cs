@@ -96,7 +96,7 @@ public class Grammar : AbstractNamedElement
 
     private Boolean IterateUsedRules(AbstractGrammarElement element, List<SimpleRule> rules)
     {
-        if ((element is SimpleRule rule) && (rules.IndexOf(rule) < 0))
+        if ((element is SimpleRule rule) && (rules.IndexOf(rule) < 0) && !rule.HasMarker<TreatInlineMarker>())
             rules.Add(rule);
         else
         if ((element is ReferenceElement referenceElement) && (FindRuleByName(referenceElement.ReferenceName) is SimpleRule referencedRule) && (rules.IndexOf(referencedRule) < 0))
