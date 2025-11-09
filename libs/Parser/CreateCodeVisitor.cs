@@ -121,11 +121,15 @@ public class CreateCodeVisitor : INodeVisitor
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
         AbstractGrammarElement definition = Pop<AbstractGrammarElement>(typedContext);
         ReferenceElement name = Pop<ReferenceElement>(typedContext);
-        List<AbstractMarker> customMarkers = new List<AbstractMarker>();
+        List<AbstractMarker> markers = new List<AbstractMarker>();
         while (TryPop<AbstractMarker>(typedContext) is AbstractMarker marker)
-            definition = marker.GetMarkedRule(definition, customMarkers);
+        {
+            markers.Add(marker);
+            marker.Element = definition;
+            definition = marker;
+        }
 
-        AbstractGrammarElement newRule = new SimpleRule(name.ReferenceName, definition, typedContext.MessageContext, node, customMarkers);
+        AbstractGrammarElement newRule = new SimpleRule(name.ReferenceName, definition, typedContext.MessageContext, node, markers);
 
         Push(typedContext, newRule);
         return ProcessNodeResult.Success;

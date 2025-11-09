@@ -8,10 +8,4 @@ public abstract class AbstractCustomMarker : AbstractMarker
 
     public override bool MatchesVariableText() => true;
 
-    public override AbstractGrammarElement GetMarkedRule(AbstractGrammarElement definition, List<AbstractMarker> customMarker)
-    {
-        customMarker.Add(this);
-        return definition;
-    }
-
 }

@@ -8,6 +8,4 @@ public abstract class AbstractMarker : AbstractOneChildOperator
 
     public override bool MatchesVariableText() => true;
 
-    public abstract AbstractGrammarElement GetMarkedRule(AbstractGrammarElement definition, List<AbstractMarker> customMarker);
-
 }

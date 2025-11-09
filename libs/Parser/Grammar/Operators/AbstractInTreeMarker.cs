@@ -8,11 +8,4 @@ public abstract class AbstractInTreeMarker : AbstractMarker
 
     public override bool MatchesVariableText() => true;
 
-    public override AbstractGrammarElement GetMarkedRule(AbstractGrammarElement definition, List<AbstractMarker> customMarker)
-    {
-        Element = definition;
-        return this;
-    }
-
-
 }

@@ -12,7 +12,12 @@ public class SimpleRule : AbstractNamedDefinitionElement
 
     private List<AbstractMarker> _customMarker;
 
-    public override String GetReferenceCode(Grammar grammar) => $"CheckRule_{Name}(actualNode, state)";
+    public bool HasMarker<T>() where T : AbstractMarker
+    {
+        return _customMarker.Any(marker => marker is T);
+    }
+
+    public override String GetReferenceCode(Grammar grammar)
 
     public override bool MatchesVariableText() => Definition is DropMarker ? false : Definition.MatchesVariableText();
 
