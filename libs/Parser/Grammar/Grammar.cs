@@ -163,7 +163,7 @@ public class Grammar : AbstractNamedElement
         {
             String ruleCode =
                 $$"""
-                private Boolean CheckRule_{{rule.Name}}(ASTNode parentNode, ParserState state)
+                private Boolean CheckRule_{{rule.Name}}(ASTNode parentNode, ParserState state, String? errorName)
                 {
                     Int32 oldPosition = state.Position;
                     ASTNode actualNode = new ASTNode({{GetElementIdOf(rule)}}, "{{rule.Name}}", "", state.Position);
@@ -313,6 +313,7 @@ public class Grammar : AbstractNamedElement
             {
                 ParserState state = new ParserState(text, new MessageContext(text));
                 ASTNode actualNode = new ASTNode(-1, "ROOT", "", 0);
+                String? errorName = null;
                 Boolean successful = {{rootRule.GetReferenceCode(this)}} && state.Position == text.Length - 1;
                 if (successful)
                     state.NoError(state.Position);
@@ -503,7 +504,7 @@ public class Grammar : AbstractNamedElement
                 };
             }
 
-            private Boolean CheckRegEx(ASTNode parentNode, ParserState state, String regEx, Int32 quantifier)
+            private Boolean CheckRegEx(ASTNode parentNode, ParserState state, String? errorName, String regEx, Int32 quantifier)
             {
                 Int32 oldPosition = state.Position;
                 if ((state.Position < state.Text.Length) && (Regex.Match(state.Text.Substring(state.Position, quantifier), $"{regEx}{{"{{{"}}quantifier{{"}}}"}}") is Match regexMatch) && regexMatch.Success)
@@ -523,7 +524,7 @@ public class Grammar : AbstractNamedElement
                 return false;
             }
 
-            private Boolean CheckText(ASTNode parentNode, ParserState state, String text)
+            private Boolean CheckText(ASTNode parentNode, ParserState state, String? errorName, String text)
             {
                 Int32 oldPosition = state.Position;
                 Int32 position = 0;
@@ -547,7 +548,7 @@ public class Grammar : AbstractNamedElement
                 return true;
             }
 
-            private Boolean CheckAnd(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> leftCheck, Func<ASTNode, Boolean> rightCheck)
+            private Boolean CheckAnd(ASTNode parentNode, ParserState state, String? errorName, Func<ASTNode, Boolean> leftCheck, Func<ASTNode, Boolean> rightCheck)
             {
                 Int32 oldPosition = state.Position;
                 ASTNode tempNode = new ASTNode(parentNode.TokenId, "AND", parentNode.Text, state.Position);
@@ -565,7 +566,7 @@ public class Grammar : AbstractNamedElement
                 return false;
             }
 
-            private Boolean CheckOr(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> leftCheck, Func<ASTNode, Boolean> rightCheck)
+            private Boolean CheckOr(ASTNode parentNode, ParserState state, String? errorName, Func<ASTNode, Boolean> leftCheck, Func<ASTNode, Boolean> rightCheck)
             {
                 Int32 oldPosition = state.Position;
                 if (leftCheck(parentNode))
@@ -574,13 +575,13 @@ public class Grammar : AbstractNamedElement
                 return rightCheck(parentNode);
             }
 
-            private Boolean Drop(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> check)
+            private Boolean Drop(ASTNode parentNode, ParserState state, String? errorName, Func<ASTNode, Boolean> check)
             {
                 ASTNode tempNode = new ASTNode(-1, "", "", state.Position);
                 return check(tempNode);
             }
 
-            private Boolean CheckOneOrMore(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> check)
+            private Boolean CheckOneOrMore(ASTNode parentNode, ParserState state, String? errorName, Func<ASTNode, Boolean> check)
             {
                 Int32 oldPosition = state.Position;
                 if (!check(parentNode))
@@ -603,7 +604,7 @@ public class Grammar : AbstractNamedElement
                 return true;
             }
 
-            private Boolean CheckZeroOrMore(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> check)
+            private Boolean CheckZeroOrMore(ASTNode parentNode, ParserState state, String? errorName, Func<ASTNode, Boolean> check)
             {
                 Int32 lastSuccessfulPosition = state.Position;
                 while ((!state.Eof))
@@ -622,7 +623,7 @@ public class Grammar : AbstractNamedElement
                 return true;
             }
 
-            private Boolean CheckDifference(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> leftCheck, Func<ASTNode, Boolean> rightCheck)
+            private Boolean CheckDifference(ASTNode parentNode, ParserState state, String? errorName, Func<ASTNode, Boolean> leftCheck, Func<ASTNode, Boolean> rightCheck)
             {
                 Int32 oldPosition = state.Position;
                 if (leftCheck(parentNode))
@@ -635,7 +636,7 @@ public class Grammar : AbstractNamedElement
                 return false;
             }
 
-            private Boolean CheckRange(ASTNode parentNode, ParserState state, Int32 minCount, Int32 maxCount, Func<ASTNode, Boolean> check)
+            private Boolean CheckRange(ASTNode parentNode, ParserState state, String? errorName, Int32 minCount, Int32 maxCount, Func<ASTNode, Boolean> check)
             {
                 Int32 oldPosition = state.Position;
                 Int32 count = 0;
@@ -669,7 +670,7 @@ public class Grammar : AbstractNamedElement
                 return true;
             }
 
-            private Boolean MakeTerminal(ASTNode parentNode, ParserState state, Boolean doNotEscape, Func<ASTNode, Boolean> check)
+            private Boolean MakeTerminal(ASTNode parentNode, ParserState state, String? errorName, Boolean doNotEscape, Func<ASTNode, Boolean> check)
             {
                 Int32 oldPosition = state.Position;
                 using (state.EnterTerminal(parentNode.Name))
@@ -688,7 +689,7 @@ public class Grammar : AbstractNamedElement
                 }
             }
 
-            private Boolean PromoteAction(ASTNode parentNode, ParserState state, Func<ASTNode, Boolean> check)
+            private Boolean PromoteAction(ASTNode parentNode, ParserState state, String? errorName, Func<ASTNode, Boolean> check)
             {
                 Int32 childCount = parentNode.Children.Count;
                 Boolean result = check(parentNode);
@@ -700,7 +701,7 @@ public class Grammar : AbstractNamedElement
                 return result;
             }
 
-            private Boolean AddVirtualNode(ASTNode parentNode, ParserState state, Int32 tokenId, String text)
+            private Boolean AddVirtualNode(ASTNode parentNode, ParserState state, String? errorName, Int32 tokenId, String text)
             {
                 parentNode.AddChild(new ASTNode(tokenId, "VIRTUAL", text, state.Position));
                 return true;

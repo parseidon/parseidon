@@ -11,7 +11,7 @@ public class IsTerminalMarker : AbstractInTreeMarker
     public override String ToString(Grammar grammar)
     {
         String result = "";
-        result += $"MakeTerminal(actualNode, state, {DoNotEscape.ToString().ToLower()}, \n";
+        result += $"MakeTerminal(actualNode, state, errorName, {DoNotEscape.ToString().ToLower()}, \n";
         result += Indent($"(actualNode) => {Element?.ToString(grammar)}") + "\n";
         result += ")";
         return result;

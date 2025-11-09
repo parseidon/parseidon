@@ -8,7 +8,7 @@ public class DropMarker : AbstractInTreeMarker
     public override String ToString(Grammar grammar)
     {
         String result = "";
-        result += $"Drop(actualNode, state, \n";
+        result += $"Drop(actualNode, state, errorName,\n";
         result += Indent($"(actualNode) => {Element?.ToString(grammar)}") + "\n";
         result += ")";
         return result;

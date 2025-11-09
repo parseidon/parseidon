@@ -7,7 +7,7 @@ public class OneOrMoreOperator : AbstractOneChildOperator
     public override String ToString(Grammar grammar)
     {
         String result = "";
-        result += $"CheckOneOrMore(actualNode, state, \n";
+        result += $"CheckOneOrMore(actualNode, state, errorName,\n";
         result += Indent($"(actualNode) => {Element?.ToString(grammar)}") + "\n";
         result += ")";
         return result;

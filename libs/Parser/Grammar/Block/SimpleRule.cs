@@ -20,7 +20,7 @@ public class SimpleRule : AbstractNamedDefinitionElement
     public override String GetReferenceCode(Grammar grammar) =>
         HasMarker<TreatInlineMarker>()
         ? ToString(grammar)
-        : $"CheckRule_{Name}(actualNode, state)";
+        : $"CheckRule_{Name}(actualNode, state, errorName)";
 
     public Boolean DropRule { get => HasMarker<DropMarker>() || HasMarker<TreatInlineMarker>(); }
 

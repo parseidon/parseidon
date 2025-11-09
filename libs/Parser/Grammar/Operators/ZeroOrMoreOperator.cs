@@ -7,7 +7,7 @@ public class ZeroOrMoreOperator : AbstractOneChildOperator
     public override String ToString(Grammar grammar)
     {
         String result = "";
-        result += $"CheckZeroOrMore(actualNode, state, \n";
+        result += $"CheckZeroOrMore(actualNode, state, errorName,\n";
         result += Indent($"(actualNode) => {Element?.ToString(grammar)}") + "\n";
         result += ")";
         return result;

@@ -9,7 +9,7 @@ public class OrOperator : AbstractTwoChildOperator
     public override String ToString(Grammar grammar)
     {
         String result = "";
-        result += $"CheckOr(actualNode, state, \n";
+        result += $"CheckOr(actualNode, state, errorName,\n";
         result += Indent($"(actualNode) => {Left.ToString(grammar)},") + "\n";
         result += Indent($"(actualNode) => {Right.ToString(grammar)}") + "\n";
         result += ")";

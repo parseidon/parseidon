@@ -9,7 +9,7 @@ public class TextTerminal : AbstractFinalTerminal
 
     public String Text { get; }
 
-    public override String ToString(Grammar grammar) => $"CheckText(actualNode, state, \"{ToLiteral(Text, true)}\")";
+    public override String ToString(Grammar grammar) => $"CheckText(actualNode, state, errorName, \"{ToLiteral(Text, true)}\")";
 
     public override bool MatchesVariableText() => false;
 

@@ -7,7 +7,7 @@ public class OptionalOperator : AbstractOneChildOperator
     public override String ToString(Grammar grammar)
     {
         String result = "";
-        result += $"CheckRange(actualNode, state, 0, 1,\n";
+        result += $"CheckRange(actualNode, state, errorName, 0, 1,\n";
         result += Indent($"(actualNode) => {Element?.ToString(grammar)}") + "\n";
         result += ")";
         return result;
