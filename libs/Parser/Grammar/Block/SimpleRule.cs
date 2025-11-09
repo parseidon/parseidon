@@ -17,8 +17,13 @@ public class SimpleRule : AbstractNamedDefinitionElement
         return _customMarker.Any(marker => marker is T);
     }
 
-    public override String GetReferenceCode(Grammar grammar)
+    public override String GetReferenceCode(Grammar grammar) =>
+        HasMarker<TreatInlineMarker>()
+        ? ToString(grammar)
+        : $"CheckRule_{Name}(actualNode, state)";
 
-    public override bool MatchesVariableText() => Definition is DropMarker ? false : Definition.MatchesVariableText();
+    public Boolean DropRule { get => HasMarker<DropMarker>() || HasMarker<TreatInlineMarker>(); }
+
+    public override bool MatchesVariableText() => DropRule ? false : Definition.MatchesVariableText();
 
 }

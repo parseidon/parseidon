@@ -8,4 +8,6 @@ public abstract class AbstractMarker : AbstractOneChildOperator
 
     public override bool MatchesVariableText() => true;
 
+    public override String ToString(Grammar grammar) => Element?.ToString(grammar) ?? String.Empty;
+
 }

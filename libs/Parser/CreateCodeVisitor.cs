@@ -305,5 +305,12 @@ public class CreateCodeVisitor : INodeVisitor
         Push(typedContext, new TextTerminal(node.Text, typedContext.MessageContext, node));
         return ProcessNodeResult.Success;
     }
+
+    public ProcessNodeResult ProcessTreatInlineNode(object context, ASTNode node, IList<ParserMessage> messages)
+    {
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        Push(typedContext, new TreatInlineMarker(null, typedContext.MessageContext, node));
+        return ProcessNodeResult.Success;
+    }
 }
 
