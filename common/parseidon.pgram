@@ -28,7 +28,7 @@ Char                = [^'\\] / '\\\'' / '\\\\' / EscapeChars / UnicodeChars;
 Regex               = RegularExpression Quantifier? Spacing;
 $RegularExpression   = '[' BracketContent+ ']';
 BracketContent     = ('\\' [.\\\[\]-^]) / [^\[\\\]] / EscapeChars / UnicodeChars;
-Quantifier          = '{' Number '}';
+:Quantifier          = '{' Number '}';
 
 Or                  = '/' Spacing;
 Optional            = '?' Spacing;
