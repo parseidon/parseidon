@@ -201,7 +201,6 @@ public class CreateCodeVisitor : INodeVisitor
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
         AbstractGrammarElement element = Pop<AbstractGrammarElement>(typedContext);
         AbstractMarker? marker = TryPop<AbstractMarker>(typedContext);
-        // element.Drop = marker is DropMarker;
         if (marker is not null)
         {
             marker.Element = element;
