@@ -1,6 +1,6 @@
 namespace Parseidon.Parser.Grammar.Operators;
 
-public class UseRuleNameAsErrorMarker : AbstractInTreeMarker
+public class UseRuleNameAsErrorMarker : AbstractMarker
 {
     public UseRuleNameAsErrorMarker(AbstractGrammarElement? element, MessageContext messageContext, ASTNode node) : base(element, messageContext, node) { }
 

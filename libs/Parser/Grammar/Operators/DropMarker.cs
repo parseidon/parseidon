@@ -1,6 +1,6 @@
 namespace Parseidon.Parser.Grammar.Operators;
 
-public class DropMarker : AbstractInTreeMarker
+public class DropMarker : AbstractMarker
 {
     public DropMarker(AbstractGrammarElement? element, MessageContext messageContext, ASTNode node) : base(element, messageContext, node) { }
 

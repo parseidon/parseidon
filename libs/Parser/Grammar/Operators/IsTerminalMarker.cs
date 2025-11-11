@@ -1,6 +1,6 @@
 namespace Parseidon.Parser.Grammar.Operators;
 
-public class IsTerminalMarker : AbstractInTreeMarker
+public class IsTerminalMarker : AbstractMarker
 {
     public IsTerminalMarker(Boolean doNetEscape, AbstractGrammarElement? element, MessageContext messageContext, ASTNode node) : base(element, messageContext, node)
     {
