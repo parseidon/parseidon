@@ -14,6 +14,7 @@ public class Grammar : AbstractNamedElement
     public Grammar(String nameSpace, String className, String rootRuleName, List<SimpleRule> rules, MessageContext messageContext, ASTNode node) : base(className, messageContext, node)
     {
         Rules = rules;
+        CheckDuplicatedRules(Rules);
         Rules.ForEach((element) => element.Parent = this);
         _namespace = nameSpace;
         _rootRuleName = String.IsNullOrWhiteSpace(rootRuleName) ? "Grammar" : rootRuleName;
@@ -74,6 +75,14 @@ public class Grammar : AbstractNamedElement
             if (element.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
                 return element;
         return null;
+    }
+
+    public void CheckDuplicatedRules(List<SimpleRule> rules)
+    {
+        HashSet<String> existingRules = new HashSet<String>(StringComparer.InvariantCultureIgnoreCase);
+        foreach (SimpleRule rule in rules)
+            if (!existingRules.Add(rule.Name))
+                throw rule.GetException($"Rule '{rule.Name}' already exists!");
     }
 
     public Int32 GetElementIdOf(AbstractNamedElement element)

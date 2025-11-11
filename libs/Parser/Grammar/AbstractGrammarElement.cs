@@ -19,7 +19,7 @@ public abstract class AbstractGrammarElement
     public ASTNode Node { get; }
     public AbstractGrammarElement? Parent { get; set; }
 
-    protected GrammarException GetException(String message)
+    public GrammarException GetException(String message)
     {
         (UInt32 row, UInt32 column) = MessageContext!.CalculateLocation(Node!.Position);
         return new GrammarException(message, row, column);
