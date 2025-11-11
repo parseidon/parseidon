@@ -334,7 +334,7 @@ public class Grammar : AbstractNamedElement
                 ParserState state = new ParserState(text, new MessageContext(text));
                 ASTNode actualNode = new ASTNode(-1, "ROOT", "", 0);
                 String? errorName = null;
-                Boolean successful = {{rootRule.GetReferenceCode(this)}} && state.Position == text.Length - 1;
+                Boolean successful = {{rootRule.GetReferenceCode(this)}} && state.Position >= text.Length - 1;
                 if (successful)
                     state.NoError(state.Position);
                 return new ParseResult(successful ? actualNode : null, state.MessageContext, state.Messages);

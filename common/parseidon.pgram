@@ -2,7 +2,7 @@
 @class ParseidonParser;
 @rootnode Grammar;
 
-Grammar             = Config Definition+;
+Grammar             = Config Definition+ Spacing;
 Config              = Namespace ClassName RootNode;
 Namespace           = Spacing -'@namespace' Spacing CSharpIdentifier LineEnd;
 ClassName           = Spacing -'@class' Spacing CSharpIdentifier LineEnd;
