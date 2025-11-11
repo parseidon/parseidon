@@ -52,6 +52,6 @@ Dot                 = '.' Spacing;
 ^WhiteSpace         = [ \t];
 ^NewLine            = '\r\n' / [\r\n];
 ^$Number            = '0' / ([1-9] [0-9]*);
-Comment             = '#' [^\r\n]* [\r\n];
+Comment             = '#' [^\r\n]*;
 BracketOpen         = '(' Spacing;
 BracketClose        = ')' Spacing;
