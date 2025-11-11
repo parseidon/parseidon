@@ -638,19 +638,6 @@ public class Grammar : AbstractNamedElement
                 return true;
             }
 
-            private Boolean CheckDifference(ASTNode parentNode, ParserState state, String? errorName, Func<ASTNode, String?, Boolean> leftCheck, Func<ASTNode, String?, Boolean> rightCheck)
-            {
-                Int32 oldPosition = state.Position;
-                if (leftCheck(parentNode, errorName))
-                {
-                    state.Position = oldPosition;
-                    if (rightCheck(parentNode, errorName))
-                        return true;
-                }
-                state.Position = oldPosition;
-                return false;
-            }
-
             private Boolean CheckRange(ASTNode parentNode, ParserState state, String? errorName, Int32 minCount, Int32 maxCount, Func<ASTNode, String?, Boolean> check)
             {
                 Int32 oldPosition = state.Position;
@@ -709,23 +696,6 @@ public class Grammar : AbstractNamedElement
                 return check(parentNode, errorName);
             }
 
-            private Boolean PromoteAction(ASTNode parentNode, ParserState state, String? errorName, Func<ASTNode, String?, Boolean> check)
-            {
-                Int32 childCount = parentNode.Children.Count;
-                Boolean result = check(parentNode, errorName);
-                if (result && (childCount < parentNode.Children.Count))
-                {
-                    ASTNode newNode = parentNode.Children.Last();
-                    parentNode.AssignFrom(newNode);
-                }
-                return result;
-            }
-
-            private Boolean AddVirtualNode(ASTNode parentNode, ParserState state, String? errorName, Int32 tokenId, String text)
-            {
-                parentNode.AddChild(new ASTNode(tokenId, "VIRTUAL", text, state.Position));
-                return true;
-            }
             """;
         return result;
     }
