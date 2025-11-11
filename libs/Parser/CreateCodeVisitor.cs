@@ -313,10 +313,10 @@ public class CreateCodeVisitor : INodeVisitor
         return ProcessNodeResult.Success;
     }
 
-    public ProcessNodeResult ProcessPromoteErrorNameNode(object context, ASTNode node, IList<ParserMessage> messages)
+    public ProcessNodeResult ProcessUseRuleNameAsErrorNode(object context, ASTNode node, IList<ParserMessage> messages)
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
-        Push(typedContext, new PromoteErrorNameMarker(null, typedContext.MessageContext, node));
+        Push(typedContext, new UseRuleNameAsErrorMarker(null, typedContext.MessageContext, node));
         return ProcessNodeResult.Success;
     }
 }

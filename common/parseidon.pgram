@@ -8,7 +8,7 @@ Namespace           = Spacing -'@namespace' Spacing CSharpIdentifier LineEnd;
 ClassName           = Spacing -'@class' Spacing CSharpIdentifier LineEnd;
 RootNode            = Spacing -'@rootnode' Spacing Identifier LineEnd;
 Definition          = Spacing RuleOptions Identifier -Equal Expression LineEnd;
-:RuleOptions        = PromoteErrorName? (IsTerminal / Drop / TreatInline)?;
+:RuleOptions        = UseRuleNameAsError? (IsTerminal / Drop / TreatInline)?;
 Expression          = Sequence (Or Sequence)*;
 Sequence            = Prefix*;
 Prefix              = Drop? Suffix;
@@ -37,7 +37,7 @@ OneOrMore           = '+' Spacing;
 Drop                = '-' Spacing;
 IsTerminal          = '$' '$'? Spacing;
 TreatInline         = ':' Spacing;
-PromoteErrorName    = '^' Spacing;
+UseRuleNameAsError  = '^' Spacing;
 
 EscapeChars         = '\\' [\\0abfnrtv"'?];
 $$UnicodeChars        = '\\u' [0-9a-fA-F]{4};

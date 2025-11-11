@@ -704,7 +704,7 @@ public class Grammar : AbstractNamedElement
                 }
             }
 
-            private Boolean PromoteErrorName(ASTNode parentNode, ParserState state, String? errorName, Func<ASTNode, String?, Boolean> check)
+            private Boolean SetErrorName(ASTNode parentNode, ParserState state, String? errorName, Func<ASTNode, String?, Boolean> check)
             {
                 return check(parentNode, errorName);
             }
