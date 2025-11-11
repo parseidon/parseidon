@@ -9,8 +9,6 @@ public class NumberTerminal : AbstractFinalTerminal
 
     public Int32 Number { get; }
 
-    public override String ToString(Grammar grammar) => $"CheckText(actualNode, state, errorName, \"{ToLiteral(Number.ToString(), true)}\")";
-
     public override bool MatchesVariableText() => false;
 
 }
