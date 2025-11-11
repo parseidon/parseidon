@@ -389,7 +389,6 @@ public class Grammar : AbstractNamedElement
                 public ParserState(String text, MessageContext messageContext)
                 {
                     Text = text;
-                    TextLength = Text.Length;
                     MessageContext = messageContext;
                 }
 
@@ -400,7 +399,6 @@ public class Grammar : AbstractNamedElement
                 private List<ParserMessage> _messages = new List<ParserMessage>();
 
                 internal String Text { get; }
-                internal Int32 TextLength { get; }
                 internal Int32 Position { get; set; } = 0;
                 internal Boolean Eof => !(Position < Text.Length);
                 internal MessageContext MessageContext { get; }
@@ -462,7 +460,7 @@ public class Grammar : AbstractNamedElement
 
                 public void ReportError(String message, Int32 parserPosition, Int32 errorPosition)
                 {
-                    if ((parserPosition >= _lastParserPosition) && (parserPosition < TextLength))
+                    if ((parserPosition >= _lastParserPosition) && (parserPosition < Text.Length))
                     {
                         if (parserPosition > _lastParserPosition)
                             NoError(parserPosition);
