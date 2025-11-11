@@ -18,12 +18,12 @@ Primary             = Identifier
                     / -BracketOpen Expression -BracketClose
                     / Regex
                     / Dot;  
-$Identifier         = IdentStart IdentCont Spacing;
+^$Identifier         = IdentStart IdentCont Spacing;
 IdentStart          = [a-zA-Z_];
 IdentCont           = [a-zA-Z0-9_]*;
-$CSharpIdentifier   = IdentStart CSharpIdentCont Spacing;
+^$CSharpIdentifier   = IdentStart CSharpIdentCont Spacing;
 CSharpIdentCont     = [a-zA-Z0-9_.]*;
-$Literal            = ((-'\'' Char*  -'\'') / ('"' Char* '"')) Spacing ;
+^$Literal            = ((-'\'' Char*  -'\'') / ('"' Char* '"')) Spacing ;
 Char                = [^'\\] / '\\\'' / '\\\\' / EscapeChars / UnicodeChars;
 Regex               = RegularExpression Quantifier? Spacing;
 $RegularExpression  = '[' BracketContent+ ']';
@@ -43,12 +43,12 @@ EscapeChars         = '\\' [\\0abfnrtv"'?];
 $$UnicodeChars        = '\\u' [0-9a-fA-F]{4};
 
 Equal               = '=' Spacing;
--LineEnd            = Spacing ';';
+^-LineEnd            = Spacing ';';
 Dot                 = '.' Spacing;
 -Spacing            = (NewLine / WhiteSpace / Comment)*;
-WhiteSpace          = [ \t\r\n];
-NewLine             = [\r];
-$Number             = '0' / ([1-9] [0-9]*);
+^WhiteSpace          = [ \t\r\n];
+^NewLine             = [\r];
+^$Number             = '0' / ([1-9] [0-9]*);
 Comment             = '#' [^\r\n]* [\r\n];
 BracketOpen         = '(' Spacing;
 BracketClose        = ')' Spacing;
