@@ -316,7 +316,7 @@ public class CreateCodeVisitor : INodeVisitor
         return ProcessNodeResult.Success;
     }
 
-    public ProcessNodeResult ProcessRegularExpressionNode(object context, ASTNode node, IList<ParserMessage> messages)
+    public ProcessNodeResult ProcessCharacterClassNode(object context, ASTNode node, IList<ParserMessage> messages)
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
         Push(typedContext, new TextTerminal(node.Text, typedContext.MessageContext, node));

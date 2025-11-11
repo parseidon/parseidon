@@ -27,8 +27,8 @@ CSharpIdentCont     = [a-zA-Z0-9_.]*;
 :SingleQuotedLiteral= (-'\'' Char*  -'\'');
 :DoubleQuotedLiteral= (-'"' Char* -'"');
 Char                = [^'\\] / '\\\'' / '\\\\' / EscapeChars / UnicodeChars;
-Regex               = RegularExpression Quantifier? Spacing;
-$RegularExpression  = '[' BracketContent+ ']';
+Regex               = CharacterClass Quantifier? Spacing;
+$CharacterClass  = '[' BracketContent+ ']';
 BracketContent      = ('\\' [.\\\[\]-^]) / [^\[\\\]] / EscapeChars / UnicodeChars;
 :Quantifier         = '{' Number '}';
 
