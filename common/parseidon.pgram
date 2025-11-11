@@ -35,7 +35,8 @@ Optional            = '?' Spacing;
 ZeroOrMore          = '*' Spacing;
 OneOrMore           = '+' Spacing;
 Drop                = '-' Spacing;
-IsTerminal          = '$' '$'? Spacing;
+IsTerminal          = '$' DontEscapeOutput? Spacing;
+:DontEscapeOutput    = '$';
 TreatInline         = ':' Spacing;
 UseRuleNameAsError  = '^' Spacing;
 
