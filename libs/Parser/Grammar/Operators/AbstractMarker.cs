@@ -6,6 +6,18 @@ public abstract class AbstractMarker : AbstractOneChildOperator
 {
     public AbstractMarker(AbstractGrammarElement? element, MessageContext messageContext, ASTNode node) : base(element, messageContext, node) { }
 
+    protected SimpleRule? GetRule()
+    {
+        AbstractGrammarElement? current = Parent;
+        while (current is not null)
+        {
+            if (current is SimpleRule rule)
+                return rule;
+            current = current.Parent;
+        }
+        return null;
+    }
+    
     public override bool MatchesVariableText() => true;
 
     public override String ToString(Grammar grammar) => Element?.ToString(grammar) ?? String.Empty;

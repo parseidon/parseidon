@@ -10,8 +10,8 @@ public class OrOperator : AbstractTwoChildOperator
     {
         String result = "";
         result += $"CheckOr(actualNode, state, errorName,\n";
-        result += Indent($"(actualNode) => {Left.ToString(grammar)},") + "\n";
-        result += Indent($"(actualNode) => {Right.ToString(grammar)}") + "\n";
+        result += Indent($"(actualNode, errorName) => {Left.ToString(grammar)},") + "\n";
+        result += Indent($"(actualNode, errorName) => {Right.ToString(grammar)}") + "\n";
         result += ")";
         return result;
     }

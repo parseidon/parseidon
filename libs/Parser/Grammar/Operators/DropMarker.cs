@@ -9,7 +9,7 @@ public class DropMarker : AbstractInTreeMarker
     {
         String result = "";
         result += $"Drop(actualNode, state, errorName,\n";
-        result += Indent($"(actualNode) => {Element?.ToString(grammar)}") + "\n";
+        result += Indent($"(actualNode, errorName) => {Element?.ToString(grammar)}") + "\n";
         result += ")";
         return result;
     }

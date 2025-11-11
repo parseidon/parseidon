@@ -12,7 +12,7 @@ public class IsTerminalMarker : AbstractInTreeMarker
     {
         String result = "";
         result += $"MakeTerminal(actualNode, state, errorName, {DoNotEscape.ToString().ToLower()}, \n";
-        result += Indent($"(actualNode) => {Element?.ToString(grammar)}") + "\n";
+        result += Indent($"(actualNode, errorName) => {Element?.ToString(grammar)}") + "\n";
         result += ")";
         return result;
     }

@@ -8,7 +8,7 @@ public class OptionalOperator : AbstractOneChildOperator
     {
         String result = "";
         result += $"CheckRange(actualNode, state, errorName, 0, 1,\n";
-        result += Indent($"(actualNode) => {Element?.ToString(grammar)}") + "\n";
+        result += Indent($"(actualNode, errorName) => {Element?.ToString(grammar)}") + "\n";
         result += ")";
         return result;
     }
