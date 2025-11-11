@@ -137,12 +137,23 @@ public class Grammar : AbstractNamedElement
                     hasOrParent = parent is OrOperator;
                     parent = parent.Parent;
                 }
+                Boolean hasOptionalParent = false;
+                if (!hasOrParent)
+                {
+                    parent = element.Parent;
+                    while ((parent is not null) && !hasOptionalParent)
+                    {
+                        hasOptionalParent = parent is OptionalOperator;
+                        parent = parent.Parent;
+                    }
+                }
+
                 referencedRule.IterateElements(
-                    (element) => IterateRelevantGrammarRules(element, rules, hasOrParent)
+                    (element) => IterateRelevantGrammarRules(element, rules, hasOrParent || hasOptionalParent)
                 );
             }
         }
-        Boolean result = !((element is SimpleRule rule1) && (rule1.Definition is IsTerminalMarker));
+        Boolean result = !((element is SimpleRule rule1) && (rule1.HasMarker<IsTerminalMarker>()));
         return result;
     }
 
