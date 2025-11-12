@@ -1,3 +1,4 @@
+using Humanizer;
 using Parseidon.Parser.Grammar.Block;
 
 namespace Parseidon.Parser.Grammar.Operators;
@@ -6,7 +7,7 @@ public abstract class AbstractMarker : AbstractOneChildOperator
 {
     public AbstractMarker(AbstractGrammarElement? element, MessageContext messageContext, ASTNode node) : base(element, messageContext, node) { }
 
-    protected SimpleRule? GetRule()
+    protected SimpleRule GetRule()
     {
         AbstractGrammarElement? current = Parent;
         while (current is not null)
@@ -15,9 +16,9 @@ public abstract class AbstractMarker : AbstractOneChildOperator
                 return rule;
             current = current.Parent;
         }
-        return null;
+        throw new InvalidCastException("Found nor rule for marker!");
     }
-    
+
     public override bool MatchesVariableText() => true;
 
     public override String ToString(Grammar grammar) => Element?.ToString(grammar) ?? String.Empty;
