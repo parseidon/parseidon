@@ -28,8 +28,13 @@ CSharpIdentCont     = [a-zA-Z0-9_.]*;
 :DoubleQuotedLiteral= (-'"' Char* -'"');
 Char                = [^'\\] / '\\\'' / '\\\\' / EscapeChars / UnicodeChars;
 Regex               = CharacterClass Quantifier? Spacing;
-$CharacterClass  = '[' BracketContent+ ']';
-BracketContent      = ('\\' [.\\\[\]-^]) / [^\[\\\]] / EscapeChars / UnicodeChars;
+$CharacterClass     = '[' Negation? ClassContent+ ']';
+:Negation           = '^';
+ClassContent        = CharRange / PredefinedClass / EscapedChar / SingleChar;
+:CharRange          = SingleChar '-' SingleChar;
+SingleChar          = [^\\\[\]\-] / UnicodeChars;
+EscapedChar         = '\\' [.\\\[\]\-\^];
+PredefinedClass     = '\\d' / '\\D' / '\\w' / '\\W' / '\\s' / '\\S' / '\\t' / '\\r' / '\\n' / '\\v' / '\\f';
 :Quantifier         = '{' Number '}';
 
 Or                  = '/' Spacing;
