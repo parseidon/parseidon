@@ -25,7 +25,7 @@ Primary             = Identifier
 ^$Identifier        = IdentStart IdentCont Spacing;
 IdentStart          = [a-zA-Z_];
 IdentCont           = [a-zA-Z0-9_]*;
-^$CSharpIdentifier  = IdentStart CSharpIdentCont Spacing;
+^$CSharpIdentifier  = IdentStart CSharpIdentCont Spacing {ErrorName='C#-Identifier'};
 CSharpIdentCont     = [a-zA-Z0-9_.]*;
 ^$Literal           = (SingleQuotedLiteral / DoubleQuotedLiteral) Spacing ;
 :SingleQuotedLiteral= (-'\'' Char*  -'\'');
