@@ -1129,14 +1129,17 @@ namespace Parseidon.Parser
             Boolean result =
                 SetErrorName(actualNode, state, "Number",
                     (actualNode, errorName) => MakeTerminal(actualNode, state, errorName, false,
-                        (actualNode, errorName) => CheckOr(actualNode, state, errorName,
-                            (actualNode, errorName) => CheckText(actualNode, state, errorName, "0"),
-                            (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
-                                (actualNode, errorName) => CheckRegEx(actualNode, state, errorName, "[1-9]", 1),
-                                (actualNode, errorName) => CheckZeroOrMore(actualNode, state, errorName,
-                                    (actualNode, errorName) => CheckRegEx(actualNode, state, errorName, "[0-9]", 1)
+                        (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
+                            (actualNode, errorName) => CheckOr(actualNode, state, errorName,
+                                (actualNode, errorName) => CheckText(actualNode, state, errorName, "0"),
+                                (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
+                                    (actualNode, errorName) => CheckRegEx(actualNode, state, errorName, "[1-9]", 1),
+                                    (actualNode, errorName) => CheckZeroOrMore(actualNode, state, errorName,
+                                        (actualNode, errorName) => CheckRegEx(actualNode, state, errorName, "[0-9]", 1)
+                                    )
                                 )
-                            )
+                            ),
+                            (actualNode, errorName) => CheckRule_Spacing(actualNode, state, errorName)
                         )
                     )
                 );
