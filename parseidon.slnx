@@ -1,0 +1,17 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/apps/">
+    <Project Path="apps/Cli/Parseidon.Cli.csproj" />
+  </Folder>
+  <Folder Name="/libs/">
+    <Project Path="libs/Helper/Parseidon.Helper.csproj" />
+    <Project Path="libs/Parser/Parseidon.Parser.csproj" />
+  </Folder>
+  <Folder Name="/libs/SourceGen/">
+    <Project Path="libs/SourceGen/Parseidon.SourceGen.csproj" />
+  </Folder>
+</Solution>
