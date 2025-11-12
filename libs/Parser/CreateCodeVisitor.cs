@@ -125,6 +125,9 @@ public class CreateCodeVisitor : INodeVisitor
     public ProcessNodeResult ProcessDefinitionNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        List<ValuePair> valuePairs = PopList<ValuePair>(typedContext);
+        Dictionary<String, String> keyValuePairs = new Dictionary<String, String>();
+        valuePairs.ForEach(pair => keyValuePairs.Add(pair.Name, pair.Value));
         AbstractGrammarElement definition = Pop<AbstractGrammarElement>(typedContext);
         ReferenceElement name = Pop<ReferenceElement>(typedContext);
         List<AbstractMarker> markers = new List<AbstractMarker>();
@@ -134,9 +137,7 @@ public class CreateCodeVisitor : INodeVisitor
             marker.Element = definition;
             definition = marker;
         }
-
-        AbstractGrammarElement newRule = new SimpleRule(name.ReferenceName, definition, typedContext.MessageContext, node, markers);
-
+        AbstractGrammarElement newRule = new SimpleRule(name.ReferenceName, definition, keyValuePairs, typedContext.MessageContext, node, markers);
         Push(typedContext, newRule);
         return ProcessNodeResult.Success;
     }
@@ -334,6 +335,16 @@ public class CreateCodeVisitor : INodeVisitor
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
         Push(typedContext, new UseRuleNameAsErrorMarker(null, typedContext.MessageContext, node));
+        return ProcessNodeResult.Success;
+    }
+
+    public ProcessNodeResult ProcessValuePairNode(object context, ASTNode node, IList<ParserMessage> messages)
+    {
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        TextTerminal value = Pop<TextTerminal>(typedContext);
+        ReferenceElement name = Pop<ReferenceElement>(typedContext);
+        ValuePair valuePair = new ValuePair(name.ReferenceName, value.Text, typedContext.MessageContext, node);
+        Push(typedContext, valuePair);
         return ProcessNodeResult.Success;
     }
 }
