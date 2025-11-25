@@ -10,8 +10,8 @@ RootNode            = Spacing -'@rootnode' Spacing Identifier LineEnd;
 Definition          = Spacing RuleOptions Identifier -Equal Expression AdditionalProperties? LineEnd;
 :RuleOptions        = UseRuleNameAsError? (IsTerminal / Drop / TreatInline)?;
 
-:AdditionalProperties= -'{' ValuePair (',' Spacing ValuePair)* -'}';
-ValuePair           = Spacing Identifier -Equal Literal;
+:AdditionalProperties= -'{' Spacing ValuePair (',' Spacing ValuePair)* -'}';
+ValuePair           = Identifier -Equal Literal;
 
 Expression          = Sequence (Or Sequence)*;
 Sequence            = Prefix+;
