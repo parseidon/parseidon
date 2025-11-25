@@ -1,6 +1,6 @@
 namespace Parseidon.Parser.Grammar.Terminals;
 
-public class TextTerminal : AbstractFinalTerminal
+public class TextTerminal : AbstractValueTerminal
 {
     public TextTerminal(String text, MessageContext messageContext, ASTNode node) : base(messageContext, node)
     {
@@ -11,6 +11,6 @@ public class TextTerminal : AbstractFinalTerminal
 
     public override String ToString(Grammar grammar) => $"CheckText(actualNode, state, errorName, \"{ToLiteral(Text, true)}\")";
 
-    public override bool MatchesVariableText() => false;
+    public override String AsText() => Text;
 
 }

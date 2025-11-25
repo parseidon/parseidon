@@ -11,8 +11,9 @@ Definition          = Spacing RuleOptions Identifier -Equal Expression Additiona
 :RuleOptions        = UseRuleNameAsError? (IsTerminal / Drop / TreatInline)?;
 
 :AdditionalProperties= -'{' Spacing ValuePair (',' Spacing ValuePair)* -'}';
-ValuePair           = Identifier -ValueAssign Literal;
-:ValueAssign         = ':' Spacing;
+ValuePair           = Identifier -ValueAssign Value;
+:ValueAssign        = ':' Spacing;
+:Value              = Literal / Number / Boolean;
 
 Expression          = Sequence (Or Sequence)*;
 Sequence            = Prefix+;
@@ -65,3 +66,6 @@ Dot                 = '.' Spacing;
 Comment             = '#' [^\r\n]*;
 BracketOpen         = '(' Spacing;
 BracketClose        = ')' Spacing;
+$Boolean            = (True / False) Spacing;
+:True               = 'true';
+:False              = 'false';

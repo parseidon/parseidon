@@ -1,6 +1,6 @@
 namespace Parseidon.Parser.Grammar.Terminals;
 
-public class NumberTerminal : AbstractFinalTerminal
+public class NumberTerminal : AbstractValueTerminal
 {
     public NumberTerminal(Int32 number, MessageContext messageContext, ASTNode node) : base(messageContext, node)
     {
@@ -9,6 +9,6 @@ public class NumberTerminal : AbstractFinalTerminal
 
     public Int32 Number { get; }
 
-    public override bool MatchesVariableText() => false;
+    public override String AsText() => Number.ToString();
 
 }

@@ -341,10 +341,17 @@ public class CreateCodeVisitor : INodeVisitor
     public ProcessNodeResult ProcessValuePairNode(object context, ASTNode node, IList<ParserMessage> messages)
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
-        TextTerminal value = Pop<TextTerminal>(typedContext);
+        AbstractValueTerminal value = Pop<AbstractValueTerminal>(typedContext);
         ReferenceElement name = Pop<ReferenceElement>(typedContext);
-        ValuePair valuePair = new ValuePair(name.ReferenceName, value.Text, typedContext.MessageContext, node);
+        ValuePair valuePair = new ValuePair(name.ReferenceName, value.AsText(), typedContext.MessageContext, node);
         Push(typedContext, valuePair);
+        return ProcessNodeResult.Success;
+    }
+
+    public ProcessNodeResult ProcessBooleanNode(object context, ASTNode node, IList<ParserMessage> messages)
+    {
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        Push(typedContext, new BooleanTerminal(Boolean.Parse(node.Text), typedContext.MessageContext, node));
         return ProcessNodeResult.Success;
     }
 }
