@@ -11,7 +11,8 @@ Definition          = Spacing RuleOptions Identifier -Equal Expression Additiona
 :RuleOptions        = UseRuleNameAsError? (IsTerminal / Drop / TreatInline)?;
 
 :AdditionalProperties= -'{' Spacing ValuePair (',' Spacing ValuePair)* -'}';
-ValuePair           = Identifier -Equal Literal;
+ValuePair           = Identifier -ValueAssign Literal;
+:ValueAssign         = ':' Spacing;
 
 Expression          = Sequence (Or Sequence)*;
 Sequence            = Prefix+;
@@ -25,7 +26,7 @@ Primary             = Identifier
 ^$Identifier        = IdentStart IdentCont Spacing;
 IdentStart          = [a-zA-Z_];
 IdentCont           = [a-zA-Z0-9_]*;
-^$CSharpIdentifier  = IdentStart CSharpIdentCont Spacing {ErrorName='C#-Identifier'};
+^$CSharpIdentifier  = IdentStart CSharpIdentCont Spacing {ErrorName: 'C#-Identifier'};
 CSharpIdentCont     = [a-zA-Z0-9_.]*;
 ^$Literal           = (SingleQuotedLiteral / DoubleQuotedLiteral) Spacing ;
 :SingleQuotedLiteral= (-'\'' Char*  -'\'');
