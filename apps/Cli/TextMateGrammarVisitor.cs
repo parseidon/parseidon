@@ -83,9 +83,19 @@ public class TextMateGrammarVisitor : INodeVisitor
         return ProcessNodeResult.Success;
     }
 
-    public ProcessNodeResult ProcessIsTerminalNode(Object context, ASTNode node, IList<ParserMessage> messages) => ProcessNodeResult.Success;
+    public ProcessNodeResult ProcessIsTerminalNode(Object context, ASTNode node, IList<ParserMessage> messages)
+    {
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        Push(typedContext, new IsTerminalMarker(node.Children.Count == 2, null, typedContext.MessageContext, node));
+        return ProcessNodeResult.Success;
+    }
 
-    public ProcessNodeResult ProcessDropNode(Object context, ASTNode node, IList<ParserMessage> messages) => ProcessNodeResult.Success;
+    public ProcessNodeResult ProcessDropNode(Object context, ASTNode node, IList<ParserMessage> messages)
+    {
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        Push(typedContext, new DropMarker(null, typedContext.MessageContext, node));
+        return ProcessNodeResult.Success;
+    }
 
     public ProcessNodeResult ProcessDefinitionNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
@@ -282,8 +292,12 @@ public class TextMateGrammarVisitor : INodeVisitor
         return ProcessNodeResult.Success;
     }
 
-    public ProcessNodeResult ProcessTreatInlineNode(object context, ASTNode node, IList<ParserMessage> messages) => ProcessNodeResult.Success;
-
+    public ProcessNodeResult ProcessTreatInlineNode(object context, ASTNode node, IList<ParserMessage> messages)
+    {
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        Push(typedContext, new TreatInlineMarker(null, typedContext.MessageContext, node));
+        return ProcessNodeResult.Success;
+    }
     public ProcessNodeResult ProcessUseRuleNameAsErrorNode(object context, ASTNode node, IList<ParserMessage> messages) => ProcessNodeResult.Success;
 
     public ProcessNodeResult ProcessValuePairNode(object context, ASTNode node, IList<ParserMessage> messages)
