@@ -4,7 +4,7 @@ namespace Parseidon.Parser.Grammar.Block;
 
 public class SimpleRule : AbstractNamedElement
 {
-    public SimpleRule(string name, AbstractGrammarElement definition, IReadOnlyDictionary<String, String> keyValuePairs, MessageContext messageContext, ASTNode node, List<AbstractMarker> customMarker) : base(name, messageContext, node)
+    public SimpleRule(string name, AbstractDefinitionElement definition, IReadOnlyDictionary<String, String> keyValuePairs, MessageContext messageContext, ASTNode node, List<AbstractMarker> customMarker) : base(name, messageContext, node)
     {
         _customMarker = customMarker;
         KeyValuePairs = keyValuePairs;
@@ -32,7 +32,7 @@ public class SimpleRule : AbstractNamedElement
             Definition.IterateElements(process);
     }
 
-    public AbstractGrammarElement Definition { get; }
+    public AbstractDefinitionElement Definition { get; }
     public IReadOnlyDictionary<String, String> KeyValuePairs { get; }
     public Boolean DropRule { get => HasMarker<DropMarker>() || HasMarker<TreatInlineMarker>(); }
     public override bool MatchesVariableText() => DropRule ? false : Definition.MatchesVariableText();
