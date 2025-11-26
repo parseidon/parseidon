@@ -206,6 +206,11 @@ public class CreateCodeVisitor : INodeVisitor
             element = suffixOperator;
             suffixOperator = null;
         }
+        if (element is null)
+        {
+            (UInt32 row, UInt32 column) = typedContext.MessageContext.CalculateLocation(node.Position);
+            throw new GrammarException("Invalid tree structure!", row, column);
+        }
         if (suffixOperator is not null)
         {
             suffixOperator.Element = element;
