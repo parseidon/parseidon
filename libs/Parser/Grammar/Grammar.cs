@@ -436,11 +436,6 @@ public class Grammar : AbstractNamedElement
                     }
                 }
 
-                private String? GetCurrentTerminalName()
-                {
-                    return _terminalNames.Count > 0 ? _terminalNames[_terminalNames.Count - 1] : null;
-                }
-
                 public void ReportError(String message, Int32 parserPosition, Int32 errorPosition)
                 {
                     if ((parserPosition >= _lastParserPosition) && (parserPosition < Text.Length))
