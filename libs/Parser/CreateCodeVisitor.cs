@@ -200,7 +200,12 @@ public class CreateCodeVisitor : INodeVisitor
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
         AbstractOneChildOperator? suffixOperator = TryPop<AbstractOneChildOperator>(typedContext);
-        AbstractDefinitionElement element = Pop<AbstractDefinitionElement>(typedContext);
+        AbstractDefinitionElement? element = TryPop<AbstractDefinitionElement>(typedContext);
+        if ((suffixOperator is not null) && (element is null))
+        {
+            element = suffixOperator;
+            suffixOperator = null;
+        }
         if (suffixOperator is not null)
         {
             suffixOperator.Element = element;
