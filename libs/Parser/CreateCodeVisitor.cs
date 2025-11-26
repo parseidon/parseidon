@@ -145,10 +145,10 @@ public class CreateCodeVisitor : INodeVisitor
         }
         else
         {
-            AbstractGrammarElement rightElement = elements.First();
+            AbstractDefinitionElement rightElement = elements.First();
             for (int i = 1; i < elements.Count; i++)
             {
-                AbstractGrammarElement leftElement = new OrOperator(elements[i], rightElement, typedContext.MessageContext, node);
+                AbstractDefinitionElement leftElement = new OrOperator(elements[i], rightElement, typedContext.MessageContext, node);
                 rightElement = leftElement;
             }
             Push(typedContext, rightElement);
@@ -171,10 +171,10 @@ public class CreateCodeVisitor : INodeVisitor
         }
         else
         {
-            AbstractGrammarElement rightElement = elements.First();
+            AbstractDefinitionElement rightElement = elements.First();
             for (int i = 1; i < elements.Count; i++)
             {
-                AbstractGrammarElement leftElement = new AndOperator(elements[i], rightElement, typedContext.MessageContext, node);
+                AbstractDefinitionElement leftElement = new AndOperator(elements[i], rightElement, typedContext.MessageContext, node);
                 rightElement = leftElement;
             }
             Push(typedContext, rightElement);
@@ -185,7 +185,7 @@ public class CreateCodeVisitor : INodeVisitor
     public ProcessNodeResult ProcessPrefixNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
-        AbstractGrammarElement element = Pop<AbstractGrammarElement>(typedContext);
+        AbstractDefinitionElement element = Pop<AbstractDefinitionElement>(typedContext);
         AbstractMarker? marker = TryPop<AbstractMarker>(typedContext);
         if (marker is not null)
         {
@@ -200,7 +200,7 @@ public class CreateCodeVisitor : INodeVisitor
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
         AbstractOneChildOperator? suffixOperator = TryPop<AbstractOneChildOperator>(typedContext);
-        AbstractGrammarElement element = Pop<AbstractGrammarElement>(typedContext);
+        AbstractDefinitionElement element = Pop<AbstractDefinitionElement>(typedContext);
         if (suffixOperator is not null)
         {
             suffixOperator.Element = element;
