@@ -39,7 +39,7 @@ ClassContent        = CharRange / PredefinedClass / EscapedChar / SingleChar;
 SingleChar          = [^\\\[\]\-] / UnicodeChars;
 EscapedChar         = '\\' [.\\\[\]\-\^];
 PredefinedClass     = '\\d' / '\\D' / '\\w' / '\\W' / '\\s' / '\\S' / '\\t' / '\\r' / '\\n' / '\\v' / '\\f';
-:Quantifier         = '{' Number '}';
+:Quantifier         = '{' Spacing Number '}';
 
 Or                  = '/' Spacing;
 Optional            = '?' Spacing;
