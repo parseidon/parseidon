@@ -26,13 +26,18 @@ rootCommand.Add(parseCommand);
 var astCommand = new Command("ast", "Create the AST (Abstract Syntax Tree) for the grammar as a YAML file");
 rootCommand.Add(astCommand);
 
+var textMateCommand = new Command("textmate", "Create a TextMate grammar from the provided grammar definition");
+rootCommand.Add(textMateCommand);
+
 var grammarFileArgument = new Argument<FileInfo>(name: "GRAMMAR-FILE", description: "The grammar file to be used");
 parseCommand.Add(grammarFileArgument);
 astCommand.Add(grammarFileArgument);
+textMateCommand.Add(grammarFileArgument);
 
 var outputFileArgument = new Argument<FileInfo>(name: "OUTPUT-FILE", description: "The output file");
 parseCommand.Add(outputFileArgument);
 astCommand.Add(outputFileArgument);
+textMateCommand.Add(outputFileArgument);
 
 parseCommand.SetHandler(
     (grammarFile, outputFile, overrideOption, parserNamespace, parserClassname) =>
@@ -44,6 +49,14 @@ astCommand.SetHandler(
     (grammarFile, outputFile, overrideOption) =>
         RunParser(grammarFile, outputFile, overrideOption, (result) =>
             CreateAST(result, outputFile, overrideOption)),
+    grammarFileArgument, outputFileArgument, overrideOption);
+
+textMateCommand.SetHandler(
+    (grammarFile, outputFile, overrideOption) =>
+    {
+        RunParser(grammarFile, outputFile, overrideOption, (result) =>
+            CreateTextMateGrammar(result, outputFile, overrideOption));
+    },
     grammarFileArgument, outputFileArgument, overrideOption);
 
 return await rootCommand.InvokeAsync(args);
@@ -121,6 +134,18 @@ static IVisitResult CreateAST(ParseResult parseResult, FileInfo outputFile, Stri
     return visitResult;
 }
 
+static IVisitResult CreateTextMateGrammar(ParseResult parseResult, FileInfo outputFile, String overrideOption)
+{
+    TextMateGrammarVisitor visitor = new TextMateGrammarVisitor();
+    IVisitResult visitResult = parseResult.Visit(visitor);
+    if (visitResult.Successful && visitResult is TextMateGrammarVisitor.IGetTextMateGrammar grammarResult)
+    {
+        File.WriteAllText(outputFile.FullName, grammarResult.GrammarJson ?? "");
+        AnsiConsole.MarkupLine($"[green] The TextMate grammar '{outputFile.FullName}' is sucessfully created![/]");
+    }
+    return visitResult;
+}
+
 static void ValidateFileInput(FileInfo grammarFile, FileInfo outputFile, String overrideOption)
 {
     if (!grammarFile.Exists)
@@ -143,4 +168,3 @@ static void ValidateFileInput(FileInfo grammarFile, FileInfo outputFile, String 
         }
     }
 }
-

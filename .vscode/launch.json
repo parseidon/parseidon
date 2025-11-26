@@ -52,6 +52,23 @@
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "console": "integratedTerminal"
+        },
+        {
+            "name": "CLI: Create TextMate",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "dotnet: build",
+            "program": "${workspaceFolder}/Output/bin/Parseidon.Cli/Debug/net9.0/dotnet-parseidon.dll",
+            "args": [
+                "textmate",
+                "${workspaceFolder}/common/parseidon.pgram",
+                "${workspaceFolder}/Output/parseidon.json",
+                "-o",
+                "override"
+            ],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "console": "integratedTerminal"
         }
     ]
 }

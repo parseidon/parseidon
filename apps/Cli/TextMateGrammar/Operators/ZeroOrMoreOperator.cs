@@ -1,0 +1,14 @@
+using Parseidon.Parser;
+
+namespace Parseidon.Cli.TextMateGrammar.Operators;
+
+public class ZeroOrMoreOperator : AbstractOneChildOperator
+{
+    public ZeroOrMoreOperator(AbstractGrammarElement? terminal, MessageContext messageContext, ASTNode node) : base(terminal, messageContext, node) { }
+
+    public override String ToString(Grammar grammar)
+    {
+        String result = "";
+        return result;
+    }
+}
