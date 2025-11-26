@@ -17,7 +17,7 @@ Expression          = Sequence (Or Sequence)*;
 Sequence            = Prefix+;
 Prefix              = Drop? Suffix;
 Suffix              = Primary (Optional / ZeroOrMore / OneOrMore)?;
-Primary             = Identifier
+:Primary             = Identifier
                     / Literal
                     / -BracketOpen Expression -BracketClose
                     / Regex
