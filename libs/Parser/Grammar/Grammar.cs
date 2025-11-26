@@ -116,7 +116,7 @@ public class Grammar : AbstractNamedElement
         if ((element is SimpleRule rule) && (rules.IndexOf(rule) < 0) && !rule.HasMarker<TreatInlineMarker>())
             rules.Add(rule);
         else
-            if ((element is ReferenceElement referenceElement) && (FindRuleByName(referenceElement.ReferenceName) is SimpleRule referencedRule) && (rules.IndexOf(referencedRule) < 0))
+            if ((element is ReferenceElement referenceElement) && (!referenceElement.TreatReferenceInline) && (FindRuleByName(referenceElement.ReferenceName) is SimpleRule referencedRule) && (rules.IndexOf(referencedRule) < 0))
                 referencedRule.IterateElements((element) => IterateUsedRules(element, rules));
         return true;
     }
@@ -136,7 +136,7 @@ public class Grammar : AbstractNamedElement
         if ((element is SimpleRule rule) && (rules.IndexOf(rule) < 0) && !(rule.DropRule) && (rule.MatchesVariableText() || forceAdd))
             rules.Add(rule);
         else
-            if ((element is ReferenceElement referenceElement) && (FindRuleByName(referenceElement.ReferenceName) is SimpleRule referencedRule) && (rules.IndexOf(referencedRule) < 0))
+            if ((element is ReferenceElement referenceElement) && (!referenceElement.TreatReferenceInline) && (FindRuleByName(referenceElement.ReferenceName) is SimpleRule referencedRule) && (rules.IndexOf(referencedRule) < 0))
             {
                 Boolean hasDropMarker = false;
                 AbstractGrammarElement? parent = element.Parent;

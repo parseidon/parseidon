@@ -16,7 +16,7 @@ Expression          = Sequence (Or Sequence)*;
 Sequence            = Prefix+;
 Prefix              = Drop? Suffix;
 Suffix              = Primary (Optional / ZeroOrMore / OneOrMore)?;
-:Primary             = Identifier
+:Primary            = TreatInline? Identifier
                     / Literal
                     / -BracketOpen Expression -BracketClose
                     / Regex

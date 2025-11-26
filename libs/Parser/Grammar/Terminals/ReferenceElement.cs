@@ -1,3 +1,4 @@
+using System.Diagnostics.Contracts;
 using Parseidon.Parser.Grammar.Block;
 using Parseidon.Parser.Grammar.Operators;
 
@@ -16,9 +17,15 @@ public class ReferenceElement : AbstractValueTerminal
     public override String ToString(Grammar grammar)
     {
         if (grammar.FindRuleByName(ReferenceName) is SimpleRule referencedRule)
+        {
+            if (TreatReferenceInline)
+                return referencedRule.ToString(grammar);
             return referencedRule.GetReferenceCode(grammar);
+        }
         throw GetException($"Can not find element '{ReferenceName}'");
     }
 
     public override string AsText() => ReferenceName;
+
+    public Boolean TreatReferenceInline { get => Parent is TreatInlineMarker; }
 }
