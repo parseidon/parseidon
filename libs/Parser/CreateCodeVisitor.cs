@@ -39,23 +39,21 @@ public class CreateCodeVisitor : INodeVisitor
         public String? Code { get; }
     }
 
-    private T Pop<T>(CreateCodeVisitorContext context) where T : AbstractGrammarElement
+    private T Pop<T>(CreateCodeVisitorContext context, Int32 position) where T : AbstractGrammarElement
     {
         AbstractGrammarElement lastElement = context.Stack.Pop();
         if (!(lastElement is T))
-            throw new Exception("Expected " + typeof(T).Name + " GOT " + ((Type)lastElement.GetType()).Name);
+        {
+            (UInt32 row, UInt32 column) = context.MessageContext.CalculateLocation(position);
+            throw new GrammarException("Expected " + typeof(T).Name + " GOT " + ((Type)lastElement.GetType()).Name, row, column);
+        }
         return (T)lastElement;
     }
 
-    private T? TryPop<T>(CreateCodeVisitorContext context) where T : AbstractGrammarElement
+    private T? TryPop<T>(CreateCodeVisitorContext context, Int32 position) where T : AbstractGrammarElement
     {
         if (context.Stack.TryPeek() is T)
-        {
-            AbstractGrammarElement lastElement = context.Stack.Pop();
-            if (!(lastElement is T))
-                throw new Exception("Expected " + typeof(T).Name + " GOT " + ((Type)lastElement.GetType()).Name);
-            return (T)lastElement;
-        }
+            return Pop<T>(context, position);
         else
             return null;
     }
@@ -102,10 +100,10 @@ public class CreateCodeVisitor : INodeVisitor
         List<ValuePair> valuePairs = PopList<ValuePair>(typedContext);
         Dictionary<String, String> keyValuePairs = new Dictionary<String, String>();
         valuePairs.ForEach(pair => keyValuePairs.Add(pair.Name, pair.Value));
-        AbstractDefinitionElement definition = Pop<AbstractDefinitionElement>(typedContext);
-        ReferenceElement name = Pop<ReferenceElement>(typedContext);
+        AbstractDefinitionElement definition = Pop<AbstractDefinitionElement>(typedContext, node.Position);
+        ReferenceElement name = Pop<ReferenceElement>(typedContext, node.Position);
         List<AbstractMarker> markers = new List<AbstractMarker>();
-        while (TryPop<AbstractMarker>(typedContext) is AbstractMarker marker)
+        while (TryPop<AbstractMarker>(typedContext, node.Position) is AbstractMarker marker)
         {
             markers.Add(marker);
             marker.Element = definition;
@@ -185,8 +183,8 @@ public class CreateCodeVisitor : INodeVisitor
     public ProcessNodeResult ProcessPrefixNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
-        AbstractDefinitionElement element = Pop<AbstractDefinitionElement>(typedContext);
-        AbstractMarker? marker = TryPop<AbstractMarker>(typedContext);
+        AbstractDefinitionElement element = Pop<AbstractDefinitionElement>(typedContext, node.Position);
+        AbstractMarker? marker = TryPop<AbstractMarker>(typedContext, node.Position);
         if (marker is not null)
         {
             marker.Element = element;
@@ -199,8 +197,8 @@ public class CreateCodeVisitor : INodeVisitor
     public ProcessNodeResult ProcessSuffixNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
-        AbstractOneChildOperator? suffixOperator = TryPop<AbstractOneChildOperator>(typedContext);
-        AbstractDefinitionElement? element = TryPop<AbstractDefinitionElement>(typedContext);
+        AbstractOneChildOperator? suffixOperator = TryPop<AbstractOneChildOperator>(typedContext, node.Position);
+        AbstractDefinitionElement? element = TryPop<AbstractDefinitionElement>(typedContext, node.Position);
         if ((suffixOperator is not null) && (element is null))
         {
             element = suffixOperator;
@@ -230,8 +228,8 @@ public class CreateCodeVisitor : INodeVisitor
     public ProcessNodeResult ProcessRegexNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
-        NumberTerminal? quantifier = TryPop<NumberTerminal>(typedContext);
-        TextTerminal expression = Pop<TextTerminal>(typedContext);
+        NumberTerminal? quantifier = TryPop<NumberTerminal>(typedContext, node.Position);
+        TextTerminal expression = Pop<TextTerminal>(typedContext, node.Position);
         Push(typedContext, new RegExTerminal(expression.Text, quantifier?.Number ?? 1, typedContext.MessageContext, node));
         return ProcessNodeResult.Success;
     }
@@ -318,8 +316,8 @@ public class CreateCodeVisitor : INodeVisitor
     public ProcessNodeResult ProcessValuePairNode(object context, ASTNode node, IList<ParserMessage> messages)
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
-        AbstractValueTerminal value = Pop<AbstractValueTerminal>(typedContext);
-        ReferenceElement name = Pop<ReferenceElement>(typedContext);
+        AbstractValueTerminal value = Pop<AbstractValueTerminal>(typedContext, node.Position);
+        ReferenceElement name = Pop<ReferenceElement>(typedContext, node.Position);
         ValuePair valuePair = new ValuePair(name.ReferenceName, value.AsText(), typedContext.MessageContext, node);
         Push(typedContext, valuePair);
         return ProcessNodeResult.Success;
