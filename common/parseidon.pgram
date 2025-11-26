@@ -4,7 +4,6 @@
 
 Grammar             = Option* Definition+ Spacing;
 Option              = Spacing '@' ValuePair LineEnd;
-ClassName           = Spacing -'@class' Spacing CSharpIdentifier LineEnd;
 Definition          = Spacing RuleOptions Identifier -Equal Expression AdditionalProperties? LineEnd;
 :RuleOptions        = UseRuleNameAsError? (IsTerminal / Drop / TreatInline)?;
 
