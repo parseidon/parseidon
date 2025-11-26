@@ -2,7 +2,7 @@ using Parseidon.Parser.Grammar.Block;
 
 namespace Parseidon.Parser.Grammar.Operators;
 
-public abstract class AbstractOneChildOperator : AbstractOperator
+public abstract class AbstractOneChildOperator : AbstractDefinitionElement
 {
     private AbstractGrammarElement? _element;
     protected AbstractOneChildOperator(AbstractGrammarElement? element, MessageContext messageContext, ASTNode node) : base(messageContext, node)

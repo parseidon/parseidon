@@ -195,7 +195,7 @@ public class Grammar : AbstractNamedElement
                 {
                     Int32 oldPosition = state.Position;
                     ASTNode actualNode = new ASTNode({{GetElementIdOf(rule)}}, "{{rule.Name}}", "", state.Position);
-                    Boolean result = {{GetElementsCode(new List<AbstractNamedDefinitionElement>() { rule }, "Rule", null)}}
+                    Boolean result = {{GetElementsCode(new List<SimpleRule>() { rule }, "Rule", null)}}
                     Int32 foundPosition = state.Position;
                     if (result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
                         parentNode.AddChild(actualNode);
@@ -351,7 +351,7 @@ public class Grammar : AbstractNamedElement
         return result;
     }
 
-    private String GetElementsCode(IEnumerable<AbstractNamedDefinitionElement> elements, String comment, AbstractNamedDefinitionElement? separatorTerminal)
+    private String GetElementsCode(IEnumerable<SimpleRule> elements, String comment, SimpleRule? separatorTerminal)
     {
         String result = String.Join("", elements.Select(x => x.ToString(this))) + ";";
         if (result.IndexOf("\n") > 0)
