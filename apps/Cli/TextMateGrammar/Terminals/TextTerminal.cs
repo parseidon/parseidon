@@ -11,7 +11,10 @@ public class TextTerminal : AbstractValueTerminal
 
     public String Text { get; }
 
-    public override String ToString(Grammar grammar) => $"CheckText(actualNode, state, errorName, \"{ToLiteral(Text, true)}\")";
+    public override String ToString(Grammar grammar)
+    {
+        return $"({Text.Replace("\"", "\\\"").Replace("\\'", "'")})";
+    }
 
     public override String AsText() => Text;
 }

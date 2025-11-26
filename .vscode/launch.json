@@ -69,6 +69,17 @@
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "console": "integratedTerminal"
+        },
+        {
+            "name": "CLI: Check TestGrammar",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "dotnet: build",
+            "program": "${workspaceFolder}/Output/samples/TextMate/run.sh",
+            "args": [],
+            "cwd": "${workspaceFolder}/Output/samples/TextMate",
+            "stopAtEntry": false,
+            "console": "integratedTerminal"
         }
     ]
 }

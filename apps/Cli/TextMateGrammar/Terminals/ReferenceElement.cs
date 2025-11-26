@@ -16,7 +16,7 @@ public class ReferenceElement : AbstractValueTerminal
     public override String ToString(Grammar grammar)
     {
         if (grammar.FindRuleByName(ReferenceName) is SimpleRule referencedRule)
-            return referencedRule.ToString(grammar);
+            return "";  //referencedRule.ToString(grammar);
         throw GetException($"Can not find element '{ReferenceName}'");
     }
 

@@ -2,6 +2,10 @@
 @class: ParseidonParser;
 @rootnode: Grammar;
 
+@tmdisplayname: Parseidon;
+@tmscopename: source.parseidon;
+@tmfiletype: pgram;
+
 Grammar             = Option* Definition+ Spacing;
 Option              = Spacing '@' ValuePair LineEnd;
 ClassName           = Spacing -'@class' Spacing CSharpIdentifier LineEnd;

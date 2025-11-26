@@ -15,6 +15,8 @@ public class RegExTerminal : AbstractFinalTerminal
     public String RegEx { get; }
     public Int32 Quantifier { get; }
 
-    public override String ToString(Grammar grammar) => $"CheckRegEx(actualNode, state, errorName, \"{ToLiteral(RegEx, false).Trim()}\", {Quantifier})";
-
+    public override String ToString(Grammar grammar)
+    {
+        return $"({RegEx.Replace("\"", "\\\"").Replace("\\'", "'")})";
+    }
 }

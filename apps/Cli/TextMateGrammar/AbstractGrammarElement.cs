@@ -42,6 +42,18 @@ public abstract class AbstractGrammarElement
         return valueTextForCompiler.FormatLiteral(false).ReplaceAll("\"", "\\\"");
     }
 
+    protected String Indent(String text, Int32 level = 1)
+    {
+        if ((text.Length > 0) && (text[text.Length - 1] == '\n'))
+            text = text.Substring(0, text.Length - 1);
+        String result = "";
+        foreach (String line in text.Split('\n'))
+        {
+            result += (new String(' ', 4 * level)) + line + "\n";
+        }
+        return result.Substring(0, result.Length - 1);
+    }
+
     public virtual String ToString(Grammar grammar) => throw new NotImplementedException($"Not implemented: {this.GetType().Name}.ToString()");
 }
 

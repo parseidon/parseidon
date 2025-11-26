@@ -8,7 +8,7 @@ public class OrOperator : AbstractTwoChildOperator
 
     public override String ToString(Grammar grammar)
     {
-        String result = "";
+        String result = $"({Left.ToString(grammar)})|({Right.ToString(grammar)})";
         return result;
     }
 }

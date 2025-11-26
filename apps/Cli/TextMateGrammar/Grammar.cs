@@ -26,10 +26,15 @@ public class Grammar : AbstractNamedElement
         return
             $$"""
             {
-                "scopeName": "",
-                "fileTypes": [],
+                "displayName": "{{GetOptionValue("tmdisplayname")}}",
+                "scopeName": "{{GetOptionValue("tmscopename")}}",
+                "fileTypes": ["{{GetOptionValue("tmfiletype")}}"],
                 "patterns": [
-                ]
+                    {"include": "#{{GetRootRule().Name.ToLower()}}"}
+                ],
+                "repository": {
+            {{Indent(Indent(GetRulesString()))}}
+                }
             }
             """.TrimLineEndWhitespace();
     }
@@ -81,4 +86,14 @@ public class Grammar : AbstractNamedElement
         throw GetException($"Can not find option '{key}'!");
     }
 
+    private String GetRulesString()
+    {
+        String result = String.Empty;
+        foreach (SimpleRule rule in Rules)
+        {
+            result += rule.ToString(this);
+        }
+        result = result.Trim()[..(result.Length - 2)];
+        return result;
+    }
 }

@@ -20,7 +20,15 @@ public class SimpleRule : AbstractNamedElement
         return _customMarker.Any(marker => marker is T);
     }
 
-    public override String ToString(Grammar grammar) => Definition.ToString(grammar);
+    public override String ToString(Grammar grammar)
+    {
+        return $$"""
+        "{{Name.ToLower()}}": {
+            "match": "{{Definition.ToString(grammar)}}"
+        },
+
+        """;
+    }
 
     public AbstractGrammarElement Definition { get; }
     public IReadOnlyDictionary<String, String> KeyValuePairs { get; }
