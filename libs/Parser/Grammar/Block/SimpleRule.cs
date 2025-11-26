@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Parseidon.Parser.Grammar.Operators;
 
 namespace Parseidon.Parser.Grammar.Block;
