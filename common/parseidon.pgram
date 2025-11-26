@@ -45,11 +45,11 @@ Or                  = '/' Spacing;
 Optional            = '?' Spacing;
 ZeroOrMore          = '*' Spacing;
 OneOrMore           = '+' Spacing;
-Drop                = '-' Spacing;
-IsTerminal          = '$' DontEscapeOutput? Spacing;
+Drop                = '-';
+IsTerminal          = '$' DontEscapeOutput?;
 :DontEscapeOutput    = '$';
-TreatInline         = ':' Spacing;
-UseRuleNameAsError  = '^' Spacing;
+TreatInline         = ':';
+UseRuleNameAsError  = '^';
 
 EscapeChars         = '\\' [\\0abfnrtv"'?];
 $$UnicodeChars      = '\\u' [0-9a-fA-F]{4};
