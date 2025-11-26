@@ -93,7 +93,7 @@ public class TextMateGrammarVisitor : INodeVisitor
         List<ValuePair> valuePairs = PopList<ValuePair>(typedContext);
         Dictionary<String, String> keyValuePairs = new Dictionary<String, String>();
         valuePairs.ForEach(pair => keyValuePairs.Add(pair.Name, pair.Value));
-        AbstractGrammarElement definition = Pop<AbstractGrammarElement>(typedContext);
+        AbstractDefinitionElement definition = Pop<AbstractDefinitionElement>(typedContext);
         ReferenceElement name = Pop<ReferenceElement>(typedContext);
         List<AbstractMarker> markers = new List<AbstractMarker>();
         while (TryPop<AbstractMarker>(typedContext) is AbstractMarker marker)
@@ -198,13 +198,6 @@ public class TextMateGrammarVisitor : INodeVisitor
             element = suffixOperator;
         }
         Push(typedContext, element);
-        return ProcessNodeResult.Success;
-    }
-
-    public ProcessNodeResult ProcessPrimaryNode(Object context, ASTNode node, IList<ParserMessage> messages)
-    {
-        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
-        Push(typedContext, new DefinitionElement(Pop<AbstractGrammarElement>(typedContext), typedContext.MessageContext, node));
         return ProcessNodeResult.Success;
     }
 
