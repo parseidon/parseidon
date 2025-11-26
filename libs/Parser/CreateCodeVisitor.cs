@@ -102,7 +102,7 @@ public class CreateCodeVisitor : INodeVisitor
         List<ValuePair> valuePairs = PopList<ValuePair>(typedContext);
         Dictionary<String, String> keyValuePairs = new Dictionary<String, String>();
         valuePairs.ForEach(pair => keyValuePairs.Add(pair.Name, pair.Value));
-        AbstractGrammarElement definition = Pop<AbstractGrammarElement>(typedContext);
+        AbstractDefinitionElement definition = Pop<AbstractDefinitionElement>(typedContext);
         ReferenceElement name = Pop<ReferenceElement>(typedContext);
         List<AbstractMarker> markers = new List<AbstractMarker>();
         while (TryPop<AbstractMarker>(typedContext) is AbstractMarker marker)
