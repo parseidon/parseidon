@@ -4,13 +4,13 @@ namespace Parseidon.Cli.TextMateGrammar.Operators;
 
 public abstract class AbstractOneChildOperator : AbstractDefinitionElement
 {
-    private AbstractGrammarElement? _element;
-    protected AbstractOneChildOperator(AbstractGrammarElement? element, MessageContext messageContext, ASTNode node) : base(messageContext, node)
+    private AbstractDefinitionElement? _element;
+    protected AbstractOneChildOperator(AbstractDefinitionElement? element, MessageContext messageContext, ASTNode node) : base(messageContext, node)
     {
         Element = element;
     }
 
-    public AbstractGrammarElement? Element
+    public AbstractDefinitionElement? Element
     {
         get => _element;
         set
