@@ -9,19 +9,16 @@ namespace Parseidon.Parser.Grammar;
 
 public class Grammar : AbstractNamedElement
 {
-    private String _namespace;
-    private String _rootRuleName;
-
-    public Grammar(String nameSpace, String className, String rootRuleName, List<SimpleRule> rules, MessageContext messageContext, ASTNode node) : base(className, messageContext, node)
+    public Grammar(List<SimpleRule> rules, List<ValuePair> options, MessageContext messageContext, ASTNode node) : base("", messageContext, node)
     {
         Rules = rules;
+        Options = options;
         CheckDuplicatedRules(Rules);
         Rules.ForEach((element) => element.Parent = this);
-        _namespace = nameSpace;
-        _rootRuleName = String.IsNullOrWhiteSpace(rootRuleName) ? "Grammar" : rootRuleName;
     }
 
     public List<SimpleRule> Rules { get; }
+    public List<ValuePair> Options { get; }
 
     public override String ToString(Grammar grammar)
     {
@@ -32,7 +29,7 @@ public class Grammar : AbstractNamedElement
             using System.Text;
             using System.Text.RegularExpressions;
 
-            namespace {{_namespace}}
+            namespace {{GetOptionValue("namespace")}}
             {
             {{Indent(GetIVisitorCode())}}
 
@@ -40,7 +37,7 @@ public class Grammar : AbstractNamedElement
 
             {{Indent(GetGlobalClassesCode())}}
 
-                public class {{Name}}
+                public class {{GetOptionValue("class")}}
                 {
             {{Indent(Indent(GetParseCode()))}}
 
@@ -95,7 +92,7 @@ public class Grammar : AbstractNamedElement
 
     public SimpleRule GetRootRule()
     {
-        String? axiomName = _rootRuleName;
+        String? axiomName = GetOptionValue("rootnode");
         if (String.IsNullOrWhiteSpace(axiomName))
             throw GetException("Grammar must have axiom option!");
         SimpleRule? rule = FindRuleByName(axiomName);
@@ -104,13 +101,23 @@ public class Grammar : AbstractNamedElement
         return rule;
     }
 
+    private String GetOptionValue(String key)
+    {
+        foreach (ValuePair value in Options)
+        {
+            if (value.Name.Equals(key, StringComparison.OrdinalIgnoreCase))
+                return value.Value;
+        }
+        throw GetException($"Can not find option '{key}'!");
+    }
+
     private Boolean IterateUsedRules(AbstractGrammarElement element, List<SimpleRule> rules)
     {
         if ((element is SimpleRule rule) && (rules.IndexOf(rule) < 0) && !rule.HasMarker<TreatInlineMarker>())
             rules.Add(rule);
         else
-        if ((element is ReferenceElement referenceElement) && (FindRuleByName(referenceElement.ReferenceName) is SimpleRule referencedRule) && (rules.IndexOf(referencedRule) < 0))
-            referencedRule.IterateElements((element) => IterateUsedRules(element, rules));
+            if ((element is ReferenceElement referenceElement) && (FindRuleByName(referenceElement.ReferenceName) is SimpleRule referencedRule) && (rules.IndexOf(referencedRule) < 0))
+                referencedRule.IterateElements((element) => IterateUsedRules(element, rules));
         return true;
     }
 
@@ -129,40 +136,40 @@ public class Grammar : AbstractNamedElement
         if ((element is SimpleRule rule) && (rules.IndexOf(rule) < 0) && !(rule.DropRule) && (rule.MatchesVariableText() || forceAdd))
             rules.Add(rule);
         else
-        if ((element is ReferenceElement referenceElement) && (FindRuleByName(referenceElement.ReferenceName) is SimpleRule referencedRule) && (rules.IndexOf(referencedRule) < 0))
-        {
-            Boolean hasDropMarker = false;
-            AbstractGrammarElement? parent = element.Parent;
-            while ((parent is not null) && !hasDropMarker)
+            if ((element is ReferenceElement referenceElement) && (FindRuleByName(referenceElement.ReferenceName) is SimpleRule referencedRule) && (rules.IndexOf(referencedRule) < 0))
             {
-                hasDropMarker = parent is DropMarker;
-                parent = parent.Parent;
-            }
-            if (!hasDropMarker)
-            {
-                Boolean hasOrParent = false;
-                parent = element.Parent;
-                while ((parent is not null) && !hasOrParent)
+                Boolean hasDropMarker = false;
+                AbstractGrammarElement? parent = element.Parent;
+                while ((parent is not null) && !hasDropMarker)
                 {
-                    hasOrParent = parent is OrOperator;
+                    hasDropMarker = parent is DropMarker;
                     parent = parent.Parent;
                 }
-                Boolean hasOptionalParent = false;
-                if (!hasOrParent)
+                if (!hasDropMarker)
                 {
+                    Boolean hasOrParent = false;
                     parent = element.Parent;
-                    while ((parent is not null) && !hasOptionalParent)
+                    while ((parent is not null) && !hasOrParent)
                     {
-                        hasOptionalParent = parent is OptionalOperator;
+                        hasOrParent = parent is OrOperator;
                         parent = parent.Parent;
                     }
-                }
+                    Boolean hasOptionalParent = false;
+                    if (!hasOrParent)
+                    {
+                        parent = element.Parent;
+                        while ((parent is not null) && !hasOptionalParent)
+                        {
+                            hasOptionalParent = parent is OptionalOperator;
+                            parent = parent.Parent;
+                        }
+                    }
 
-                referencedRule.IterateElements(
-                    (element) => IterateRelevantGrammarRules(element, rules, hasOrParent || hasOptionalParent)
-                );
+                    referencedRule.IterateElements(
+                        (element) => IterateRelevantGrammarRules(element, rules, hasOrParent || hasOptionalParent)
+                    );
+                }
             }
-        }
         Boolean result = !((element is SimpleRule rule1) && (rule1.HasMarker<IsTerminalMarker>()));
         return result;
     }

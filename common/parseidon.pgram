@@ -1,12 +1,10 @@
-@namespace Parseidon.Parser;
-@class ParseidonParser;
-@rootnode Grammar;
+@namespace: Parseidon.Parser;
+@class: ParseidonParser;
+@rootnode: Grammar;
 
-Grammar             = Config Definition+ Spacing;
-Config              = Namespace ClassName RootNode;
-Namespace           = Spacing -'@namespace' Spacing CSharpIdentifier LineEnd;
+Grammar             = Option* Definition+ Spacing;
+Option              = Spacing '@' ValuePair LineEnd;
 ClassName           = Spacing -'@class' Spacing CSharpIdentifier LineEnd;
-RootNode            = Spacing -'@rootnode' Spacing Identifier LineEnd;
 Definition          = Spacing RuleOptions Identifier -Equal Expression AdditionalProperties? LineEnd;
 :RuleOptions        = UseRuleNameAsError? (IsTerminal / Drop / TreatInline)?;
 
