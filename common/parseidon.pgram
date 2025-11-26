@@ -13,7 +13,7 @@ Definition          = Spacing RuleOptions Identifier -Equal Expression Additiona
 :AdditionalProperties= -'{' Spacing ValuePair (',' Spacing ValuePair)* -'}';
 ValuePair           = Identifier -ValueAssign Value;
 :ValueAssign        = ':' Spacing;
-:Value              = Literal / Number / Boolean;
+:Value              = Literal / Number / Boolean / CSharpIdentifier;
 
 Expression          = Sequence (Or Sequence)*;
 Sequence            = Prefix+;

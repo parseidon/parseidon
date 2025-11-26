@@ -1,10 +1,10 @@
 using Parseidon.Parser.Grammar.Block;
 using Parseidon.Parser.Grammar.Operators;
 
-namespace Parseidon.Parser.Grammar;
+namespace Parseidon.Parser.Grammar.Terminals;
 
 
-public class ReferenceElement : AbstractGrammarElement
+public class ReferenceElement : AbstractValueTerminal
 {
     public ReferenceElement(String referenceName, MessageContext messageContext, ASTNode node) : base(messageContext, node)
     {
@@ -20,6 +20,5 @@ public class ReferenceElement : AbstractGrammarElement
         throw GetException($"Can not find element '{ReferenceName}'");
     }
 
-    public override Boolean MatchesVariableText() => false;
-
+    public override string AsText() => ReferenceName;
 }
