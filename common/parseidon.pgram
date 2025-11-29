@@ -7,7 +7,8 @@ Option              = Spacing '@' ValuePair LineEnd;
 Definition          = Spacing RuleOptions Identifier -Equal Expression Properties? LineEnd;
 :RuleOptions        = UseRuleNameAsError? (IsTerminal / Drop / TreatInline)?;
 
-:Properties         = -'{' Spacing ValuePair (',' Spacing ValuePair)* -'}';
+:Properties         = -'{' Spacing Property (',' Spacing Property)* -'}';
+Property            = Identifier (-ValueAssign Value)?;
 ValuePair           = Identifier -ValueAssign Value;
 :ValueAssign        = ':' Spacing;
 :Value              = Literal / Number / Boolean / CSharpIdentifier;
