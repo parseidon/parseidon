@@ -355,7 +355,7 @@ public class Grammar : AbstractNamedElement
     {
         String result = String.Join("", elements.Select(x => x.ToString(this))) + ";";
         if (result.IndexOf("\n") > 0)
-            result = "\n" + result;
+            result = $"\n{result}";
         return Indent(Indent(result));
     }
 
@@ -690,7 +690,7 @@ public class Grammar : AbstractNamedElement
                     Row = position.row;
                     Column = position.column;
                 }
-                
+
                 public UInt32 Row { get; }
                 public UInt32 Column { get; }
             }

@@ -68,13 +68,13 @@ public static class StringExtensions
                 if (category == UnicodeCategory.Surrogate)
                 {
                     // an unpaired surrogate
-                    builder.Append("\\u" + ((int)c).ToString("x4"));
+                    builder.Append($"\\u{((int)c).ToString("x4")}");
                 }
                 else if (NeedsEscaping(category))
                 {
                     // a surrogate pair that needs to be escaped
                     var unicode = char.ConvertToUtf32(value, i);
-                    builder.Append("\\U" + unicode.ToString("x8"));
+                    builder.Append($"\\U{unicode.ToString("x8")}");
                     i++; // skip the already-encoded second surrogate of the pair
                 }
                 else
@@ -163,7 +163,7 @@ public static class StringExtensions
 
         if (NeedsEscaping(CharUnicodeInfo.GetUnicodeCategory(c)))
         {
-            replaceWith = "\\u" + ((int)c).ToString("x4");
+            replaceWith = $"\\u{((int)c).ToString("x4")}";
             return true;
         }
 

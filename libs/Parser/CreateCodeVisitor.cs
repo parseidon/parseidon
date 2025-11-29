@@ -45,7 +45,7 @@ public class CreateCodeVisitor : INodeVisitor
         if (!(lastElement is T))
         {
             (UInt32 row, UInt32 column) = context.MessageContext.CalculateLocation(position);
-            throw new GrammarException("Expected " + typeof(T).Name + " GOT " + ((Type)lastElement.GetType()).Name, row, column);
+            throw new GrammarException($"Expected {typeof(T).Name}, got {((Type)lastElement.GetType()).Name}!", row, column);
         }
         return (T)lastElement;
     }
