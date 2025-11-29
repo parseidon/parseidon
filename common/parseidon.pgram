@@ -4,10 +4,10 @@
 
 Grammar             = Option* Definition+ Spacing;
 Option              = Spacing '@' ValuePair LineEnd;
-Definition          = Spacing RuleOptions Identifier -Equal Expression AdditionalProperties? LineEnd;
+Definition          = Spacing RuleOptions Identifier -Equal Expression Properties? LineEnd;
 :RuleOptions        = UseRuleNameAsError? (IsTerminal / Drop / TreatInline)?;
 
-:AdditionalProperties= -'{' Spacing ValuePair (',' Spacing ValuePair)* -'}';
+:Properties         = -'{' Spacing ValuePair (',' Spacing ValuePair)* -'}';
 ValuePair           = Identifier -ValueAssign Value;
 :ValueAssign        = ':' Spacing;
 :Value              = Literal / Number / Boolean / CSharpIdentifier;
@@ -46,7 +46,7 @@ ZeroOrMore          = '*' Spacing;
 OneOrMore           = '+' Spacing;
 Drop                = '-';
 IsTerminal          = '$' DontEscapeOutput?;
-:DontEscapeOutput    = '$';
+:DontEscapeOutput   = '$';
 TreatInline         = ':';
 UseRuleNameAsError  = '^';
 
