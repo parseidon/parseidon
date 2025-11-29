@@ -197,6 +197,12 @@ namespace Parseidon.Parser
             Column = column;
         }
 
+        public GrammarException(String message, (UInt32 row, UInt32 column) position) : base(message)
+        {
+            Row = position.row;
+            Column = position.column;
+        }
+
         public UInt32 Row { get; }
         public UInt32 Column { get; }
     }
