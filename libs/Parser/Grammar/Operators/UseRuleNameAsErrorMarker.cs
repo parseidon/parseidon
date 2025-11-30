@@ -4,7 +4,7 @@ namespace Parseidon.Parser.Grammar.Operators;
 
 public class UseRuleNameAsErrorMarker : AbstractMarker
 {
-    public UseRuleNameAsErrorMarker(AbstractGrammarElement? element, MessageContext messageContext, ASTNode node) : base(element, messageContext, node) { }
+    public UseRuleNameAsErrorMarker(AbstractDefinitionElement? element, MessageContext messageContext, ASTNode node) : base(element, messageContext, node) { }
 
 
     public override String ToString(Grammar grammar)

@@ -2,7 +2,7 @@ namespace Parseidon.Parser.Grammar.Operators;
 
 public abstract class AbstractTwoChildOperator : AbstractDefinitionElement
 {
-    protected AbstractTwoChildOperator(AbstractGrammarElement? left, AbstractGrammarElement? right, MessageContext messageContext, ASTNode node) : base(messageContext, node)
+    protected AbstractTwoChildOperator(AbstractDefinitionElement? left, AbstractDefinitionElement? right, MessageContext messageContext, ASTNode node) : base(messageContext, node)
     {
         if ((left == null) || (right == null))
             throw GetException("Missing child element!");
@@ -12,8 +12,8 @@ public abstract class AbstractTwoChildOperator : AbstractDefinitionElement
         Right.Parent = this;
     }
 
-    public AbstractGrammarElement Left { get; }
-    public AbstractGrammarElement Right { get; }
+    public AbstractDefinitionElement Left { get; }
+    public AbstractDefinitionElement Right { get; }
 
     internal override void IterateElements(Func<AbstractGrammarElement, Boolean> process)
     {

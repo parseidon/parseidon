@@ -107,7 +107,8 @@ static IVisitResult CreateParser(ParseResult parseResult, FileInfo outputFile, S
         //*                                      *//
         //****************************************//
 
-        """ + code;
+        {code}
+        """;
         if (outputFile.Exists && overrideOption.Equals("backup"))
         {
             Int32 backupFileNo = 1;

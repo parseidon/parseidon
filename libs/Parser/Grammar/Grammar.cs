@@ -116,7 +116,7 @@ public class Grammar : AbstractNamedElement
         if ((element is SimpleRule rule) && (rules.IndexOf(rule) < 0) && !rule.HasMarker<TreatInlineMarker>())
             rules.Add(rule);
         else
-            if ((element is ReferenceElement referenceElement) && (FindRuleByName(referenceElement.ReferenceName) is SimpleRule referencedRule) && (rules.IndexOf(referencedRule) < 0))
+            if ((element is ReferenceElement referenceElement) && (!referenceElement.TreatReferenceInline) && (FindRuleByName(referenceElement.ReferenceName) is SimpleRule referencedRule) && (rules.IndexOf(referencedRule) < 0))
                 referencedRule.IterateElements((element) => IterateUsedRules(element, rules));
         return true;
     }
@@ -136,7 +136,7 @@ public class Grammar : AbstractNamedElement
         if ((element is SimpleRule rule) && (rules.IndexOf(rule) < 0) && !(rule.DropRule) && (rule.MatchesVariableText() || forceAdd))
             rules.Add(rule);
         else
-            if ((element is ReferenceElement referenceElement) && (FindRuleByName(referenceElement.ReferenceName) is SimpleRule referencedRule) && (rules.IndexOf(referencedRule) < 0))
+            if ((element is ReferenceElement referenceElement) && (!referenceElement.TreatReferenceInline) && (FindRuleByName(referenceElement.ReferenceName) is SimpleRule referencedRule) && (rules.IndexOf(referencedRule) < 0))
             {
                 Boolean hasDropMarker = false;
                 AbstractGrammarElement? parent = element.Parent;
@@ -355,7 +355,7 @@ public class Grammar : AbstractNamedElement
     {
         String result = String.Join("", elements.Select(x => x.ToString(this))) + ";";
         if (result.IndexOf("\n") > 0)
-            result = "\n" + result;
+            result = $"\n{result}";
         return Indent(Indent(result));
     }
 
@@ -683,6 +683,12 @@ public class Grammar : AbstractNamedElement
                 {
                     Row = row;
                     Column = column;
+                }
+
+                public GrammarException(String message, (UInt32 row, UInt32 column) position) : base(message)
+                {
+                    Row = position.row;
+                    Column = position.column;
                 }
 
                 public UInt32 Row { get; }
