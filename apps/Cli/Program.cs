@@ -36,36 +36,60 @@ astCommand.Add(outputFileArgument);
 
 parseCommand.SetHandler(
     (grammarFile, outputFile, overrideOption, parserNamespace, parserClassname) =>
-        RunParser(grammarFile, outputFile, overrideOption, (result) =>
-            CreateParser(result, outputFile, overrideOption, parserNamespace, parserClassname)),
+    {
+        int exitCode = RunParser(grammarFile, outputFile, overrideOption, (result) =>
+            CreateParser(result, outputFile, overrideOption, parserNamespace, parserClassname));
+        Environment.Exit(exitCode);
+    },
     grammarFileArgument, outputFileArgument, overrideOption, namespaceOption, classnameOption);
 
 astCommand.SetHandler(
     (grammarFile, outputFile, overrideOption) =>
-        RunParser(grammarFile, outputFile, overrideOption, (result) =>
-            CreateAST(result, outputFile, overrideOption)),
+    {
+        int exitCode = RunParser(grammarFile, outputFile, overrideOption, (result) =>
+            CreateAST(result, outputFile, overrideOption));
+        Environment.Exit(exitCode);
+    },
     grammarFileArgument, outputFileArgument, overrideOption);
 
 return await rootCommand.InvokeAsync(args);
 
-static void RunParser(FileInfo grammarFile, FileInfo outputFile, String overrideOption, Func<ParseResult, IVisitResult> processResult)
+static int RunParser(FileInfo grammarFile, FileInfo outputFile, String overrideOption, Func<ParseResult, IVisitResult> processResult)
 {
-    ValidateFileInput(grammarFile, outputFile, overrideOption);
+    int exitCode = ValidateFileInput(grammarFile, outputFile, overrideOption);
+    if (exitCode != 0)
+        return exitCode;
+
     ParseidonParser Parser = new ParseidonParser();
     ParseResult parseResult = Parser.Parse(File.ReadAllText(grammarFile.FullName));
     IVisitResult? visitResult = null;
     if (parseResult.Successful)
         visitResult = processResult(parseResult);
-    ProcessMessages(visitResult?.Messages);
-    ProcessMessages(parseResult.Messages);
+
+    int visitResultExitCode = ProcessMessages(visitResult?.Messages);
+    int parseResultExitCode = ProcessMessages(parseResult.Messages);
+
+    // Exit Code 1 wenn einer der beiden Fehler hatte
+    if (visitResultExitCode != 0 || parseResultExitCode != 0)
+        return 1;
+
+    return 0;
 }
 
-static void ProcessMessages(IReadOnlyList<ParserMessage>? messages)
+static int ProcessMessages(IReadOnlyList<ParserMessage>? messages)
 {
-    if (messages == null) return;
+    if (messages == null || messages.Count == 0)
+        return 0;
+
+    bool hasErrors = false;
     foreach (var message in messages)
+    {
         PrintMessage(message.Type, $"({message.Row}:{message.Column}) {message.Message}");
-    Environment.Exit(1);
+        if (message.Type == ParserMessage.MessageType.Error)
+            hasErrors = true;
+    }
+
+    return hasErrors ? 1 : 0;
 }
 
 static void PrintMessage(ParserMessage.MessageType messageType, String message)
@@ -122,26 +146,27 @@ static IVisitResult CreateAST(ParseResult parseResult, FileInfo outputFile, Stri
     return visitResult;
 }
 
-static void ValidateFileInput(FileInfo grammarFile, FileInfo outputFile, String overrideOption)
+static int ValidateFileInput(FileInfo grammarFile, FileInfo outputFile, String overrideOption)
 {
     if (!grammarFile.Exists)
     {
         PrintMessage(ParserMessage.MessageType.Error, $"The file '{grammarFile.FullName}' could not be found!");
-        Environment.Exit(1);
+        return 1;
     }
     if (outputFile.Exists)
     {
         if (overrideOption.Equals("abort"))
         {
             PrintMessage(ParserMessage.MessageType.Error, $"The file '{outputFile.FullName}' already exists!");
-            Environment.Exit(1);
+            return 1;
         }
         if (overrideOption.Equals("ask"))
         {
             PrintMessage(ParserMessage.MessageType.Error, $"The file '{outputFile.FullName}' already exists!");
             if (!AnsiConsole.Prompt(new ConfirmationPrompt("Should it be overwritten?")))
-                Environment.Exit(1);
+                return 1;
         }
     }
+    return 0;
 }
 
