@@ -22,14 +22,19 @@ public class SimpleRule : AbstractNamedElement
 
     public override String ToString(Grammar grammar)
     {
+
+        AbstractDefinitionElement.RegExMatchResult before = new AbstractDefinitionElement.RegExMatchResult("^", null, 0);
+        AbstractDefinitionElement.RegExMatchResult after = new AbstractDefinitionElement.RegExMatchResult("$", null, 0);
+        AbstractDefinitionElement.RegExResult regEx = Definition.GetRegExChain(grammar, before, after);
         return $$"""
-        "{{Name.ToLower()}}": {
-            "match": "{{Definition.ToString(grammar)}}"
-        },
+        "{{Name.ToLower()}}": {{regEx}}
 
         """;
     }
 
     public AbstractDefinitionElement Definition { get; }
     public IReadOnlyDictionary<String, String> KeyValuePairs { get; }
+
+    public AbstractDefinitionElement GetRegExDefinition(Grammar grammar) => Definition.GetRegExDefinition(grammar);
+
 }

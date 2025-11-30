@@ -15,8 +15,8 @@ public class RegExTerminal : AbstractFinalTerminal
     public String RegEx { get; }
     public Int32 Quantifier { get; }
 
-    public override String ToString(Grammar grammar)
+    public override RegExResult GetRegExChain(Grammar grammar, RegExResult before, RegExResult after)
     {
-        return $"({RegEx.Replace("\"", "\\\"").Replace("\\'", "'")})";
+        return new RegExMatchResult(RegEx, null, 0);
     }
 }

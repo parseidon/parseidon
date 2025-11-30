@@ -6,9 +6,8 @@ public class ZeroOrMoreOperator : AbstractOneChildOperator
 {
     public ZeroOrMoreOperator(AbstractDefinitionElement? terminal, MessageContext messageContext, ASTNode node) : base(terminal, messageContext, node) { }
 
-    public override String ToString(Grammar grammar)
+    public override RegExResult GetRegExChain(Grammar grammar, RegExResult before, RegExResult after)
     {
-        String result = "";
-        return result;
+        throw new NotImplementedException();
     }
 }

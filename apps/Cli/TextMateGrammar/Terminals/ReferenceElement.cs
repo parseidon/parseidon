@@ -13,12 +13,30 @@ public class ReferenceElement : AbstractValueTerminal
 
     public String ReferenceName { get; }
 
-    public override String ToString(Grammar grammar)
+    public override string AsText() => ReferenceName;
+
+    public Boolean IsTextMateRule(Grammar grammar)
     {
         if (grammar.FindRuleByName(ReferenceName) is SimpleRule referencedRule)
-            return "";  //referencedRule.ToString(grammar);
-        throw GetException($"Can not find element '{ReferenceName}'");
+        {
+            return referencedRule.KeyValuePairs.ContainsKey("tmname");
+        }
+        return false;
     }
 
-    public override string AsText() => ReferenceName;
+    public Boolean Ignore(Grammar grammar)
+    {
+        if (grammar.FindRuleByName(ReferenceName) is SimpleRule referencedRule)
+        {
+            return referencedRule.KeyValuePairs.ContainsKey("tmignore");
+        }
+        return false;
+    }
+
+    public override RegExResult GetRegExChain(Grammar grammar, RegExResult before, RegExResult after)
+    {
+        throw new NotImplementedException();
+    }
+
+
 }

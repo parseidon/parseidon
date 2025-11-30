@@ -7,17 +7,8 @@ public abstract class AbstractMarker : AbstractOneChildOperator
 {
     public AbstractMarker(AbstractDefinitionElement? element, MessageContext messageContext, ASTNode node) : base(element, messageContext, node) { }
 
-    protected SimpleRule GetRule()
+    public override RegExResult GetRegExChain(Grammar grammar, RegExResult before, RegExResult after)
     {
-        AbstractGrammarElement? current = Parent;
-        while (current is not null)
-        {
-            if (current is SimpleRule rule)
-                return rule;
-            current = current.Parent;
-        }
-        throw new InvalidCastException("Found nor rule for marker!");
+        throw new NotImplementedException();
     }
-
-    public override String ToString(Grammar grammar) => Element?.ToString(grammar) ?? String.Empty;
 }
