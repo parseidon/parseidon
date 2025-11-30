@@ -316,5 +316,22 @@ public class TextMateGrammarVisitor : INodeVisitor
         Push(typedContext, new BooleanTerminal(Boolean.Parse(node.Text), typedContext.MessageContext, node));
         return ProcessNodeResult.Success;
     }
+
+    public ProcessNodeResult ProcessPropertyNode(object context, ASTNode node, IList<ParserMessage> messages)
+    {
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        AbstractValueTerminal value = Pop<AbstractValueTerminal>(typedContext);
+        ReferenceElement? name = TryPop<ReferenceElement>(typedContext);
+        if ((value is ReferenceElement refValue) && (name is null))
+        {
+            name = refValue;
+            value = new BooleanTerminal(true, typedContext.MessageContext, node);
+        }
+        if (name is null)
+            throw new GrammarException($"Expected {typeof(ReferenceElement).Name}, got null!", typedContext.MessageContext.CalculateLocation(node.Position));
+        ValuePair valuePair = new ValuePair(name.ReferenceName, value.AsText(), typedContext.MessageContext, node);
+        Push(typedContext, valuePair);
+        return ProcessNodeResult.Success;
+    }
 }
 
