@@ -7,7 +7,7 @@ Option              = Spacing '@' ValuePair LineEnd;
 Definition          = Spacing RuleOptions Identifier -Equal Expression Properties? LineEnd;
 :RuleOptions        = UseRuleNameAsError? (IsTerminal / Drop / TreatInline)?;
 
-:Properties         = CurlyBracketOpen Spacing Property (',' Spacing Property)* CurlyBracketClose;
+:Properties         = -CurlyBracketOpen Spacing Property (',' Spacing Property)* -CurlyBracketClose;
 Property            = Identifier (-ValueAssign Value)?;
 ValuePair           = Identifier -ValueAssign Value;
 :ValueAssign        = ':' Spacing;
@@ -19,7 +19,7 @@ Prefix              = Drop? Suffix;
 Suffix              = Primary (Optional / ZeroOrMore / OneOrMore)?;
 :Primary            = TreatInline? Identifier
                     / Literal
-                    / BracketOpen Spacing Expression BracketClose Spacing
+                    / -BracketOpen Spacing Expression -BracketClose Spacing
                     / Regex
                     / Dot;  
 ^$Identifier        = IdentStart IdentCont Spacing;
