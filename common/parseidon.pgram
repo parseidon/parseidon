@@ -3,10 +3,9 @@
 @rootnode: Grammar;
 
 # Grammar
-Grammar             = Option* Definition+ Spacing;
+Grammar             = Spacing (Option Spacing)* Definition+ Spacing;
 
-Option              = Spacing '@' ValuePair LineEnd;
-
+Option              = '@' ValuePair LineEnd;
 
 # Rule structure
 Definition          = Spacing RuleOptions Identifier Spacing -Equal Spacing Expression Properties? LineEnd;
@@ -14,23 +13,23 @@ Definition          = Spacing RuleOptions Identifier Spacing -Equal Spacing Expr
 Expression          = Sequence (Or Spacing Sequence)*;
 Sequence            = Prefix+;
 Prefix              = Drop? Suffix;
-Suffix              = Primary ((Optional / ZeroOrMore / OneOrMore)? Spacing);
-:Primary            = TreatInline? Identifier Spacing
+Suffix              = Primary (Optional / ZeroOrMore / OneOrMore)? Spacing;
+:Primary            = TreatInline? Identifier
                     / Literal
-                    / -BracketOpen Spacing Expression -BracketClose Spacing
+                    / -BracketOpen Spacing Expression -BracketClose
                     / Regex
                     / AllChar;  
 :Properties         = -CurlyBracketOpen Spacing ValuePair (',' Spacing ValuePair)* -CurlyBracketClose Spacing;
 
 # Values
-ValuePair           = Identifier Spacing (-ValueAssign Value)?;
+ValuePair           = Identifier Spacing (-ValueAssign Value Spacing)?;
 :ValueAssign        = ':' Spacing;
 :Value              = Literal / Number / Boolean / CSharpIdentifier;
-^$Number            = ('0' / ([1-9] [0-9]*)) Spacing;
-$Boolean            = (True / False) Spacing;
+^$Number            = ('0' / ([1-9] [0-9]*));
+$Boolean            = (True / False);
 :True               = 'true';
 :False              = 'false';
-^$CSharpIdentifier  = IdentStart CSharpIdentCont Spacing {ErrorName: 'C#-Identifier'};
+^$CSharpIdentifier  = IdentStart CSharpIdentCont {ErrorName: 'C#-Identifier'};
 CSharpIdentCont     = [a-zA-Z0-9_.]*;
 
 # Identifier
@@ -39,14 +38,14 @@ IdentStart          = [a-zA-Z_];
 IdentCont           = [a-zA-Z0-9_]*;
 
 # Literal
-^$Literal           = (SingleQuotedLiteral / DoubleQuotedLiteral) Spacing ;
+^$Literal           = (SingleQuotedLiteral / DoubleQuotedLiteral);
 :SingleQuotedLiteral= (-'\'' Char*  -'\'');
 :DoubleQuotedLiteral= (-'"' Char* -'"');
 Char                = [^'\\] / '\\\'' / '\\\\' / EscapeChars / UnicodeChars;
 EscapeChars         = '\\' [\\0abfnrtv"'?];
 
 # Regular Expression
-Regex               = CharacterClass Quantifier? Spacing;
+Regex               = CharacterClass Quantifier?;
 $CharacterClass     = SquareBracketOpen Negation? ClassContent+ SquareBracketClose;
 :Negation           = '^';
 ClassContent        = CharRange / PredefinedClass / EscapedChar / SingleChar;
@@ -57,7 +56,7 @@ PredefinedClass     = '\\d' / '\\D' / '\\w' / '\\W' / '\\s' / '\\S' / '\\t' / '\
 :Quantifier         = CurlyBracketOpen Spacing Number CurlyBracketClose;
 
 # All characters
-AllChar             = Dot Spacing;
+AllChar             = Dot;
 
 # Operator
 Or                  = '/';
