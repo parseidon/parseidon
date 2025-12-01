@@ -4,7 +4,7 @@
 
 Grammar             = Option* Definition+ Spacing;
 Option              = Spacing '@' ValuePair LineEnd;
-Definition          = Spacing RuleOptions Identifier -Equal Expression Properties? LineEnd;
+Definition          = Spacing RuleOptions Identifier -Equal Spacing Expression Properties? LineEnd;
 :RuleOptions        = UseRuleNameAsError? (IsTerminal / Drop / TreatInline)?;
 
 :Properties         = -CurlyBracketOpen Spacing Property (',' Spacing Property)* -CurlyBracketClose;
@@ -54,7 +54,7 @@ UseRuleNameAsError  = '^';
 EscapeChars         = '\\' [\\0abfnrtv"'?];
 $$UnicodeChars      = '\\u' [0-9a-fA-F]{4};
 
-Equal               = '=' Spacing;
+:Equal              = '=';
 ^-LineEnd           = Spacing ';';
 Dot                 = '.' Spacing;
 -Spacing            = (NewLine / WhiteSpace / Comment)*;
