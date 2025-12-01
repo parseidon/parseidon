@@ -13,10 +13,10 @@ ValuePair           = Identifier -ValueAssign Value;
 :ValueAssign        = ':' Spacing;
 :Value              = Literal / Number / Boolean / CSharpIdentifier;
 
-Expression          = Sequence (Or Sequence)*;
+Expression          = Sequence (Or Spacing Sequence)*;
 Sequence            = Prefix+;
 Prefix              = Drop? Suffix;
-Suffix              = Primary (Optional / ZeroOrMore / OneOrMore)?;
+Suffix              = Primary ((Optional / ZeroOrMore / OneOrMore)? Spacing);
 :Primary            = TreatInline? Identifier
                     / Literal
                     / -BracketOpen Spacing Expression -BracketClose Spacing
@@ -41,10 +41,10 @@ EscapedChar         = '\\' [.\\\[\]\-\^];
 PredefinedClass     = '\\d' / '\\D' / '\\w' / '\\W' / '\\s' / '\\S' / '\\t' / '\\r' / '\\n' / '\\v' / '\\f';
 :Quantifier         = CurlyBracketOpen Spacing Number CurlyBracketClose;
 
-Or                  = '/' Spacing;
-Optional            = '?' Spacing;
-ZeroOrMore          = '*' Spacing;
-OneOrMore           = '+' Spacing;
+Or                  = '/';
+Optional            = '?';
+ZeroOrMore          = '*';
+OneOrMore           = '+';
 Drop                = '-';
 IsTerminal          = '$' DontEscapeOutput?;
 :DontEscapeOutput   = '$';
