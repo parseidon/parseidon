@@ -23,7 +23,7 @@ Suffix              = Primary (Optional / ZeroOrMore / OneOrMore)?_;
 
 # Values
 ValuePair           = Identifier_(-ValueAssign_Value_)?;
-:ValueAssign        = ':';
+:ValueAssign        = Colon;
 :Value              = Literal / Number / Boolean / CSharpIdentifier;
 ^$Number            = ('0' / ([1-9] [0-9]*));
 $Boolean            = (True / False);
@@ -33,7 +33,7 @@ $Boolean            = (True / False);
 CSharpIdentCont     = [a-zA-Z0-9.]*;
 
 # Identifier
-^$Identifier        = '_' / (IdentStart IdentCont);
+^$Identifier        = Underscore / (IdentStart IdentCont);
 IdentStart          = [a-zA-Z];
 IdentCont           = [a-zA-Z0-9]*;
 
@@ -53,7 +53,7 @@ ClassContent        = CharRange / PredefinedClass / EscapedChar / SingleChar;
 SingleChar          = [^\\\[\]\-] / UnicodeChars;
 EscapedChar         = '\\' [.\\\[\]\-\^];
 PredefinedClass     = '\\d' / '\\D' / '\\w' / '\\W' / '\\s' / '\\S' / '\\t' / '\\r' / '\\n' / '\\v' / '\\f';
-:Quantifier         = CurlyBracketOpen _ Number CurlyBracketClose;
+:Quantifier         = CurlyBracketOpen Number CurlyBracketClose;
 
 # All characters
 AllChar             = Dot;
@@ -85,10 +85,12 @@ Comment             = '#' [^\r\n]*;
 # Shared characters
 :Equal              = '=';
 :Dot                = '.';
+:Colon              = ':';
 :BracketOpen        = '(';
 :BracketClose       = ')';
 :CurlyBracketOpen   = '{';
 :CurlyBracketClose  = '}';
 :SquareBracketOpen  = '[';
 :SquareBracketClose = ']';
+:Underscore         = '_';
 
