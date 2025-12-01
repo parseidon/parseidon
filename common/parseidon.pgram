@@ -19,7 +19,7 @@ Prefix              = Drop? Suffix;
 Suffix              = Primary (Optional / ZeroOrMore / OneOrMore)?;
 :Primary            = TreatInline? Identifier
                     / Literal
-                    / -BracketOpen Expression -BracketClose
+                    / BracketOpen Spacing Expression BracketClose Spacing
                     / Regex
                     / Dot;  
 ^$Identifier        = IdentStart IdentCont Spacing;
@@ -62,8 +62,8 @@ Dot                 = '.' Spacing;
 ^NewLine            = '\r\n' / [\r\n];
 ^$Number            = ('0' / ([1-9] [0-9]*)) Spacing;
 Comment             = '#' [^\r\n]*;
-BracketOpen         = '(' Spacing;
-BracketClose        = ')' Spacing;
+:BracketOpen        = '(';
+:BracketClose       = ')';
 $Boolean            = (True / False) Spacing;
 :True               = 'true';
 :False              = 'false';
