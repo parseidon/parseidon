@@ -5,7 +5,7 @@
 Grammar             = Option* Definition+ Spacing;
 Option              = Spacing '@' ValuePair LineEnd;
 Definition          = Spacing RuleOptions Identifier -Equal Spacing Expression Properties? LineEnd;
-:RuleOptions        = UseRuleNameAsError? (IsTerminal / Drop / TreatInline)?;
+:RuleOptions        = UseRuleNameAsError? (IsTerminal / Drop)? TreatInline?;
 
 :Properties         = -CurlyBracketOpen Spacing Property (',' Spacing Property)* -CurlyBracketClose Spacing;
 Property            = Identifier (-ValueAssign Value)?;
@@ -56,7 +56,7 @@ EscapeChars         = '\\' [\\0abfnrtv"'?];
 $$UnicodeChars      = '\\u' [0-9a-fA-F]{4};
 
 :Equal              = '=';
-^-LineEnd           = ';';
+^-:LineEnd          = ';';
 :Dot                = '.';
 -Spacing            = (NewLine / WhiteSpace / Comment)*;
 ^WhiteSpace         = [ \t];
