@@ -9,13 +9,13 @@ Option              = Spacing '@' ValuePair LineEnd;
 
 
 # Rule structure
-Definition          = Spacing RuleOptions Identifier -Equal Spacing Expression Properties? LineEnd;
+Definition          = Spacing RuleOptions Identifier Spacing -Equal Spacing Expression Properties? LineEnd;
 :RuleOptions        = UseRuleNameAsError? (IsTerminal / Drop)? TreatInline?;
 Expression          = Sequence (Or Spacing Sequence)*;
 Sequence            = Prefix+;
 Prefix              = Drop? Suffix;
 Suffix              = Primary ((Optional / ZeroOrMore / OneOrMore)? Spacing);
-:Primary            = TreatInline? Identifier
+:Primary            = TreatInline? Identifier Spacing
                     / Literal
                     / -BracketOpen Spacing Expression -BracketClose Spacing
                     / Regex
@@ -23,7 +23,7 @@ Suffix              = Primary ((Optional / ZeroOrMore / OneOrMore)? Spacing);
 :Properties         = -CurlyBracketOpen Spacing ValuePair (',' Spacing ValuePair)* -CurlyBracketClose Spacing;
 
 # Values
-ValuePair           = Identifier (-ValueAssign Value)?;
+ValuePair           = Identifier Spacing (-ValueAssign Value)?;
 :ValueAssign        = ':' Spacing;
 :Value              = Literal / Number / Boolean / CSharpIdentifier;
 ^$Number            = ('0' / ([1-9] [0-9]*)) Spacing;
@@ -34,7 +34,7 @@ $Boolean            = (True / False) Spacing;
 CSharpIdentCont     = [a-zA-Z0-9_.]*;
 
 # Identifier
-^$Identifier        = IdentStart IdentCont Spacing;
+^$Identifier        = IdentStart IdentCont;
 IdentStart          = [a-zA-Z_];
 IdentCont           = [a-zA-Z0-9_]*;
 
