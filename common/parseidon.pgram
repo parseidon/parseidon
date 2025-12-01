@@ -7,7 +7,7 @@ Option              = Spacing '@' ValuePair LineEnd;
 Definition          = Spacing RuleOptions Identifier -Equal Expression Properties? LineEnd;
 :RuleOptions        = UseRuleNameAsError? (IsTerminal / Drop / TreatInline)?;
 
-:Properties         = -'{' Spacing Property (',' Spacing Property)* -'}';
+:Properties         = CurlyBracketOpen Spacing Property (',' Spacing Property)* CurlyBracketClose;
 Property            = Identifier (-ValueAssign Value)?;
 ValuePair           = Identifier -ValueAssign Value;
 :ValueAssign        = ':' Spacing;
@@ -39,7 +39,7 @@ ClassContent        = CharRange / PredefinedClass / EscapedChar / SingleChar;
 SingleChar          = [^\\\[\]\-] / UnicodeChars;
 EscapedChar         = '\\' [.\\\[\]\-\^];
 PredefinedClass     = '\\d' / '\\D' / '\\w' / '\\W' / '\\s' / '\\S' / '\\t' / '\\r' / '\\n' / '\\v' / '\\f';
-:Quantifier         = '{' Spacing Number '}';
+:Quantifier         = CurlyBracketOpen Spacing Number CurlyBracketClose;
 
 Or                  = '/' Spacing;
 Optional            = '?' Spacing;
@@ -64,6 +64,8 @@ Dot                 = '.' Spacing;
 Comment             = '#' [^\r\n]*;
 :BracketOpen        = '(';
 :BracketClose       = ')';
+:CurlyBracketOpen   = '{';
+:CurlyBracketClose  = '}';
 $Boolean            = (True / False) Spacing;
 :True               = 'true';
 :False              = 'false';
