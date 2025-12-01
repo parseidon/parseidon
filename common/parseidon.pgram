@@ -6,10 +6,6 @@
 @tmscopename: source.parseidon;
 @tmfiletype: pgram;
 
-@tmdisplayname: Parseidon;
-@tmscopename: source.parseidon;
-@tmfiletype: pgram;
-
 # Grammar
 Grammar             = _(Option_)* Definition+_;
 
