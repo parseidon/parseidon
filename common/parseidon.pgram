@@ -3,39 +3,39 @@
 @rootnode: Grammar;
 
 # Grammar
-Grammar             = Spacing (Option Spacing)* Definition+ Spacing;
+Grammar             = _(Option_)* Definition+_;
 
-Option              = '@' ValuePair LineEnd;
+Option              = '@' ValuePair_LineEnd;
 
 # Rule structure
-Definition          = Spacing RuleOptions Identifier Spacing -Equal Spacing Expression Properties? LineEnd;
+Definition          = _RuleOptions Identifier_-Equal_Expression Properties? LineEnd;
 :RuleOptions        = UseRuleNameAsError? (IsTerminal / Drop)? TreatInline?;
-Expression          = Sequence (Or Spacing Sequence)*;
+Expression          = Sequence (Or_Sequence)*;
 Sequence            = Prefix+;
 Prefix              = Drop? Suffix;
-Suffix              = Primary (Optional / ZeroOrMore / OneOrMore)? Spacing;
+Suffix              = Primary (Optional / ZeroOrMore / OneOrMore)?_;
 :Primary            = TreatInline? Identifier
                     / Literal
-                    / -BracketOpen Spacing Expression -BracketClose
+                    / -BracketOpen_Expression_-BracketClose
                     / Regex
                     / AllChar;  
-:Properties         = -CurlyBracketOpen Spacing ValuePair (',' Spacing ValuePair)* -CurlyBracketClose Spacing;
+:Properties         = -CurlyBracketOpen_ValuePair_(','_ValuePair_)* -CurlyBracketClose_;
 
 # Values
-ValuePair           = Identifier Spacing (-ValueAssign Value Spacing)?;
-:ValueAssign        = ':' Spacing;
+ValuePair           = Identifier_(-ValueAssign_Value_)?;
+:ValueAssign        = ':';
 :Value              = Literal / Number / Boolean / CSharpIdentifier;
 ^$Number            = ('0' / ([1-9] [0-9]*));
 $Boolean            = (True / False);
 :True               = 'true';
 :False              = 'false';
 ^$CSharpIdentifier  = IdentStart CSharpIdentCont {ErrorName: 'C#-Identifier'};
-CSharpIdentCont     = [a-zA-Z0-9_.]*;
+CSharpIdentCont     = [a-zA-Z0-9.]*;
 
 # Identifier
-^$Identifier        = IdentStart IdentCont;
-IdentStart          = [a-zA-Z_];
-IdentCont           = [a-zA-Z0-9_]*;
+^$Identifier        = '_' / (IdentStart IdentCont);
+IdentStart          = [a-zA-Z];
+IdentCont           = [a-zA-Z0-9]*;
 
 # Literal
 ^$Literal           = (SingleQuotedLiteral / DoubleQuotedLiteral);
@@ -53,7 +53,7 @@ ClassContent        = CharRange / PredefinedClass / EscapedChar / SingleChar;
 SingleChar          = [^\\\[\]\-] / UnicodeChars;
 EscapedChar         = '\\' [.\\\[\]\-\^];
 PredefinedClass     = '\\d' / '\\D' / '\\w' / '\\W' / '\\s' / '\\S' / '\\t' / '\\r' / '\\n' / '\\v' / '\\f';
-:Quantifier         = CurlyBracketOpen Spacing Number CurlyBracketClose;
+:Quantifier         = CurlyBracketOpen _ Number CurlyBracketClose;
 
 # All characters
 AllChar             = Dot;
@@ -77,7 +77,7 @@ $$UnicodeChars      = '\\u' [0-9a-fA-F]{4};
 
 # Grammar structure
 ^-:LineEnd          = ';';
--Spacing            = (NewLine / WhiteSpace / Comment)*;
+-_                  = (NewLine / WhiteSpace / Comment)*;
 ^WhiteSpace         = [ \t];
 ^NewLine            = '\r\n' / [\r\n];
 Comment             = '#' [^\r\n]*;
