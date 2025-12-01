@@ -11,7 +11,10 @@ public class TextMateGrammarVisitor : INodeVisitor
 {
     public interface IGetTextMateGrammar
     {
-        String? GrammarJson { get; }
+        String GrammarJson { get; }
+        String LanguageConfigJson { get; }
+        String PackageJson { get; }
+        String Name { get; }
     }
 
     private class CreateCodeVisitorContext
@@ -28,16 +31,22 @@ public class TextMateGrammarVisitor : INodeVisitor
 
     private class CreateCodeVisitResult : IVisitResult, IGetTextMateGrammar
     {
-        public CreateCodeVisitResult(Boolean successful, IReadOnlyList<ParserMessage> messages, String? code)
+        public CreateCodeVisitResult(Boolean successful, IReadOnlyList<ParserMessage> messages, String code, String languageConfigJson, String packageJson, String name)
         {
             Successful = successful;
             Messages = messages;
             GrammarJson = code;
+            LanguageConfigJson = languageConfigJson;
+            PackageJson = packageJson;
+            Name = name;
         }
 
         public Boolean Successful { get; }
         public IReadOnlyList<ParserMessage> Messages { get; }
-        public String? GrammarJson { get; }
+        public String GrammarJson { get; }
+        public String LanguageConfigJson { get; }
+        public String PackageJson { get; }
+        public String Name { get; }
     }
 
     private T Pop<T>(CreateCodeVisitorContext context) where T : AbstractGrammarElement
@@ -275,7 +284,12 @@ public class TextMateGrammarVisitor : INodeVisitor
     public IVisitResult GetResult(object context, Boolean successful, IReadOnlyList<ParserMessage> messages)
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
-        return new CreateCodeVisitResult(successful, messages, typedContext.Grammar is not null ? typedContext.Grammar.ToString() : String.Empty);
+        return new CreateCodeVisitResult(successful, messages,
+            typedContext.Grammar?.ToString() ?? throw new Exception("No grammar defined!"),
+            typedContext.Grammar?.ToLanguageConfigJson() ?? throw new Exception("No grammar defined!"),
+            typedContext.Grammar?.ToPackageJson() ?? throw new Exception("No grammar defined!"),
+            typedContext.Grammar?.LanguageName ?? throw new Exception("No grammar defined!")
+        );
     }
 
     public ProcessNodeResult ProcessNumberNode(object context, ASTNode node, IList<ParserMessage> messages)

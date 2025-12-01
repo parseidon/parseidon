@@ -6,6 +6,11 @@ using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Parseidon.Parser;
 using Parseidon.Cli.TextMateGrammar.Block;
+using System.Collections.Immutable;
+using Parseidon.Cli.TextMateGrammar.Terminals;
+using Parseidon.Cli.TextMateGrammar.Operators;
+using System.Text.Encodings.Web;
+using Parseidon.Helper;
 
 namespace Parseidon.Cli.TextMateGrammar;
 
@@ -41,8 +46,8 @@ public class Grammar : AbstractNamedElement
 
         TextMateGrammarDocument document = new TextMateGrammarDocument
         {
-            DisplayName = GetOptionValue("tmdisplayname"),
-            ScopeName = GetOptionValue("tmscopename"),
+            DisplayName = GetOptionValue("displayname"),
+            ScopeName = GetOptionValue("scopename"),
             FileTypes = GetFileTypes(),
             Patterns = patterns,
             Repository = repository
@@ -91,6 +96,16 @@ public class Grammar : AbstractNamedElement
                 return value.Value;
         }
         throw GetException($"Can not find option '{key}'!");
+    }
+
+    private String? TryGetOptionValue(String key)
+    {
+        foreach (ValuePair value in Options)
+        {
+            if (value.Name.Equals(key, StringComparison.OrdinalIgnoreCase))
+                return value.Value;
+        }
+        return null;
     }
 
     private IReadOnlyList<SimpleRule> GetRequiredRules()
@@ -205,10 +220,129 @@ public class Grammar : AbstractNamedElement
 
     private String[] GetFileTypes()
     {
-        String rawValue = GetOptionValue("tmfiletype");
+        String rawValue = GetOptionValue("filetype");
         String[] parts = rawValue.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         return parts.Length == 0 ? new[] { rawValue.Trim() } : parts;
     }
+
+    public String ToLanguageConfigJson()
+    {
+        String GetTextValueOfRule(SimpleRule rule)
+        {
+            AbstractDefinitionElement definition = rule.Definition;
+            while (definition is not TextTerminal)
+            {
+                if (definition is AbstractMarker marker)
+                    definition = marker.Element ?? throw new Exception("Element required!");
+                else
+                    throw new Exception("Quoted rules can only include literals!");
+            }
+            return (definition as TextTerminal)!.AsText().ReplaceAll("\\'", "'").ReplaceAll("\\\"", "\"").ReplaceAll("\\\\", "\\");
+        }
+        List<KeyValuePair<String, String>> brackets = new List<KeyValuePair<String, String>>();
+        List<KeyValuePair<String, String>> autoClosingPairs = new List<KeyValuePair<String, String>>();
+        List<KeyValuePair<String, String>> surroundingPairs = new List<KeyValuePair<String, String>>();
+        foreach (SimpleRule rule in Rules)
+        {
+            if (rule.KeyValuePairs.ContainsKey("quote"))
+            {
+                String quoteValue = GetTextValueOfRule(rule);
+                autoClosingPairs.Add(new KeyValuePair<String, String>(quoteValue, quoteValue));
+                surroundingPairs.Add(new KeyValuePair<String, String>(quoteValue, quoteValue));
+            }
+            if (rule.KeyValuePairs.ContainsKey("bracketopen"))
+            {
+                String bracketIdentifier = rule.KeyValuePairs["bracketopen"];
+                String? closeBracket = null;
+                foreach (SimpleRule correspondingRule in Rules)
+                {
+                    if ((correspondingRule != rule) && correspondingRule.KeyValuePairs.ContainsKey("bracketclose") && (correspondingRule.KeyValuePairs["bracketclose"] == bracketIdentifier))
+                    {
+                        closeBracket = GetTextValueOfRule(correspondingRule);
+                        break;
+                    }
+                }
+                if (!String.IsNullOrEmpty(closeBracket))
+                {
+                    String openBracket = GetTextValueOfRule(rule);
+                    brackets.Add(new KeyValuePair<String, String>(openBracket, closeBracket));
+                    autoClosingPairs.Add(new KeyValuePair<String, String>(openBracket, closeBracket));
+                    surroundingPairs.Add(new KeyValuePair<String, String>(openBracket, closeBracket));
+                }
+                else
+                    throw new Exception($"A closing bracket for \"bracketopen: {bracketIdentifier}\" is required!");
+            }
+        }
+        String? lineComment = TryGetOptionValue("linecomment");
+        KeyValuePair<String, String>? blockComment = null;
+
+        VSCodeLanguageConfDocument document = new VSCodeLanguageConfDocument
+        {
+            Comments = new VSCodeLanguageConfComments
+            {
+                LineComment = lineComment,
+                BlockComment = blockComment
+            },
+            Brackets = brackets,
+            AutoClosingPairs = autoClosingPairs,
+            SurroundingPairs = surroundingPairs
+        };
+
+        JsonSerializerOptions serializerOptions = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            Converters = { new KeyValuePairArrayConverter() }
+        };
+
+        return JsonSerializer.Serialize(document, serializerOptions);
+    }
+
+    public String ToPackageJson()
+    {
+        String languageDisplayName = GetOptionValue("displayname");
+        String languageName = (TryGetOptionValue("name") ?? languageDisplayName).ToLower().Replace(" ", "");
+
+        VSCodePackageDocument document = new VSCodePackageDocument
+        {
+            Name = languageName,
+            DisplayName = languageDisplayName,
+            Description = GetOptionValue("description"),
+            Version = GetOptionValue("version"),
+            Contributes =
+                new VSCodePackageContributes
+                {
+                    Languages = ImmutableArray.Create<VSCodePackageLanguage>().Add(
+                        new VSCodePackageLanguage
+                        {
+                            Id = languageName,
+                            Aliases = ImmutableArray.Create<String>().Add(languageDisplayName).Add(languageName),
+                            Extensions = GetFileTypes()
+                        }
+                    ),
+                    Grammars = ImmutableArray.Create<VSCodePackageGrammar>().Add(
+                        new VSCodePackageGrammar
+                        {
+                            Language = languageName,
+                            ScopeName = TryGetOptionValue("scopename") ?? $"source.{languageName}",
+                            Path = $"./syntaxes/{languageName}.tmLanguage.json"
+                        }
+                    )
+                }
+        };
+
+        JsonSerializerOptions serializerOptions = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        };
+
+        return JsonSerializer.Serialize(document, serializerOptions);
+    }
+
+    public String LanguageName { get; private set; } = String.Empty;
 
     private sealed class TextMateGrammarDocument
     {
@@ -265,5 +399,105 @@ public class Grammar : AbstractNamedElement
     {
         [JsonPropertyName("name")]
         public String Name { get; init; } = String.Empty;
+    }
+
+    private sealed class VSCodePackageDocument
+    {
+        [JsonPropertyName("name")]
+        public String Name { get; init; } = String.Empty;
+
+        [JsonPropertyName("displayName")]
+        public String DisplayName { get; init; } = String.Empty;
+
+        [JsonPropertyName("description")]
+        public String Description { get; init; } = String.Empty;
+
+        [JsonPropertyName("version")]
+        public String Version { get; init; } = String.Empty;
+
+        [JsonPropertyName("engines")]
+        public IReadOnlyDictionary<String, String> Engines { get; init; } = ImmutableDictionary.Create<String, String>().Add("vscode", "^1.106.1");
+
+        [JsonPropertyName("categories")]
+        public IReadOnlyList<String> Categories { get; init; } = ImmutableArray.Create<String>().Add("Programming Languages");
+
+        [JsonPropertyName("contributes")]
+        public VSCodePackageContributes Contributes { get; init; } = new VSCodePackageContributes();
+    }
+
+    private sealed class VSCodePackageContributes
+    {
+        [JsonPropertyName("languages")]
+        public IReadOnlyList<VSCodePackageLanguage> Languages { get; init; } = Array.Empty<VSCodePackageLanguage>();
+
+        [JsonPropertyName("grammars")]
+        public IReadOnlyList<VSCodePackageGrammar> Grammars { get; init; } = Array.Empty<VSCodePackageGrammar>();
+    }
+
+    private sealed class VSCodePackageLanguage
+    {
+        [JsonPropertyName("id")]
+        public String Id { get; init; } = String.Empty;
+
+        [JsonPropertyName("aliases")]
+        public IReadOnlyList<String> Aliases { get; init; } = Array.Empty<String>();
+
+        [JsonPropertyName("extensions")]
+        public IReadOnlyList<String> Extensions { get; init; } = Array.Empty<String>();
+
+        [JsonPropertyName("configuration")]
+        public String Configuration { get; init; } = "./language-configuration.json";
+    }
+
+    private sealed class VSCodePackageGrammar
+    {
+        [JsonPropertyName("language")]
+        public String Language { get; init; } = String.Empty;
+
+        [JsonPropertyName("scopeName")]
+        public String ScopeName { get; init; } = String.Empty;
+
+        [JsonPropertyName("path")]
+        public String Path { get; init; } = String.Empty;
+    }
+
+    private sealed class VSCodeLanguageConfDocument
+    {
+        [JsonPropertyName("comments")]
+        public VSCodeLanguageConfComments Comments { get; init; } = new VSCodeLanguageConfComments();
+
+        [JsonPropertyName("brackets")]
+        public IList<KeyValuePair<String, String>> Brackets { get; init; } = Array.Empty<KeyValuePair<String, String>>();
+
+        [JsonPropertyName("autoClosingPairs")]
+        public IList<KeyValuePair<String, String>> AutoClosingPairs { get; init; } = Array.Empty<KeyValuePair<String, String>>();
+
+        [JsonPropertyName("surroundingPairs")]
+        public IList<KeyValuePair<String, String>> SurroundingPairs { get; init; } = Array.Empty<KeyValuePair<String, String>>();
+    }
+
+    private sealed class VSCodeLanguageConfComments
+    {
+        [JsonPropertyName("lineComment")]
+        public String? LineComment { get; init; }
+
+        [JsonPropertyName("blockComment")]
+        public KeyValuePair<String, String>? BlockComment { get; init; }
+    }
+
+    public class KeyValuePairArrayConverter : JsonConverter<KeyValuePair<String, String>>
+    {
+        public override KeyValuePair<String, String> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Write(Utf8JsonWriter writer, KeyValuePair<String, String> value, JsonSerializerOptions options)
+        {
+            writer.WriteStartArray();
+            writer.WriteStringValue(value.Key);
+            writer.WriteStringValue(value.Value);
+            writer.WriteEndArray();
+        }
     }
 }
