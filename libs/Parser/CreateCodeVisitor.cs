@@ -234,7 +234,7 @@ public class CreateCodeVisitor : INodeVisitor
         return ProcessNodeResult.Success;
     }
 
-    public ProcessNodeResult ProcessDotNode(Object context, ASTNode node, IList<ParserMessage> messages)
+    public ProcessNodeResult ProcessAllCharNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
         Push(typedContext, new RegExTerminal(".", 1, typedContext.MessageContext, node));
@@ -327,23 +327,6 @@ public class CreateCodeVisitor : INodeVisitor
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
         Push(typedContext, new BooleanTerminal(Boolean.Parse(node.Text), typedContext.MessageContext, node));
-        return ProcessNodeResult.Success;
-    }
-
-    public ProcessNodeResult ProcessPropertyNode(object context, ASTNode node, IList<ParserMessage> messages)
-    {
-        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
-        AbstractValueTerminal value = Pop<AbstractValueTerminal>(typedContext, node.Position);
-        ReferenceElement? name = TryPop<ReferenceElement>(typedContext, node.Position);
-        if ((value is ReferenceElement refValue) && (name is null))
-        {
-            name = refValue;
-            value = new BooleanTerminal(true, typedContext.MessageContext, node);
-        }
-        if (name is null)
-            throw new GrammarException($"Expected {typeof(ReferenceElement).Name}, got null!", typedContext.MessageContext.CalculateLocation(node.Position));
-        ValuePair valuePair = new ValuePair(name.ReferenceName, value.AsText(), typedContext.MessageContext, node);
-        Push(typedContext, valuePair);
         return ProcessNodeResult.Success;
     }
 }

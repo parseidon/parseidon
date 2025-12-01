@@ -236,7 +236,7 @@ public class TextMateGrammarVisitor : INodeVisitor
         return ProcessNodeResult.Success;
     }
 
-    public ProcessNodeResult ProcessDotNode(Object context, ASTNode node, IList<ParserMessage> messages)
+    public ProcessNodeResult ProcessAllCharNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
         Push(typedContext, new RegExTerminal(".", 1, typedContext.MessageContext, node));
