@@ -3,7 +3,7 @@
 @rootnode: Grammar;
 
 # Grammar
-Grammar             = _(Option_)* Definition+;
+Grammar             = _(Option_)* (Definition / TMDefinition)+;
 
 Option              = '@' ValuePair_LineEnd;
 
@@ -20,6 +20,19 @@ Suffix              = Primary (Optional / ZeroOrMore / OneOrMore)?_;
                     / Regex
                     / AllChar;  
 :Properties         = -CurlyBracketOpen_ValuePair_(','_ValuePair_)* -CurlyBracketClose_;
+
+# TextMate rule structure
+TMDefinition        = TMIdentifier_-Equal_TMMatch_((TMIdentifier_)* TMMatch_)? LineEnd_;
+TMMatch             = Identifier 
+                    / TMRegEx
+                    / -BracketOpen_TMMatch_-BracketClose; 
+TMRegEx             = '[]';
+
+# TextMate Identifier
+^$TMIdentifier      = '!' IdentStart TMIdentCont {ErrorName: 'TextMate-Identifier'};
+TMIdentCont         = [a-zA-Z0-9.\-]*;
+
+!Meta.Definition.My-Rule         = Identifier !Ident.if.i-er Identifier;
 
 # Values
 ValuePair           = Identifier_(-ValueAssign_Value_)?;

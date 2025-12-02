@@ -329,5 +329,29 @@ public class CreateCodeVisitor : INodeVisitor
         Push(typedContext, new BooleanTerminal(Boolean.Parse(node.Text), typedContext.MessageContext, node));
         return ProcessNodeResult.Success;
     }
+
+    public ProcessNodeResult ProcessTMDefinitionNode(object context, ASTNode node, IList<ParserMessage> messages)
+    {
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        var stackElement = TryPop<AbstractDefinitionElement>(typedContext, node.Position);
+        while (stackElement is not null)
+            stackElement = TryPop<AbstractDefinitionElement>(typedContext, node.Position);
+        return ProcessNodeResult.Success;
+    }
+
+    public ProcessNodeResult ProcessTMIdentifierNode(object context, ASTNode node, IList<ParserMessage> messages)
+    {
+        return ProcessNodeResult.Success;
+    }
+
+    public ProcessNodeResult ProcessTMMatchNode(object context, ASTNode node, IList<ParserMessage> messages)
+    {
+        return ProcessNodeResult.Success;
+    }
+
+    public ProcessNodeResult ProcessTMRegExNode(object context, ASTNode node, IList<ParserMessage> messages)
+    {
+        return ProcessNodeResult.Success;
+    }
 }
 
