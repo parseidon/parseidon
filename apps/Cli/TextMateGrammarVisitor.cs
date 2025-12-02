@@ -100,5 +100,13 @@ public class TextMateGrammarVisitor : INodeVisitor
     public ProcessNodeResult ProcessBooleanNode(object context, ASTNode node, IList<ParserMessage> messages) => ProcessNodeResult.Success;
 
     public ProcessNodeResult ProcessPropertyNode(object context, ASTNode node, IList<ParserMessage> messages) => ProcessNodeResult.Success;
+
+    public ProcessNodeResult ProcessTMDefinitionNode(object context, ASTNode node, IList<ParserMessage> messages) => ProcessNodeResult.Success;
+
+    public ProcessNodeResult ProcessTMIdentifierNode(object context, ASTNode node, IList<ParserMessage> messages) => ProcessNodeResult.Success;
+
+    public ProcessNodeResult ProcessTMMatchNode(object context, ASTNode node, IList<ParserMessage> messages) => ProcessNodeResult.Success;
+
+    public ProcessNodeResult ProcessTMRegExNode(object context, ASTNode node, IList<ParserMessage> messages) => ProcessNodeResult.Success;
 }
 
