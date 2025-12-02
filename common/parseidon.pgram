@@ -8,7 +8,7 @@ Grammar             = _(Option_)* Definition+;
 Option              = '@' ValuePair_LineEnd;
 
 # Rule structure
-Definition          = RuleOptions Identifier_-Equal_Expression Properties? LineEnd_;
+Definition          = RuleOptions Identifier_-Equal_Expression Properties?_LineEnd_;
 :RuleOptions        = UseRuleNameAsError? (IsTerminal / Drop)? TreatInline?;
 Expression          = Sequence (Or_Sequence)*;
 Sequence            = Prefix+;
@@ -19,7 +19,7 @@ Suffix              = Primary (Optional / ZeroOrMore / OneOrMore)?_;
                     / -BracketOpen_Expression_-BracketClose
                     / Regex
                     / AllChar;  
-:Properties         = -CurlyBracketOpen_ValuePair_(','_ValuePair_)* -CurlyBracketClose_;
+:Properties         = -CurlyBracketOpen_ValuePair_(','_ValuePair_)* -CurlyBracketClose;
 
 # Values
 ValuePair           = Identifier_(-ValueAssign_Value_)?;
@@ -30,7 +30,7 @@ $Boolean            = (True / False);
 :True               = 'true';
 :False              = 'false';
 ^$CSharpIdentifier  = IdentStart CSharpIdentCont {ErrorName: 'C#-Identifier'};
-CSharpIdentCont     = [a-zA-Z0-9.]*;
+CSharpIdentCont     = ('.'? [a-zA-Z0-9])*;
 
 # Identifier
 ^$Identifier        = Underscore / (IdentStart IdentCont);
