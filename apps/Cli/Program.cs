@@ -26,19 +26,35 @@ rootCommand.Add(parseCommand);
 var astCommand = new Command("ast", "Create the AST (Abstract Syntax Tree) for the grammar as a YAML file");
 rootCommand.Add(astCommand);
 
+var textMateCommand = new Command("textmate", "Create a TextMate grammar from the provided grammar definition");
+rootCommand.Add(textMateCommand);
+
+var vsCodeCommand = new Command("vscode", "Create a VS Code extension with the syntax highlighting from the provided grammar definition");
+rootCommand.Add(vsCodeCommand);
+
 var grammarFileArgument = new Argument<FileInfo>(name: "GRAMMAR-FILE", description: "The grammar file to be used");
 parseCommand.Add(grammarFileArgument);
 astCommand.Add(grammarFileArgument);
+textMateCommand.Add(grammarFileArgument);
+vsCodeCommand.Add(grammarFileArgument);
 
 var outputFileArgument = new Argument<FileInfo>(name: "OUTPUT-FILE", description: "The output file");
 parseCommand.Add(outputFileArgument);
 astCommand.Add(outputFileArgument);
+textMateCommand.Add(outputFileArgument);
+
+var outputFolderArgument = new Argument<DirectoryInfo>(name: "OUTPUT-FOLDER", description: "The output folder");
+vsCodeCommand.Add(outputFolderArgument);
 
 parseCommand.SetHandler(
     (grammarFile, outputFile, overrideOption, parserNamespace, parserClassname) =>
     {
-        int exitCode = RunParser(grammarFile, outputFile, overrideOption, (result) =>
-            CreateParser(result, outputFile, overrideOption, parserNamespace, parserClassname));
+        int exitCode = RunParser(
+            grammarFile,
+            () => ValidateFileInput(grammarFile, outputFile, overrideOption),
+            overrideOption,
+            (result) => CreateParser(result, outputFile, overrideOption, parserNamespace, parserClassname)
+        );
         Environment.Exit(exitCode);
     },
     grammarFileArgument, outputFileArgument, overrideOption, namespaceOption, classnameOption);
@@ -46,17 +62,48 @@ parseCommand.SetHandler(
 astCommand.SetHandler(
     (grammarFile, outputFile, overrideOption) =>
     {
-        int exitCode = RunParser(grammarFile, outputFile, overrideOption, (result) =>
-            CreateAST(result, outputFile, overrideOption));
+        int exitCode = RunParser(
+            grammarFile,
+            () => ValidateFileInput(grammarFile, outputFile, overrideOption),
+            overrideOption,
+            (result) => CreateAST(result, outputFile, overrideOption)
+        );
         Environment.Exit(exitCode);
     },
     grammarFileArgument, outputFileArgument, overrideOption);
 
+textMateCommand.SetHandler(
+    (grammarFile, outputFile, overrideOption) =>
+    {
+        int exitCode = RunParser(
+            grammarFile,
+            () => ValidateFileInput(grammarFile, outputFile, overrideOption),
+            overrideOption,
+            (result) => CreateTextMateGrammar(result, outputFile, overrideOption)
+        );
+        Environment.Exit(exitCode);
+    },
+    grammarFileArgument, outputFileArgument, overrideOption);
+
+vsCodeCommand.SetHandler(
+    (grammarFile, outputFolder, overrideOption) =>
+    {
+        int exitCode = RunParser(
+            grammarFile,
+            () => ValidateFolderInput(grammarFile, outputFolder, overrideOption),
+            overrideOption,
+            (result) => CreateVSCodePackage(result, outputFolder, overrideOption)
+        );
+        Environment.Exit(exitCode);
+    },
+    grammarFileArgument, outputFolderArgument, overrideOption);
+
 return await rootCommand.InvokeAsync(args);
 
-static int RunParser(FileInfo grammarFile, FileInfo outputFile, String overrideOption, Func<ParseResult, IVisitResult> processResult)
+static int RunParser(FileInfo grammarFile, Func<Int32> validateInput, String overrideOption, Func<ParseResult, IVisitResult> processResult)
 {
-    int exitCode = ValidateFileInput(grammarFile, outputFile, overrideOption);
+    // int exitCode = ValidateFileInput(grammarFile, outputFile, overrideOption);
+    Int32 exitCode = validateInput();
     if (exitCode != 0)
         return exitCode;
 
@@ -146,7 +193,37 @@ static IVisitResult CreateAST(ParseResult parseResult, FileInfo outputFile, Stri
     return visitResult;
 }
 
-static int ValidateFileInput(FileInfo grammarFile, FileInfo outputFile, String overrideOption)
+static IVisitResult CreateTextMateGrammar(ParseResult parseResult, FileInfo outputFile, String overrideOption)
+{
+    TextMateGrammarVisitor visitor = new TextMateGrammarVisitor();
+    IVisitResult visitResult = parseResult.Visit(visitor);
+    if (visitResult.Successful && visitResult is TextMateGrammarVisitor.IGetTextMateGrammar grammarResult)
+    {
+        File.WriteAllText(outputFile.FullName, grammarResult.GrammarJson ?? "");
+        AnsiConsole.MarkupLine($"[green] The TextMate grammar '{outputFile.FullName}' is sucessfully created![/]");
+    }
+    return visitResult;
+}
+
+static IVisitResult CreateVSCodePackage(ParseResult parseResult, DirectoryInfo outputFolder, String overrideOption)
+{
+    TextMateGrammarVisitor visitor = new TextMateGrammarVisitor();
+    IVisitResult visitResult = parseResult.Visit(visitor);
+    if (visitResult.Successful && visitResult is TextMateGrammarVisitor.IGetTextMateGrammar grammarResult)
+    {
+        if (outputFolder.Exists)
+            outputFolder.Delete(true);
+        outputFolder.Create();
+        (new DirectoryInfo(Path.Combine(outputFolder.FullName, "syntaxes"))).Create();
+        File.WriteAllText(Path.Combine(outputFolder.FullName, $"language-configuration.json"), grammarResult.LanguageConfigJson);
+        File.WriteAllText(Path.Combine(outputFolder.FullName, $"package.json"), grammarResult.PackageJson);
+        File.WriteAllText(Path.Combine(outputFolder.FullName, $"syntaxes/parseidon.tmLanguage.json"), grammarResult.GrammarJson);
+        AnsiConsole.MarkupLine($"[green] The VS Code package in '{outputFolder.FullName}' is sucessfully created![/]");
+    }
+    return visitResult;
+}
+
+static Int32 ValidateFileInput(FileInfo grammarFile, FileInfo outputFile, String overrideOption)
 {
     if (!grammarFile.Exists)
     {
@@ -170,3 +247,26 @@ static int ValidateFileInput(FileInfo grammarFile, FileInfo outputFile, String o
     return 0;
 }
 
+static Int32 ValidateFolderInput(FileInfo grammarFile, DirectoryInfo outputFolder, String overrideOption)
+{
+    if (!grammarFile.Exists)
+    {
+        PrintMessage(ParserMessage.MessageType.Error, $"The file '{grammarFile.FullName}' could not be found!");
+        return 1;
+    }
+    if (outputFolder.Exists)
+    {
+        if (overrideOption.Equals("abort"))
+        {
+            PrintMessage(ParserMessage.MessageType.Error, $"The file '{outputFolder.FullName}' already exists!");
+            return 1;
+        }
+        if (overrideOption.Equals("ask"))
+        {
+            PrintMessage(ParserMessage.MessageType.Error, $"The file '{outputFolder.FullName}' already exists!");
+            if (!AnsiConsole.Prompt(new ConfirmationPrompt("Should it be overwritten?")))
+                return 1;
+        }
+    }
+    return 0;
+}
