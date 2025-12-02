@@ -3,12 +3,12 @@
 @rootnode: Grammar;
 
 # Grammar
-Grammar             = _(Option_)* Definition+_;
+Grammar             = _(Option_)* Definition+;
 
 Option              = '@' ValuePair_LineEnd;
 
 # Rule structure
-Definition          = _RuleOptions Identifier_-Equal_Expression Properties? LineEnd;
+Definition          = RuleOptions Identifier_-Equal_Expression Properties? LineEnd_;
 :RuleOptions        = UseRuleNameAsError? (IsTerminal / Drop)? TreatInline?;
 Expression          = Sequence (Or_Sequence)*;
 Sequence            = Prefix+;
