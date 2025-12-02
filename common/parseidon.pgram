@@ -32,8 +32,6 @@ TMRegEx             = '[]';
 ^$TMIdentifier      = '!' IdentStart TMIdentCont {ErrorName: 'TextMate-Identifier'};
 TMIdentCont         = [a-zA-Z0-9.\-]*;
 
-!Meta.Definition.My-Rule         = Identifier !Ident.if.i-er Identifier;
-
 # Values
 ValuePair           = Identifier_(-ValueAssign_Value_)?;
 :ValueAssign        = Colon;
