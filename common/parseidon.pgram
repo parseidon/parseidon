@@ -25,7 +25,7 @@ Suffix              = Primary (Optional / ZeroOrMore / OneOrMore)?_;
 TMDefinition        = TMIdentifier_-Equal_TMMatchSequence_(TMIncludes?_TMMatchSequence_)? LineEnd_;
 TMIncludes          = CurlyBracketOpen_(TMIdentifier_(-Or_TMIdentifier_)*)? CurlyBracketClose;
 TMMatchSequence     = (TMMatch_)+;
-TMMatch             = Identifier 
+:TMMatch            = Identifier 
                     / TreatInline TMIdentifier
                     / TMRegEx
                     / -BracketOpen_TMMatchSequence_-BracketClose; 
@@ -50,6 +50,8 @@ $Boolean            = (True / False);
 :False              = 'false';
 ^$CSharpIdentifier  = IdentStart CSharpIdentCont {ErrorName: 'C#-Identifier'};
 CSharpIdentCont     = ('.'? [a-zA-Z0-9])*;
+
+!meta.test          = Identifier {!meta.test / !meta.test} RegEx !'hallo';
 
 # Identifier
 ^$Identifier        = Underscore / (IdentStart IdentCont);
