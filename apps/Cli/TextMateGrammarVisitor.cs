@@ -112,8 +112,6 @@ public class TextMateGrammarVisitor : INodeVisitor
 
     public ProcessNodeResult ProcessTMMatchSequenceNode(object context, ASTNode node, IList<ParserMessage> messages) => ProcessNodeResult.Success;
 
-    public ProcessNodeResult ProcessTMRegExCharNode(object context, ASTNode node, IList<ParserMessage> messages) => ProcessNodeResult.Success;
-
     public ProcessNodeResult ProcessTMIncludesNode(object context, ASTNode node, IList<ParserMessage> messages) => ProcessNodeResult.Success;
 }
 

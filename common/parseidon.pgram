@@ -29,8 +29,12 @@ TMMatch             = Identifier
                     / TreatInline TMIdentifier
                     / TMRegEx
                     / -BracketOpen_TMMatchSequence_-BracketClose; 
-TMRegEx             = -'!\'' TMRegExChar+ '\'';
-TMRegExChar         = [a-zA-Z];
+$TMRegEx            = -'!\'' TMRegExChar+ -'\'';
+TMRegExChar         = [^'\\]
+                    / '\\\''
+                    / '\\\\'
+                    / EscapeChars
+                    / UnicodeChars;
 
 # TextMate Identifier
 ^$TMIdentifier      = '!' IdentStart TMIdentCont {ErrorName: 'TextMate-Identifier'};
