@@ -52,6 +52,34 @@
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "console": "integratedTerminal"
+        },
+        {
+            "name": "CLI: Create VSCode Package",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "dotnet: build",
+            "program": "${workspaceFolder}/Output/bin/Parseidon.Cli/Debug/net9.0/dotnet-parseidon.dll",
+            "args": [
+                "vscode",
+                "${workspaceFolder}/common/parseidon.pgram",
+                "${workspaceFolder}/Output/VSCodePackage",
+                "-o",
+                "override"
+            ],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Run VS Code Extension",
+            "type": "extensionHost",
+            "request": "launch",
+            "preLaunchTask": "Create VS Code extension",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}/Output/VSCodePackage"
+            ],
+            "cwd": "${workspaceFolder}/Output/VSCodePackage",
         }
     ]
 }

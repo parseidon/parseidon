@@ -25,6 +25,24 @@
 				"isDefault": true
 			},
 			"problemMatcher": "$msCompile"
+		},
+		{
+			"type": "shell",
+			"label": "Create VS Code extension",
+			"command": "${workspaceFolder}/Output/bin/Parseidon.Cli/Debug/net9.0/dotnet-parseidon",
+			"args": [
+				"vscode",
+				"${workspaceFolder}/Output/common/parseidon.pgram",
+				"${workspaceFolder}/Output/VSCodePackage",
+				"-o",
+				"override"
+			],
+			"options": {
+				"env": {
+					"DOTNET_CLI_CONTEXT_ANSI_PASS_THRU": "true"
+				}
+			},
+			"problemMatcher": []
 		}
 	]
 }
