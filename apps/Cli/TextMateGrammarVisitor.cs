@@ -84,7 +84,7 @@ public class TextMateGrammarVisitor : INodeVisitor
 
     public IVisitResult GetResult(object context, Boolean successful, IReadOnlyList<ParserMessage> messages)
     {
-        var typedContext = context as CreateTMGrammarVisitResult ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        var typedContext = context as CreateTMGrammarVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
         return new CreateTMGrammarVisitResult(successful, messages, "", "", "", "");
     }
 
@@ -93,6 +93,7 @@ public class TextMateGrammarVisitor : INodeVisitor
     public ProcessNodeResult ProcessCharacterClassNode(object context, ASTNode node, IList<ParserMessage> messages) => ProcessNodeResult.Success;
 
     public ProcessNodeResult ProcessTreatInlineNode(object context, ASTNode node, IList<ParserMessage> messages) => ProcessNodeResult.Success;
+
     public ProcessNodeResult ProcessUseRuleNameAsErrorNode(object context, ASTNode node, IList<ParserMessage> messages) => ProcessNodeResult.Success;
 
     public ProcessNodeResult ProcessValuePairNode(object context, ASTNode node, IList<ParserMessage> messages) => ProcessNodeResult.Success;
@@ -108,5 +109,11 @@ public class TextMateGrammarVisitor : INodeVisitor
     public ProcessNodeResult ProcessTMMatchNode(object context, ASTNode node, IList<ParserMessage> messages) => ProcessNodeResult.Success;
 
     public ProcessNodeResult ProcessTMRegExNode(object context, ASTNode node, IList<ParserMessage> messages) => ProcessNodeResult.Success;
+
+    public ProcessNodeResult ProcessTMMatchSequenceNode(object context, ASTNode node, IList<ParserMessage> messages) => ProcessNodeResult.Success;
+
+    public ProcessNodeResult ProcessTMRegExCharNode(object context, ASTNode node, IList<ParserMessage> messages) => ProcessNodeResult.Success;
+
+    public ProcessNodeResult ProcessTMIncludesNode(object context, ASTNode node, IList<ParserMessage> messages) => ProcessNodeResult.Success;
 }
 

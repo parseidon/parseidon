@@ -22,11 +22,15 @@ Suffix              = Primary (Optional / ZeroOrMore / OneOrMore)?_;
 :Properties         = -CurlyBracketOpen_ValuePair_(','_ValuePair_)* -CurlyBracketClose;
 
 # TextMate rule structure
-TMDefinition        = TMIdentifier_-Equal_TMMatch_((TMIdentifier_)* TMMatch_)? LineEnd_;
+TMDefinition        = TMIdentifier_-Equal_TMMatchSequence_(TMIncludes?_TMMatchSequence_)? LineEnd_;
+TMIncludes          = CurlyBracketOpen_(TMIdentifier_(-Or_TMIdentifier_)*)? CurlyBracketClose;
+TMMatchSequence     = (TMMatch_)+;
 TMMatch             = Identifier 
+                    / TreatInline TMIdentifier
                     / TMRegEx
-                    / -BracketOpen_TMMatch_-BracketClose; 
-TMRegEx             = '[]';
+                    / -BracketOpen_TMMatchSequence_-BracketClose; 
+TMRegEx             = -'!\'' TMRegExChar+ '\'';
+TMRegExChar         = [a-zA-Z];
 
 # TextMate Identifier
 ^$TMIdentifier      = '!' IdentStart TMIdentCont {ErrorName: 'TextMate-Identifier'};

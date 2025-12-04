@@ -353,5 +353,20 @@ public class CreateCodeVisitor : INodeVisitor
     {
         return ProcessNodeResult.Success;
     }
+
+    public ProcessNodeResult ProcessTMMatchSequenceNode(object context, ASTNode node, IList<ParserMessage> messages)
+    {
+        return ProcessNodeResult.Success;
+    }
+
+    public ProcessNodeResult ProcessTMRegExCharNode(object context, ASTNode node, IList<ParserMessage> messages)
+    {
+        return ProcessNodeResult.Success;
+    }
+
+    public ProcessNodeResult ProcessTMIncludesNode(object context, ASTNode node, IList<ParserMessage> messages)
+    {
+        return ProcessNodeResult.Success;
+    }
 }
 
