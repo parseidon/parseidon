@@ -16,7 +16,7 @@ public class ReferenceElement : AbstractValueTerminal
 
     public override String ToString(Grammar grammar)
     {
-        if (grammar.FindRuleByName(ReferenceName) is SimpleRule referencedRule)
+        if (grammar.FindRuleByName(ReferenceName) is Definition referencedRule)
         {
             if (TreatReferenceInline)
                 return referencedRule.ToString(grammar);

@@ -75,7 +75,7 @@ public class CreateCodeVisitor : INodeVisitor
     public ProcessNodeResult ProcessGrammarNode(Object context, ASTNode node, IList<ParserMessage> messages)
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
-        List<SimpleRule> rules = PopList<SimpleRule>(typedContext);
+        List<Definition> rules = PopList<Definition>(typedContext);
         List<ValuePair> options = PopList<ValuePair>(typedContext);
         typedContext.Grammar = new Grammar.Grammar(rules, options, typedContext.MessageContext, node);
         return ProcessNodeResult.Success;
@@ -110,7 +110,7 @@ public class CreateCodeVisitor : INodeVisitor
             marker.Element = definition;
             definition = marker;
         }
-        AbstractGrammarElement newRule = new SimpleRule(name.ReferenceName, definition, keyValuePairs, typedContext.MessageContext, node, markers);
+        AbstractGrammarElement newRule = new Definition(name.ReferenceName, definition, keyValuePairs, typedContext.MessageContext, node, markers);
         Push(typedContext, newRule);
         return ProcessNodeResult.Success;
     }

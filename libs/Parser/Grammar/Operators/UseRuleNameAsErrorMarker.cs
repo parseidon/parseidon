@@ -9,7 +9,7 @@ public class UseRuleNameAsErrorMarker : AbstractMarker
 
     public override String ToString(Grammar grammar)
     {
-        SimpleRule rule = GetRule();
+        Definition rule = GetRule();
         String errorName = rule.KeyValuePairs.TryGetValue("ErrorName", out String temp) ? $"\"{temp}\"" : $"\"{rule.Name}\"" ?? "errorName";
         String result = "";
         result += $"SetErrorName(actualNode, state, {errorName},\n";

@@ -9,7 +9,7 @@ namespace Parseidon.Parser.Grammar;
 
 public class Grammar : AbstractNamedElement
 {
-    public Grammar(List<SimpleRule> rules, List<ValuePair> options, MessageContext messageContext, ASTNode node) : base("", messageContext, node)
+    public Grammar(List<Definition> rules, List<ValuePair> options, MessageContext messageContext, ASTNode node) : base("", messageContext, node)
     {
         Rules = rules;
         Options = options;
@@ -17,7 +17,7 @@ public class Grammar : AbstractNamedElement
         Rules.ForEach((element) => element.Parent = this);
     }
 
-    public List<SimpleRule> Rules { get; }
+    public List<Definition> Rules { get; }
     public List<ValuePair> Options { get; }
 
     public String ParserCode { get => ToString(this); }
@@ -55,7 +55,7 @@ public class Grammar : AbstractNamedElement
     public override bool MatchesVariableText()
     {
         Boolean result = false;
-        foreach (SimpleRule rule in Rules)
+        foreach (Definition rule in Rules)
             result = result || rule.MatchesVariableText();
         return result;
     }
@@ -63,40 +63,40 @@ public class Grammar : AbstractNamedElement
     internal override void IterateElements(Func<AbstractGrammarElement, Boolean> process)
     {
         if (process(this))
-            foreach (SimpleRule rule in Rules)
+            foreach (Definition rule in Rules)
                 rule.IterateElements(process);
     }
 
-    public SimpleRule? FindRuleByName(String name)
+    public Definition? FindRuleByName(String name)
     {
-        List<SimpleRule> rules = new List<SimpleRule>();
-        foreach (SimpleRule element in Rules)
+        List<Definition> rules = new List<Definition>();
+        foreach (Definition element in Rules)
             if (element.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
                 return element;
         return null;
     }
 
-    public void CheckDuplicatedRules(List<SimpleRule> rules)
+    public void CheckDuplicatedRules(List<Definition> rules)
     {
         HashSet<String> existingRules = new HashSet<String>(StringComparer.InvariantCultureIgnoreCase);
-        foreach (SimpleRule rule in rules)
+        foreach (Definition rule in rules)
             if (!existingRules.Add(rule.Name))
                 throw rule.GetException($"Rule '{rule.Name}' already exists!");
     }
 
     public Int32 GetElementIdOf(AbstractNamedElement element)
     {
-        if ((element is SimpleRule) && (Rules.IndexOf((SimpleRule)element) >= 0))
-            return Rules.IndexOf((SimpleRule)element);
+        if ((element is Definition) && (Rules.IndexOf((Definition)element) >= 0))
+            return Rules.IndexOf((Definition)element);
         throw GetException($"Can not find identifier '{element.Name}'!");
     }
 
-    public SimpleRule GetRootRule()
+    public Definition GetRootRule()
     {
         String? axiomName = GetOptionValue("rootnode");
         if (String.IsNullOrWhiteSpace(axiomName))
             throw GetException("Grammar must have axiom option!");
-        SimpleRule? rule = FindRuleByName(axiomName);
+        Definition? rule = FindRuleByName(axiomName);
         if (rule is null)
             throw GetException($"Can not find axiom option '{axiomName}'!");
         return rule;
@@ -112,32 +112,32 @@ public class Grammar : AbstractNamedElement
         throw GetException($"Can not find option '{key}'!");
     }
 
-    private Boolean IterateUsedRules(AbstractGrammarElement element, List<SimpleRule> rules)
+    private Boolean IterateUsedRules(AbstractGrammarElement element, List<Definition> rules)
     {
-        if ((element is SimpleRule rule) && (rules.IndexOf(rule) < 0) && !rule.HasMarker<TreatInlineMarker>())
+        if ((element is Definition rule) && (rules.IndexOf(rule) < 0) && !rule.HasMarker<TreatInlineMarker>())
             rules.Add(rule);
         else
-            if ((element is ReferenceElement referenceElement) && (!referenceElement.TreatReferenceInline) && (FindRuleByName(referenceElement.ReferenceName) is SimpleRule referencedRule) && (rules.IndexOf(referencedRule) < 0))
+            if ((element is ReferenceElement referenceElement) && (!referenceElement.TreatReferenceInline) && (FindRuleByName(referenceElement.ReferenceName) is Definition referencedRule) && (rules.IndexOf(referencedRule) < 0))
                 referencedRule.IterateElements((element) => IterateUsedRules(element, rules));
         return true;
     }
 
-    private List<SimpleRule> GetUsedRules()
+    private List<Definition> GetUsedRules()
     {
-        List<SimpleRule> result = new List<SimpleRule>();
-        SimpleRule rootRule = GetRootRule();
+        List<Definition> result = new List<Definition>();
+        Definition rootRule = GetRootRule();
         result.Add(rootRule);
         rootRule.IterateElements((element) => IterateUsedRules(element, result));
         result.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
         return result;
     }
 
-    private Boolean IterateRelevantGrammarRules(AbstractGrammarElement element, List<SimpleRule> rules, Boolean forceAdd)
+    private Boolean IterateRelevantGrammarRules(AbstractGrammarElement element, List<Definition> rules, Boolean forceAdd)
     {
-        if ((element is SimpleRule rule) && (rules.IndexOf(rule) < 0) && !(rule.DropRule) && (rule.MatchesVariableText() || forceAdd))
+        if ((element is Definition rule) && (rules.IndexOf(rule) < 0) && !(rule.DropRule) && (rule.MatchesVariableText() || forceAdd))
             rules.Add(rule);
         else
-            if ((element is ReferenceElement referenceElement) && (!referenceElement.TreatReferenceInline) && (FindRuleByName(referenceElement.ReferenceName) is SimpleRule referencedRule) && (rules.IndexOf(referencedRule) < 0))
+            if ((element is ReferenceElement referenceElement) && (!referenceElement.TreatReferenceInline) && (FindRuleByName(referenceElement.ReferenceName) is Definition referencedRule) && (rules.IndexOf(referencedRule) < 0))
             {
                 Boolean hasDropMarker = false;
                 AbstractGrammarElement? parent = element.Parent;
@@ -171,14 +171,14 @@ public class Grammar : AbstractNamedElement
                     );
                 }
             }
-        Boolean result = !((element is SimpleRule rule1) && (rule1.HasMarker<IsTerminalMarker>()));
+        Boolean result = !((element is Definition rule1) && (rule1.HasMarker<IsTerminalMarker>()));
         return result;
     }
 
-    private List<SimpleRule> GetRelevantGrammarRules()
+    private List<Definition> GetRelevantGrammarRules()
     {
-        List<SimpleRule> result = new List<SimpleRule>();
-        SimpleRule rootRule = GetRootRule();
+        List<Definition> result = new List<Definition>();
+        Definition rootRule = GetRootRule();
         result.Add(rootRule);
         rootRule.IterateElements((element) => IterateRelevantGrammarRules(element, result, false));
         result.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
@@ -188,7 +188,7 @@ public class Grammar : AbstractNamedElement
     protected String GetCheckRuleCode()
     {
         StringBuilder builder = new StringBuilder();
-        foreach (SimpleRule rule in GetUsedRules())
+        foreach (Definition rule in GetUsedRules())
         {
             String ruleCode =
                 $$"""
@@ -196,7 +196,7 @@ public class Grammar : AbstractNamedElement
                 {
                     Int32 oldPosition = state.Position;
                     ASTNode actualNode = new ASTNode({{GetElementIdOf(rule)}}, "{{rule.Name}}", "", state.Position);
-                    Boolean result = {{GetElementsCode(new List<SimpleRule>() { rule }, "Rule", null)}}
+                    Boolean result = {{GetElementsCode(new List<Definition>() { rule }, "Rule", null)}}
                     Int32 foundPosition = state.Position;
                     if (result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
                         parentNode.AddChild(actualNode);
@@ -212,11 +212,11 @@ public class Grammar : AbstractNamedElement
 
     protected String GetParseResultCode()
     {
-        String GetEventName(SimpleRule rule) => $"Process{rule.Name.Humanize().Dehumanize()}Node";
-        SimpleRule rootRule = GetRootRule();
-        List<SimpleRule> usedRules = GetRelevantGrammarRules();
+        String GetEventName(Definition rule) => $"Process{rule.Name.Humanize().Dehumanize()}Node";
+        Definition rootRule = GetRootRule();
+        List<Definition> usedRules = GetRelevantGrammarRules();
         String visitorCalls = "";
-        foreach (SimpleRule rule in usedRules)
+        foreach (Definition rule in usedRules)
             visitorCalls += $"case {GetElementIdOf(rule)}: return visitor.{GetEventName(rule)}(context, node, messages);\n";
 
         String result =
@@ -335,7 +335,7 @@ public class Grammar : AbstractNamedElement
 
     protected String GetParseCode()
     {
-        SimpleRule rootRule = GetRootRule();
+        Definition rootRule = GetRootRule();
         String result =
             $$"""
             public ParseResult Parse(String text)
@@ -352,7 +352,7 @@ public class Grammar : AbstractNamedElement
         return result;
     }
 
-    private String GetElementsCode(IEnumerable<SimpleRule> elements, String comment, SimpleRule? separatorTerminal)
+    private String GetElementsCode(IEnumerable<Definition> elements, String comment, Definition? separatorTerminal)
     {
         String result = String.Join("", elements.Select(x => x.ToString(this))) + ";";
         if (result.IndexOf("\n") > 0)
@@ -362,10 +362,10 @@ public class Grammar : AbstractNamedElement
 
     protected String GetIVisitorCode()
     {
-        String GetEventName(SimpleRule rule) => $"Process{rule.Name.Humanize().Dehumanize()}Node";
-        List<SimpleRule> usedRules = GetRelevantGrammarRules();
+        String GetEventName(Definition rule) => $"Process{rule.Name.Humanize().Dehumanize()}Node";
+        List<Definition> usedRules = GetRelevantGrammarRules();
         String visitorEvents = "";
-        foreach (SimpleRule rule in usedRules)
+        foreach (Definition rule in usedRules)
             visitorEvents += $"ProcessNodeResult {GetEventName(rule)}(Object context, ASTNode node, IList<ParserMessage> messages);\n";
         String result =
             $$"""

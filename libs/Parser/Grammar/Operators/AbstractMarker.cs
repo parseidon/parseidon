@@ -7,12 +7,12 @@ public abstract class AbstractMarker : AbstractOneChildOperator
 {
     public AbstractMarker(AbstractDefinitionElement? element, MessageContext messageContext, ASTNode node) : base(element, messageContext, node) { }
 
-    protected SimpleRule GetRule()
+    protected Definition GetRule()
     {
         AbstractGrammarElement? current = Parent;
         while (current is not null)
         {
-            if (current is SimpleRule rule)
+            if (current is Definition rule)
                 return rule;
             current = current.Parent;
         }
