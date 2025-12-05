@@ -10,7 +10,7 @@ public class CreateCodeVisitor : INodeVisitor
 {
     public interface IGetCode
     {
-        String? Code { get; }
+        String Code { get; }
     }
 
     private class CreateCodeVisitorContext
@@ -27,7 +27,7 @@ public class CreateCodeVisitor : INodeVisitor
 
     private class CreateCodeVisitResult : IVisitResult, IGetCode
     {
-        public CreateCodeVisitResult(Boolean successful, IReadOnlyList<ParserMessage> messages, String? code)
+        public CreateCodeVisitResult(Boolean successful, IReadOnlyList<ParserMessage> messages, String code)
         {
             Successful = successful;
             Messages = messages;
@@ -36,7 +36,7 @@ public class CreateCodeVisitor : INodeVisitor
 
         public Boolean Successful { get; }
         public IReadOnlyList<ParserMessage> Messages { get; }
-        public String? Code { get; }
+        public String Code { get; }
     }
 
     private T Pop<T>(CreateCodeVisitorContext context, Int32 position) where T : AbstractGrammarElement
