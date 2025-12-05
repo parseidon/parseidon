@@ -20,6 +20,9 @@ public class Grammar : AbstractNamedElement
     public List<SimpleRule> Rules { get; }
     public List<ValuePair> Options { get; }
 
+    public String ParserCode { get => ToString(this); }
+
+
     public override String ToString(Grammar grammar)
     {
         return
@@ -48,8 +51,6 @@ public class Grammar : AbstractNamedElement
             }
             """.TrimLineEndWhitespace();
     }
-
-    public override String ToString() => ToString(this);
 
     public override bool MatchesVariableText()
     {

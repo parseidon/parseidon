@@ -27,16 +27,17 @@ public class CreateCodeVisitor : INodeVisitor
 
     private class CreateCodeVisitResult : IVisitResult, IGetResults
     {
-        public CreateCodeVisitResult(Boolean successful, IReadOnlyList<ParserMessage> messages, String code)
+        public CreateCodeVisitResult(Boolean successful, IReadOnlyList<ParserMessage> messages, Grammar.Grammar grammar)
         {
             Successful = successful;
             Messages = messages;
-            ParserCode = code;
+            _grammar = grammar;
         }
 
+        private Grammar.Grammar _grammar;
         public Boolean Successful { get; }
         public IReadOnlyList<ParserMessage> Messages { get; }
-        public String ParserCode { get; }
+        public String ParserCode { get => _grammar.ParserCode; }
     }
 
     private T Pop<T>(CreateCodeVisitorContext context, Int32 position) where T : AbstractGrammarElement
@@ -282,7 +283,9 @@ public class CreateCodeVisitor : INodeVisitor
     public IVisitResult GetResult(object context, Boolean successful, IReadOnlyList<ParserMessage> messages)
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
-        return new CreateCodeVisitResult(successful, messages, typedContext.Grammar is not null ? typedContext.Grammar.ToString() : String.Empty);
+        if (typedContext.Grammar is null)
+            throw new Exception("No grammar available!");
+        return new CreateCodeVisitResult(successful, messages, typedContext.Grammar);
     }
 
     public ProcessNodeResult ProcessNumberNode(object context, ASTNode node, IList<ParserMessage> messages)
