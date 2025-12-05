@@ -349,7 +349,7 @@ public class CreateCodeVisitor : INodeVisitor
         return ProcessNodeResult.Success;
     }
 
-    public ProcessNodeResult ProcessTMMatchSequenceNode(object context, ASTNode node, IList<ParserMessage> messages)
+    public ProcessNodeResult ProcessTMMatchNode(object context, ASTNode node, IList<ParserMessage> messages)
     {
         return ProcessNodeResult.Success;
     }
