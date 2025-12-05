@@ -8,7 +8,7 @@ namespace Parseidon.Parser;
 
 public class CreateCodeVisitor : INodeVisitor
 {
-    public interface IGetCode
+    public interface IGetResults
     {
         String Code { get; }
     }
@@ -25,7 +25,7 @@ public class CreateCodeVisitor : INodeVisitor
         internal MessageContext MessageContext { get; set; }
     }
 
-    private class CreateCodeVisitResult : IVisitResult, IGetCode
+    private class CreateCodeVisitResult : IVisitResult, IGetResults
     {
         public CreateCodeVisitResult(Boolean successful, IReadOnlyList<ParserMessage> messages, String code)
         {

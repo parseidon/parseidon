@@ -112,7 +112,7 @@ public class ParseidonSourceGenerator : IIncrementalGenerator
                     continue;
                 }
 
-                if (visitResult is CreateCodeVisitor.IGetCode codeResult)
+                if (visitResult is CreateCodeVisitor.IGetResults codeResult)
                 {
                     // Add the generated source to the compilation
                     var sourceText = SourceText.From(codeResult.Code ?? String.Empty, Encoding.UTF8);
