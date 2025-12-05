@@ -153,7 +153,7 @@ static IVisitResult CreateParser(ParseResult parseResult, FileInfo outputFile, S
 
     if (visitResult.Successful && visitResult is CreateCodeVisitor.IGetResults)
     {
-        String code = (visitResult as CreateCodeVisitor.IGetResults)!.Code ?? "";
+        String code = (visitResult as CreateCodeVisitor.IGetResults)!.ParserCode ?? "";
         code =
             $"""
         //****************************************//
