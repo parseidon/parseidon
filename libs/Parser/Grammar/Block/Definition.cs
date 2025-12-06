@@ -21,10 +21,10 @@ public class Definition : AbstractNamedElement
 
     public String GetReferenceCode(Grammar grammar) =>
         HasMarker<TreatInlineMarker>()
-        ? ToString(grammar)
+        ? ToParserCode(grammar)
         : $"CheckRule_{Name}(actualNode, state, errorName)";
 
-    public override String ToString(Grammar grammar) => DefinitionElement.ToString(grammar);
+    public override String ToParserCode(Grammar grammar) => DefinitionElement.ToParserCode(grammar);
 
     internal override void IterateElements(Func<AbstractGrammarElement, Boolean> process)
     {

@@ -53,7 +53,7 @@ public abstract class AbstractGrammarElement
         return valueTextForCompiler.FormatLiteral(false).ReplaceAll("\"", "\\\"");
     }
 
-    public virtual String ToString(Grammar grammar) => throw new NotImplementedException($"Not implemented: {this.GetType().Name}.ToString()");
+    public virtual String ToParserCode(Grammar grammar) => throw new NotImplementedException($"Not implemented: {this.GetType().Name}.ToString()");
 
     public virtual Boolean MatchesVariableText() => false;
 

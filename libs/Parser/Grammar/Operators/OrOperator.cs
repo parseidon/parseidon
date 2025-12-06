@@ -4,12 +4,12 @@ public class OrOperator : AbstractTwoChildOperator
 {
     public OrOperator(AbstractDefinitionElement? left, AbstractDefinitionElement? right, MessageContext messageContext, ASTNode node) : base(left, right, messageContext, node) { }
 
-    public override String ToString(Grammar grammar)
+    public override String ToParserCode(Grammar grammar)
     {
         String result = "";
         result += $"CheckOr(actualNode, state, errorName,\n";
-        result += Indent($"(actualNode, errorName) => {Left.ToString(grammar)},") + "\n";
-        result += Indent($"(actualNode, errorName) => {Right.ToString(grammar)}") + "\n";
+        result += Indent($"(actualNode, errorName) => {Left.ToParserCode(grammar)},") + "\n";
+        result += Indent($"(actualNode, errorName) => {Right.ToParserCode(grammar)}") + "\n";
         result += ")";
         return result;
     }

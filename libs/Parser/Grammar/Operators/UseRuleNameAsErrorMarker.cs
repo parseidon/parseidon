@@ -7,13 +7,13 @@ public class UseRuleNameAsErrorMarker : AbstractMarker
     public UseRuleNameAsErrorMarker(AbstractDefinitionElement? element, MessageContext messageContext, ASTNode node) : base(element, messageContext, node) { }
 
 
-    public override String ToString(Grammar grammar)
+    public override String ToParserCode(Grammar grammar)
     {
         Definition rule = GetRule();
         String errorName = rule.KeyValuePairs.TryGetValue("ErrorName", out String temp) ? $"\"{temp}\"" : $"\"{rule.Name}\"" ?? "errorName";
         String result = "";
         result += $"SetErrorName(actualNode, state, {errorName},\n";
-        result += Indent($"(actualNode, errorName) => {Element?.ToString(grammar)}") + "\n";
+        result += Indent($"(actualNode, errorName) => {Element?.ToParserCode(grammar)}") + "\n";
         result += ")";
         return result;
     }

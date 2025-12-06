@@ -14,12 +14,12 @@ public class ReferenceElement : AbstractValueTerminal
 
     public String ReferenceName { get; }
 
-    public override String ToString(Grammar grammar)
+    public override String ToParserCode(Grammar grammar)
     {
         if (grammar.FindRuleByName(ReferenceName) is Definition referencedRule)
         {
             if (TreatReferenceInline)
-                return referencedRule.ToString(grammar);
+                return referencedRule.ToParserCode(grammar);
             return referencedRule.GetReferenceCode(grammar);
         }
         throw GetException($"Can not find element '{ReferenceName}'");

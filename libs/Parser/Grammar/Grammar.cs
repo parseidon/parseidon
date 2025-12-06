@@ -20,10 +20,9 @@ public class Grammar : AbstractNamedElement
     public List<Definition> Rules { get; }
     public List<ValuePair> Options { get; }
 
-    public String ParserCode { get => ToString(this); }
+    public String ParserCode { get => ToParserCode(this); }
 
-
-    public override String ToString(Grammar grammar)
+    public override String ToParserCode(Grammar grammar)
     {
         return
             $$"""
@@ -354,7 +353,7 @@ public class Grammar : AbstractNamedElement
 
     private String GetElementsCode(IEnumerable<Definition> elements, String comment, Definition? separatorTerminal)
     {
-        String result = String.Join("", elements.Select(x => x.ToString(this))) + ";";
+        String result = String.Join("", elements.Select(x => x.ToParserCode(this))) + ";";
         if (result.IndexOf("\n") > 0)
             result = $"\n{result}";
         return Indent(Indent(result));
