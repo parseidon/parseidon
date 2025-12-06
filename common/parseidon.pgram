@@ -24,7 +24,7 @@ Suffix              = Primary (Optional / ZeroOrMore / OneOrMore)?_;
 # TextMate rule structure
 TMDefinition        = TMIdentifier_-Equal_TMMatchSequence_(TMIncludes?_TMMatchSequence_)? LineEnd_;
 TMIncludes          = CurlyBracketOpen_(TMIdentifier_(-Or_TMIdentifier_)*)? CurlyBracketClose;
-:TMMatchSequence    = (TMMatch_)+;
+TMMatchSequence    = (TMMatch_)+;
 TMMatch            = Identifier 
                     / TreatInline TMIdentifier
                     / TMRegEx
