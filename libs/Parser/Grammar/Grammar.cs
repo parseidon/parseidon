@@ -9,15 +9,17 @@ namespace Parseidon.Parser.Grammar;
 
 public class Grammar : AbstractNamedElement
 {
-    public Grammar(List<Definition> rules, List<ValuePair> options, MessageContext messageContext, ASTNode node) : base("", messageContext, node)
+    public Grammar(List<Definition> definitions, List<TMDefinition> tmDefinitions, List<ValuePair> options, MessageContext messageContext, ASTNode node) : base("", messageContext, node)
     {
-        Rules = rules;
+        Definitions = definitions;
+        TMDefinitions = tmDefinitions;
         Options = options;
-        CheckDuplicatedRules(Rules);
-        Rules.ForEach((element) => element.Parent = this);
+        CheckDuplicatedRules(Definitions);
+        Definitions.ForEach((element) => element.Parent = this);
     }
 
-    public List<Definition> Rules { get; }
+    public List<Definition> Definitions { get; }
+    public List<TMDefinition> TMDefinitions { get; }
     public List<ValuePair> Options { get; }
 
     public String ParserCode { get => ToParserCode(this); }
@@ -54,7 +56,7 @@ public class Grammar : AbstractNamedElement
     public override bool MatchesVariableText()
     {
         Boolean result = false;
-        foreach (Definition rule in Rules)
+        foreach (Definition rule in Definitions)
             result = result || rule.MatchesVariableText();
         return result;
     }
@@ -62,14 +64,14 @@ public class Grammar : AbstractNamedElement
     internal override void IterateElements(Func<AbstractGrammarElement, Boolean> process)
     {
         if (process(this))
-            foreach (Definition rule in Rules)
+            foreach (Definition rule in Definitions)
                 rule.IterateElements(process);
     }
 
     public Definition? FindRuleByName(String name)
     {
         List<Definition> rules = new List<Definition>();
-        foreach (Definition element in Rules)
+        foreach (Definition element in Definitions)
             if (element.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
                 return element;
         return null;
@@ -85,8 +87,8 @@ public class Grammar : AbstractNamedElement
 
     public Int32 GetElementIdOf(AbstractNamedElement element)
     {
-        if ((element is Definition) && (Rules.IndexOf((Definition)element) >= 0))
-            return Rules.IndexOf((Definition)element);
+        if ((element is Definition) && (Definitions.IndexOf((Definition)element) >= 0))
+            return Definitions.IndexOf((Definition)element);
         throw GetException($"Can not find identifier '{element.Name}'!");
     }
 
