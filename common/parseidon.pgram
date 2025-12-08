@@ -22,19 +22,23 @@ Suffix              = Primary (Optional / ZeroOrMore / OneOrMore)?_;
 :Properties         = -CurlyBracketOpen_ValuePair_(','_ValuePair_)* -CurlyBracketClose;
 
 # TextMate rule structure
-TMDefinition        = TMIdentifier_-Equal_TMMatchSequence_(TMIncludes?_TMMatchSequence_)? LineEnd_;
-TMIncludes          = CurlyBracketOpen_(TMIdentifier_(-Or_TMIdentifier_)*)? CurlyBracketClose;
-TMMatchSequence    = (TMMatch_)+;
-TMMatch            = Identifier 
+TMDefinition        = TMIdentifier_-Equal_(TMNamedExpression / TMExpression)_LineEnd_;
+:TMNamedExpression   = TMScopeName -BracketOpen_TMExpression_-BracketClose;
+:TMExpression       = TMMatchSequence_(TMIncludes?_TMMatchSequence_)?;
+TMIncludes          = SquareBracketOpen_(TMIdentifier_(-Or_TMIdentifier_)*)? SquareBracketClose;
+TMMatchSequence     = (TMMatch_)+;
+TMMatch             = Identifier 
                     / TreatInline TMIdentifier
                     / TMRegEx
-                    / -BracketOpen_TMMatchSequence_-BracketClose; 
+                    / TMScopeName? -BracketOpen_TMMatchSequence_-BracketClose; 
 $TMRegEx            = -'!\'' TMRegExChar+ -'\'';
 TMRegExChar         = [^'\\]
                     / '\\\''
                     / '\\\\'
                     / EscapeChars
                     / UnicodeChars;
+TMScopeName         = TMIdentifier -':';
+
 
 # TextMate Identifier
 ^$TMIdentifier      = -'!' IdentStart TMIdentCont {ErrorName: 'TextMate-Identifier'};

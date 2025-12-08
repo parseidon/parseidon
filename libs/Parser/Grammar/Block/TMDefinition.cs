@@ -4,8 +4,9 @@ namespace Parseidon.Parser.Grammar.Block;
 
 public class TMDefinition : AbstractNamedElement
 {
-    public TMDefinition(string name, TMSequence beginSequence, TMSequence? endSequence, MessageContext messageContext, ASTNode node) : base(name, messageContext, node)
+    public TMDefinition(String name, String? scopeName, TMSequence beginSequence, TMSequence? endSequence, MessageContext messageContext, ASTNode node) : base(name, messageContext, node)
     {
+        ScopeName = scopeName;
         BeginSequence = beginSequence;
         BeginSequence.Parent = this;
         EndSequence = endSequence;
@@ -23,6 +24,7 @@ public class TMDefinition : AbstractNamedElement
             EndSequence?.IterateElements(process);
     }
 
+    public String? ScopeName { get; }
     public TMSequence BeginSequence { get; }
     public TMSequence? EndSequence { get; }
 
