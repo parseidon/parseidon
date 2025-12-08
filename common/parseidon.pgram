@@ -23,11 +23,11 @@ Suffix              = Primary (Optional / ZeroOrMore / OneOrMore)?_;
 
 # TextMate rule structure
 TMDefinition        = TMIdentifier_-Equal_(TMNamedExpression / TMExpression)_LineEnd_;
-:TMNamedExpression   = TMScopeName -BracketOpen_TMExpression_-BracketClose;
+:TMNamedExpression  = TMScopeName -BracketOpen_TMExpression_-BracketClose;
 :TMExpression       = TMMatchSequence_(TMIncludes?_TMMatchSequence_)?;
 TMIncludes          = SquareBracketOpen_(TMIdentifier_(-Or_TMIdentifier_)*)? SquareBracketClose;
 TMMatchSequence     = (TMMatch_)+;
-TMMatch             = Identifier 
+TMMatch             = -AngleBracketOpen_Expression_-AngleBracketClose 
                     / TreatInline TMIdentifier
                     / TMRegEx
                     / TMScopeName? -BracketOpen_TMMatchSequence_-BracketClose; 
@@ -41,8 +41,9 @@ TMScopeName         = TMIdentifier -':';
 
 
 # TextMate Identifier
-^$TMIdentifier      = -'!' IdentStart TMIdentCont {ErrorName: 'TextMate-Identifier'};
+^$TMIdentifier      = TMIdentifierPrefix IdentStart TMIdentCont {ErrorName: 'TextMate-Identifier'};
 TMIdentCont         = [a-zA-Z0-9.\-]*;
+-TMIdentifierPrefix = ExclamationMark;
 
 # Values
 ValuePair           = Identifier_(-ValueAssign_Value_)?;
@@ -54,8 +55,6 @@ $Boolean            = (True / False);
 :False              = 'false';
 ^$CSharpIdentifier  = IdentStart CSharpIdentCont {ErrorName: 'C#-Identifier'};
 CSharpIdentCont     = ('.'? [a-zA-Z0-9])*;
-
-!meta.test          = Identifier {!meta.test / !meta.test} RegEx !'hallo';
 
 # Identifier
 ^$Identifier        = Underscore / (IdentStart IdentCont);
@@ -95,7 +94,7 @@ OneOrMore           = '+';
 Drop                = '-';
 IsTerminal          = '$' DontEscapeOutput?;
 :DontEscapeOutput   = '$';
-TreatInline         = ':';
+TreatInline         = Colon;
 UseRuleNameAsError  = '^';
 
 $$UnicodeChars      = '\\u' [0-9a-fA-F]{4};
@@ -117,5 +116,8 @@ Comment             = '#' [^\r\n]*;
 :CurlyBracketClose  = '}';
 :SquareBracketOpen  = '[';
 :SquareBracketClose = ']';
+:AngleBracketOpen   = '<';
+:AngleBracketClose  = '>';
 :Underscore         = '_';
+:ExclamationMark    = '!';
 
