@@ -52,13 +52,13 @@ ValuePair           = Identifier_(-ValueAssign_Value_)?;
 $Boolean            = (True / False);
 :True               = 'true';
 :False              = 'false';
-^$CSharpIdentifier  = IdentStart CSharpIdentCont {ErrorName: 'C#-Identifier'};
-CSharpIdentCont     = ('.'? [a-zA-Z0-9])*;
+^$CSharpIdentifier  = IdentStart CSharpIdentCont {ErrorName: 'C# identifier'};
+:CSharpIdentCont    = ('.'? [a-zA-Z0-9])*;
 
 # Identifier
 ^$Identifier        = Underscore / (IdentStart IdentCont);
-IdentStart          = [a-zA-Z];
-IdentCont           = [a-zA-Z0-9]*;
+:IdentStart         = [a-zA-Z];
+:IdentCont          = [a-zA-Z0-9]*;
 
 # Literal
 ^$Literal           = (SingleQuotedLiteral / DoubleQuotedLiteral);
