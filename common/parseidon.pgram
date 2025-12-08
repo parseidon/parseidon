@@ -36,7 +36,7 @@ TMRegExChar         = [^'\\]
                     / '\\\\'
                     / EscapeChars
                     / UnicodeChars;
-$TMScopeName        = IdentStart TMScopeNameCont Colon {ErrorName: 'TextMate scope name'};
+$TMScopeName        = IdentStart TMScopeNameCont -Colon {ErrorName: 'TextMate scope name'};
 :TMScopeNameCont    = (('.' / '_' / '-')? [a-zA-Z0-9])*;
 
 
