@@ -27,7 +27,7 @@ TMDefinition        = TMIdentifier_-Equal_(TMNamedExpression / TMExpression)_Lin
 :TMExpression       = TMMatchSequence_(TMIncludes?_TMMatchSequence_)?;
 TMIncludes          = SquareBracketOpen_(TMIdentifier_(-Or_TMIdentifier_)*)? SquareBracketClose;
 TMMatchSequence     = (TMMatch_)+;
-TMMatch             = -AngleBracketOpen_Expression_-AngleBracketClose 
+TMMatch             = TMScopeName? -AngleBracketOpen_Expression_-AngleBracketClose 
                     / TreatInline TMIdentifier
                     / TMRegEx
                     / TMScopeName? -BracketOpen_TMMatchSequence_-BracketClose; 
