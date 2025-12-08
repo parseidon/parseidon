@@ -37,7 +37,7 @@ TMRegExChar         = [^'\\]
                     / UnicodeChars;
 
 # TextMate Identifier
-^$TMIdentifier      = '!' IdentStart TMIdentCont {ErrorName: 'TextMate-Identifier'};
+^$TMIdentifier      = -'!' IdentStart TMIdentCont {ErrorName: 'TextMate-Identifier'};
 TMIdentCont         = [a-zA-Z0-9.\-]*;
 
 # Values
