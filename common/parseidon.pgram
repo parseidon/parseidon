@@ -22,7 +22,7 @@ Suffix              = Primary (Optional / ZeroOrMore / OneOrMore)?_;
 :Properties         = -CurlyBracketOpen_ValuePair_(','_ValuePair_)* -CurlyBracketClose;
 
 # TextMate rule structure
-TMDefinition        = TMIdentifierPrefix Identifier_-Equal_(TMNamedExpression / TMExpression)_LineEnd_;
+TMDefinition        = TMIdentifier_-Equal_(TMNamedExpression / TMExpression)_LineEnd_;
 :TMNamedExpression  = TMScopeName -BracketOpen_TMExpression_-BracketClose;
 :TMExpression       = TMMatchSequence_(TMIncludes?_TMMatchSequence_)?;
 TMIncludes          = SquareBracketOpen_(TMIdentifier_(-Or_TMIdentifier_)*)? SquareBracketClose;
@@ -36,12 +36,12 @@ TMRegExChar         = [^'\\]
                     / '\\\\'
                     / EscapeChars
                     / UnicodeChars;
-TMScopeName         = TMIdentifier -':';
+TMScopeName         = IdentStart TMScopeNameCont {ErrorName: 'TextMate scope name'};
+:TMScopeNameCont    = (('.' / '_' / '-')? [a-zA-Z0-9])*;
 
 
 # TextMate Identifier
-^$TMIdentifier      = IdentStart TMIdentCont {ErrorName: 'TextMate-Identifier'};
-TMIdentCont         = [a-zA-Z0-9.\-]*;
+^$TMIdentifier      = TMIdentifierPrefix Identifier {ErrorName: 'TextMate identifier'}; 
 -:TMIdentifierPrefix= ExclamationMark;
 
 # Values

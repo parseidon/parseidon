@@ -1289,75 +1289,50 @@ namespace Parseidon.Parser
             ASTNode actualNode = new ASTNode(66, "TMDefinition", "", state.Position);
             Boolean result =
                 CheckAnd(actualNode, state, errorName,
-                    (actualNode, errorName) => Drop(actualNode, state, errorName,
-                        (actualNode, errorName) => CheckText(actualNode, state, errorName, "!")
-                    ),
+                    (actualNode, errorName) => CheckRule_TMIdentifier(actualNode, state, errorName),
                     (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
-                        (actualNode, errorName) => CheckRule_Identifier(actualNode, state, errorName),
+                        (actualNode, errorName) => CheckRule__(actualNode, state, errorName),
                         (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
-                            (actualNode, errorName) => CheckRule__(actualNode, state, errorName),
+                            (actualNode, errorName) => Drop(actualNode, state, errorName,
+                                (actualNode, errorName) => CheckText(actualNode, state, errorName, "=")
+                            ),
                             (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
-                                (actualNode, errorName) => Drop(actualNode, state, errorName,
-                                    (actualNode, errorName) => CheckText(actualNode, state, errorName, "=")
-                                ),
+                                (actualNode, errorName) => CheckRule__(actualNode, state, errorName),
                                 (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
-                                    (actualNode, errorName) => CheckRule__(actualNode, state, errorName),
-                                    (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
-                                        (actualNode, errorName) => CheckOr(actualNode, state, errorName,
+                                    (actualNode, errorName) => CheckOr(actualNode, state, errorName,
+                                        (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
+                                            (actualNode, errorName) => CheckRule_TMScopeName(actualNode, state, errorName),
                                             (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
-                                                (actualNode, errorName) => CheckRule_TMScopeName(actualNode, state, errorName),
+                                                (actualNode, errorName) => Drop(actualNode, state, errorName,
+                                                    (actualNode, errorName) => CheckText(actualNode, state, errorName, "(")
+                                                ),
                                                 (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
-                                                    (actualNode, errorName) => Drop(actualNode, state, errorName,
-                                                        (actualNode, errorName) => CheckText(actualNode, state, errorName, "(")
-                                                    ),
+                                                    (actualNode, errorName) => CheckRule__(actualNode, state, errorName),
                                                     (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
-                                                        (actualNode, errorName) => CheckRule__(actualNode, state, errorName),
                                                         (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
+                                                            (actualNode, errorName) => CheckRule_TMMatchSequence(actualNode, state, errorName),
                                                             (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
-                                                                (actualNode, errorName) => CheckRule_TMMatchSequence(actualNode, state, errorName),
-                                                                (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
-                                                                    (actualNode, errorName) => CheckRule__(actualNode, state, errorName),
-                                                                    (actualNode, errorName) => CheckRange(actualNode, state, errorName, 0, 1,
+                                                                (actualNode, errorName) => CheckRule__(actualNode, state, errorName),
+                                                                (actualNode, errorName) => CheckRange(actualNode, state, errorName, 0, 1,
+                                                                    (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
+                                                                        (actualNode, errorName) => CheckRange(actualNode, state, errorName, 0, 1,
+                                                                            (actualNode, errorName) => CheckRule_TMIncludes(actualNode, state, errorName)
+                                                                        ),
                                                                         (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
-                                                                            (actualNode, errorName) => CheckRange(actualNode, state, errorName, 0, 1,
-                                                                                (actualNode, errorName) => CheckRule_TMIncludes(actualNode, state, errorName)
-                                                                            ),
+                                                                            (actualNode, errorName) => CheckRule__(actualNode, state, errorName),
                                                                             (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
-                                                                                (actualNode, errorName) => CheckRule__(actualNode, state, errorName),
-                                                                                (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
-                                                                                    (actualNode, errorName) => CheckRule_TMMatchSequence(actualNode, state, errorName),
-                                                                                    (actualNode, errorName) => CheckRule__(actualNode, state, errorName)
-                                                                                )
+                                                                                (actualNode, errorName) => CheckRule_TMMatchSequence(actualNode, state, errorName),
+                                                                                (actualNode, errorName) => CheckRule__(actualNode, state, errorName)
                                                                             )
                                                                         )
                                                                     )
                                                                 )
-                                                            ),
-                                                            (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
-                                                                (actualNode, errorName) => CheckRule__(actualNode, state, errorName),
-                                                                (actualNode, errorName) => Drop(actualNode, state, errorName,
-                                                                    (actualNode, errorName) => CheckText(actualNode, state, errorName, ")")
-                                                                )
                                                             )
-                                                        )
-                                                    )
-                                                )
-                                            ),
-                                            (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
-                                                (actualNode, errorName) => CheckRule_TMMatchSequence(actualNode, state, errorName),
-                                                (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
-                                                    (actualNode, errorName) => CheckRule__(actualNode, state, errorName),
-                                                    (actualNode, errorName) => CheckRange(actualNode, state, errorName, 0, 1,
+                                                        ),
                                                         (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
-                                                            (actualNode, errorName) => CheckRange(actualNode, state, errorName, 0, 1,
-                                                                (actualNode, errorName) => CheckRule_TMIncludes(actualNode, state, errorName)
-                                                            ),
-                                                            (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
-                                                                (actualNode, errorName) => CheckRule__(actualNode, state, errorName),
-                                                                (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
-                                                                    (actualNode, errorName) => CheckRule_TMMatchSequence(actualNode, state, errorName),
-                                                                    (actualNode, errorName) => CheckRule__(actualNode, state, errorName)
-                                                                )
+                                                            (actualNode, errorName) => CheckRule__(actualNode, state, errorName),
+                                                            (actualNode, errorName) => Drop(actualNode, state, errorName,
+                                                                (actualNode, errorName) => CheckText(actualNode, state, errorName, ")")
                                                             )
                                                         )
                                                     )
@@ -1365,15 +1340,35 @@ namespace Parseidon.Parser
                                             )
                                         ),
                                         (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
-                                            (actualNode, errorName) => CheckRule__(actualNode, state, errorName),
+                                            (actualNode, errorName) => CheckRule_TMMatchSequence(actualNode, state, errorName),
                                             (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
-                                                (actualNode, errorName) => SetErrorName(actualNode, state, "LineEnd",
-                                                    (actualNode, errorName) => Drop(actualNode, state, errorName,
-                                                        (actualNode, errorName) => CheckText(actualNode, state, errorName, ";")
+                                                (actualNode, errorName) => CheckRule__(actualNode, state, errorName),
+                                                (actualNode, errorName) => CheckRange(actualNode, state, errorName, 0, 1,
+                                                    (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
+                                                        (actualNode, errorName) => CheckRange(actualNode, state, errorName, 0, 1,
+                                                            (actualNode, errorName) => CheckRule_TMIncludes(actualNode, state, errorName)
+                                                        ),
+                                                        (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
+                                                            (actualNode, errorName) => CheckRule__(actualNode, state, errorName),
+                                                            (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
+                                                                (actualNode, errorName) => CheckRule_TMMatchSequence(actualNode, state, errorName),
+                                                                (actualNode, errorName) => CheckRule__(actualNode, state, errorName)
+                                                            )
+                                                        )
                                                     )
-                                                ),
-                                                (actualNode, errorName) => CheckRule__(actualNode, state, errorName)
+                                                )
                                             )
+                                        )
+                                    ),
+                                    (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
+                                        (actualNode, errorName) => CheckRule__(actualNode, state, errorName),
+                                        (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
+                                            (actualNode, errorName) => SetErrorName(actualNode, state, "LineEnd",
+                                                (actualNode, errorName) => Drop(actualNode, state, errorName,
+                                                    (actualNode, errorName) => CheckText(actualNode, state, errorName, ";")
+                                                )
+                                            ),
+                                            (actualNode, errorName) => CheckRule__(actualNode, state, errorName)
                                         )
                                     )
                                 )
@@ -1387,30 +1382,18 @@ namespace Parseidon.Parser
             return result;
         }
 
-        private Boolean CheckRule_TMIdentCont(ASTNode parentNode, ParserState state, String? errorName)
-        {
-            Int32 oldPosition = state.Position;
-            ASTNode actualNode = new ASTNode(56, "TMIdentCont", "", state.Position);
-            Boolean result =
-                CheckZeroOrMore(actualNode, state, errorName,
-                    (actualNode, errorName) => CheckRegEx(actualNode, state, errorName, "[a-zA-Z0-9.\\-]", 1)
-                );
-            Int32 foundPosition = state.Position;
-            if (result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
-                parentNode.AddChild(actualNode);
-            return result;
-        }
-
         private Boolean CheckRule_TMIdentifier(ASTNode parentNode, ParserState state, String? errorName)
         {
             Int32 oldPosition = state.Position;
-            ASTNode actualNode = new ASTNode(57, "TMIdentifier", "", state.Position);
+            ASTNode actualNode = new ASTNode(56, "TMIdentifier", "", state.Position);
             Boolean result =
-                SetErrorName(actualNode, state, "TextMate-Identifier",
+                SetErrorName(actualNode, state, "TextMate identifier",
                     (actualNode, errorName) => MakeTerminal(actualNode, state, errorName, false,
                         (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
-                            (actualNode, errorName) => CheckRule_IdentStart(actualNode, state, errorName),
-                            (actualNode, errorName) => CheckRule_TMIdentCont(actualNode, state, errorName)
+                            (actualNode, errorName) => Drop(actualNode, state, errorName,
+                                (actualNode, errorName) => CheckText(actualNode, state, errorName, "!")
+                            ),
+                            (actualNode, errorName) => CheckRule_Identifier(actualNode, state, errorName)
                         )
                     )
                 );
@@ -1595,9 +1578,20 @@ namespace Parseidon.Parser
             ASTNode actualNode = new ASTNode(58, "TMScopeName", "", state.Position);
             Boolean result =
                 CheckAnd(actualNode, state, errorName,
-                    (actualNode, errorName) => CheckRule_TMIdentifier(actualNode, state, errorName),
-                    (actualNode, errorName) => Drop(actualNode, state, errorName,
-                        (actualNode, errorName) => CheckText(actualNode, state, errorName, ":")
+                    (actualNode, errorName) => CheckRegEx(actualNode, state, errorName, "[a-zA-Z]", 1),
+                    (actualNode, errorName) => CheckZeroOrMore(actualNode, state, errorName,
+                        (actualNode, errorName) => CheckAnd(actualNode, state, errorName,
+                            (actualNode, errorName) => CheckRange(actualNode, state, errorName, 0, 1,
+                                (actualNode, errorName) => CheckOr(actualNode, state, errorName,
+                                    (actualNode, errorName) => CheckText(actualNode, state, errorName, "."),
+                                    (actualNode, errorName) => CheckOr(actualNode, state, errorName,
+                                        (actualNode, errorName) => CheckText(actualNode, state, errorName, "_"),
+                                        (actualNode, errorName) => CheckText(actualNode, state, errorName, "-")
+                                    )
+                                )
+                            ),
+                            (actualNode, errorName) => CheckRegEx(actualNode, state, errorName, "[a-zA-Z0-9]", 1)
+                        )
                     )
                 );
             Int32 foundPosition = state.Position;
