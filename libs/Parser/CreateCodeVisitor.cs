@@ -353,8 +353,9 @@ public class CreateCodeVisitor : INodeVisitor
             beginSequence = endSequence;
             endSequence = null;
         }
+        TMScopeName? scopeName = TryPop<TMScopeName>(typedContext, node.Position);
         ReferenceElement name = Pop<ReferenceElement>(typedContext, node.Position);
-        AbstractGrammarElement newTMDefinition = new TMDefinition(name.ReferenceName, null, beginSequence, endSequence, typedContext.MessageContext, node);
+        AbstractGrammarElement newTMDefinition = new TMDefinition(name.ReferenceName, scopeName?.ScopeName, beginSequence, endSequence, typedContext.MessageContext, node);
         Push(typedContext, newTMDefinition);
         return ProcessNodeResult.Success;
     }
@@ -377,7 +378,11 @@ public class CreateCodeVisitor : INodeVisitor
     public ProcessNodeResult ProcessTMMatchNode(object context, ASTNode node, IList<ParserMessage> messages)
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
-        Push(typedContext, Pop<AbstractDefinitionElement>(typedContext, node.Position));
+        AbstractDefinitionElement definition = Pop<AbstractDefinitionElement>(typedContext, node.Position);
+        TMScopeName? scopeName = TryPop<TMScopeName>(typedContext, node.Position);
+        if ((scopeName is not null) && (definition is TMSequence sequence))
+            sequence.ScopeName = scopeName.ScopeName;
+        Push(typedContext, definition);
         return ProcessNodeResult.Success;
     }
 
@@ -390,6 +395,7 @@ public class CreateCodeVisitor : INodeVisitor
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
         var stackElements = PopList<AbstractDefinitionElement>(typedContext);
+        stackElements.Reverse();
         Push(typedContext, new TMSequence(stackElements, typedContext.MessageContext, node));
         return ProcessNodeResult.Success;
     }

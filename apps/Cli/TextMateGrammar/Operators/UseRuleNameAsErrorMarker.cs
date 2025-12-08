@@ -1,0 +1,25 @@
+using Parseidon.Parser;
+
+using Parseidon.Cli.TextMateGrammar.Block;
+
+namespace Parseidon.Cli.TextMateGrammar.Operators;
+
+public class UseRuleNameAsErrorMarker : AbstractMarker
+{
+    public UseRuleNameAsErrorMarker(AbstractDefinitionElement? element, MessageContext messageContext, ASTNode node) : base(element, messageContext, node) { }
+
+
+    public override String ToParserCode(Grammar grammar)
+    {
+        Definition rule = GetRule();
+        String errorName = rule.KeyValuePairs.TryGetValue("ErrorName", out String temp) ? $"\"{temp}\"" : $"\"{rule.Name}\"" ?? "errorName";
+        String result = "";
+        result += $"SetErrorName(actualNode, state, {errorName},\n";
+        result += Indent($"(actualNode, errorName) => {Element?.ToParserCode(grammar)}") + "\n";
+        result += ")";
+        return result;
+    }
+
+    public override bool MatchesVariableText() => Element?.MatchesVariableText() ?? false;
+
+}
