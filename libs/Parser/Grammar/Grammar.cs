@@ -410,7 +410,7 @@ public class Grammar : AbstractNamedElement
             if (value.Name.Equals(key, StringComparison.OrdinalIgnoreCase))
                 return value.Value;
         }
-        throw GetException($"Can not find option '{key}'!");
+        return null;
     }
 
     private Boolean IterateUsedDefinitions(AbstractGrammarElement element, List<Definition> definitions)
