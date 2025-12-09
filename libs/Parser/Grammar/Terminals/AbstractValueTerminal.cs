@@ -8,4 +8,8 @@ public abstract class AbstractValueTerminal : AbstractFinalTerminal
 
     public abstract String AsText();
 
+    internal protected override RegExResult GetRegEx(Grammar grammar)
+    {
+        return new RegExResult(AsText(), Array.Empty<String>());
+    }
 }

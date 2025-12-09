@@ -28,4 +28,18 @@ public class ReferenceElement : AbstractValueTerminal
     public override string AsText() => ReferenceName;
 
     public Boolean TreatReferenceInline { get => Parent is TreatInlineMarker; }
+
+    internal protected override RegExResult GetRegEx(Grammar grammar)
+    {
+        if (grammar.FindDefinitionByName(ReferenceName) is Definition referencedDefinition)
+        {
+            if (referencedDefinition.KeyValuePairs.ContainsKey("tmscope"))
+            {
+                var regEx = referencedDefinition.DefinitionElement.GetRegEx(grammar);
+                return new RegExResult($"({regEx.RegEx})", new[] { referencedDefinition.KeyValuePairs["tmscope"] }.Concat(regEx.Captures).ToArray());
+            }
+            return referencedDefinition.DefinitionElement.GetRegEx(grammar);
+        }
+        throw GetException($"Can not find element '{ReferenceName}'");
+    }
 }

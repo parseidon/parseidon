@@ -7,6 +7,8 @@ public class TMSequence : AbstractDefinitionElement
     public TMSequence(List<AbstractDefinitionElement> elements, MessageContext messageContext, ASTNode node) : base(messageContext, node)
     {
         Elements = elements;
+        foreach (var element in Elements)
+            element.Parent = this;
     }
 
     public String? ScopeName { get; set; }
@@ -33,5 +35,25 @@ public class TMSequence : AbstractDefinitionElement
         if (process(this))
             foreach (var element in Elements)
                 element.IterateElements(process);
+    }
+
+    internal protected override RegExResult GetRegEx(Grammar grammar)
+    {
+        String regEx = String.Empty;
+        String[] captures = Array.Empty<String>();
+        foreach (var element in Elements)
+        {
+            var tempRegEx = element.GetRegEx(grammar);
+            regEx = regEx + tempRegEx.RegEx;
+            captures = captures.Concat(tempRegEx.Captures).ToArray();
+        }
+        if (ScopeName is null)
+            regEx = $"(?:{regEx})";
+        else
+        {
+            captures = new[] { ScopeName }.Concat(captures).ToArray();
+            regEx = $"({regEx})";
+        }
+        return new RegExResult(regEx, captures);
     }
 }

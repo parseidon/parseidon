@@ -28,4 +28,9 @@ public abstract class AbstractOneChildOperator : AbstractDefinitionElement
         if (process(this))
             Element!.IterateElements(process);
     }
+
+    internal protected override RegExResult GetRegEx(Grammar grammar)
+    {
+        return Element?.GetRegEx(grammar) ?? base.GetRegEx(grammar);
+    }
 }

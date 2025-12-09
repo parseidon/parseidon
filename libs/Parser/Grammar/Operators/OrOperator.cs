@@ -16,4 +16,10 @@ public class OrOperator : AbstractTwoChildOperator
 
     public override bool MatchesVariableText() => true;
 
+    internal protected override RegExResult GetRegEx(Grammar grammar)
+    {
+        var leftRegEx = Left.GetRegEx(grammar);
+        var rightRegEx = Right.GetRegEx(grammar);
+        return new RegExResult($"(?:(?:{leftRegEx.RegEx})|(?:{rightRegEx.RegEx}))", leftRegEx.Captures.Concat(rightRegEx.Captures).ToArray());
+    }
 }

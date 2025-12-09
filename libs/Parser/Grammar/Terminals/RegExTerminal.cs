@@ -17,4 +17,8 @@ public class RegExTerminal : AbstractFinalTerminal
 
     public override bool MatchesVariableText() => true;
 
+    internal protected override RegExResult GetRegEx(Grammar grammar)
+    {
+        return new RegExResult(RegEx, Array.Empty<String>());
+    }
 }
