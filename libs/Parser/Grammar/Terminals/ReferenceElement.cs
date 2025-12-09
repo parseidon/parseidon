@@ -16,11 +16,11 @@ public class ReferenceElement : AbstractValueTerminal
 
     public override String ToParserCode(Grammar grammar)
     {
-        if (grammar.FindRuleByName(ReferenceName) is Definition referencedRule)
+        if (grammar.FindDefinitionByName(ReferenceName) is Definition referencedDefinition)
         {
             if (TreatReferenceInline)
-                return referencedRule.ToParserCode(grammar);
-            return referencedRule.GetReferenceCode(grammar);
+                return referencedDefinition.ToParserCode(grammar);
+            return referencedDefinition.GetReferenceCode(grammar);
         }
         throw GetException($"Can not find element '{ReferenceName}'");
     }

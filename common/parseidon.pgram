@@ -3,120 +3,126 @@
 @rootnode: Grammar;
 
 # Grammar
-Grammar             = _(Option_)* (Definition / TMDefinition)+;
+Grammar                 = _(Option_)* (Definition / TMDefinition)+;
 
-Option              = '@' ValuePair_LineEnd;
+Option                  = '@' ValuePair_LineEnd;
+# Definition structure
+Definition              = DefinitionOptions Identifier_-Equal_Expression Properties?_LineEnd_;
+:DefinitionOptions      = UseDefinitionNameAsError? (IsTerminal / Drop)? TreatInline?;
+Expression              = Sequence (Or_Sequence)*;
+Sequence                = Prefix+;
+Prefix                  = Drop? Suffix;
+Suffix                  = Primary (Optional / ZeroOrMore / OneOrMore)?_;
+:Primary                = TreatInline? Identifier
+                        / Literal
+                        / -BracketOpen_Expression_-BracketClose
+                        / Regex
+                        / AllChar;  
+:Properties             = -CurlyBracketOpen_ValuePair_(','_ValuePair_)* -CurlyBracketClose;
 
-# Rule structure
-Definition          = RuleOptions Identifier_-Equal_Expression Properties?_LineEnd_;
-:RuleOptions        = UseRuleNameAsError? (IsTerminal / Drop)? TreatInline?;
-Expression          = Sequence (Or_Sequence)*;
-Sequence            = Prefix+;
-Prefix              = Drop? Suffix;
-Suffix              = Primary (Optional / ZeroOrMore / OneOrMore)?_;
-:Primary            = TreatInline? Identifier
-                    / Literal
-                    / -BracketOpen_Expression_-BracketClose
-                    / Regex
-                    / AllChar;  
-:Properties         = -CurlyBracketOpen_ValuePair_(','_ValuePair_)* -CurlyBracketClose;
-
-# TextMate rule structure
-TMDefinition        = TMIdentifier_-Equal_(TMNamedExpression / TMExpression)_LineEnd_;
-:TMNamedExpression  = TMScopeName -BracketOpen_TMExpression_-BracketClose;
-:TMExpression       = (TMMatchSequence_(TMIncludes?_TMMatchSequence_)?) / TMIncludes;
-TMIncludes          = SquareBracketOpen_(TMIdentifier_(-Or_TMIdentifier_)*)? SquareBracketClose;
-TMMatchSequence     = (TMMatch_)+;
-TMMatch             = TMScopeName? -AngleBracketOpen_Expression_-AngleBracketClose 
-                    / TMRegEx
-                    / TMScopeName? -BracketOpen_TMMatchSequence_-BracketClose; 
-$TMRegEx            = -'!\'' TMRegExChar+ -'\'';
-TMRegExChar         = [^'\\]
-                    / '\\\''
-                    / '\\\\'
-                    / EscapeChars
-                    / UnicodeChars;
-$TMScopeName        = IdentStart TMScopeNameCont -Colon {ErrorName: 'TextMate scope name'};
-:TMScopeNameCont    = (('.' / '_' / '-')? [a-zA-Z0-9])*;
+# TextMate definition structure
+TMDefinition            = TMIdentifier_-Equal_(TMNamedExpression / TMExpression)_LineEnd_;
+:TMNamedExpression      = TMScopeName -BracketOpen_TMExpression_-BracketClose;
+:TMExpression           = (TMMatchSequence_(TMIncludes?_TMMatchSequence_)?) / TMIncludes;
+TMIncludes              = SquareBracketOpen_(TMIdentifier_(-Or_TMIdentifier_)*)? SquareBracketClose;
+TMMatchSequence         = (TMMatch_)+;
+TMMatch                 = TMScopeName? -AngleBracketOpen_Expression_-AngleBracketClose 
+                        / TMRegEx
+                        / TMScopeName? -BracketOpen_TMMatchSequence_-BracketClose; 
+$TMRegEx                = -'!\'' TMRegExChar+ -'\'';
+TMRegExChar             = [^'\\]
+                        / '\\\''
+                        / '\\\\'
+                        / EscapeChars
+                        / UnicodeChars;
+$TMScopeName            = IdentStart TMScopeNameCont -Colon {ErrorName: 'TextMate scope name'};
+:TMScopeNameCont        = (('.' / '_' / '-')? [a-zA-Z0-9])*;
 
 
 # TextMate Identifier
-^$TMIdentifier      = TMIdentifierPrefix Identifier {ErrorName: 'TextMate identifier'}; 
--:TMIdentifierPrefix= ExclamationMark;
+^$TMIdentifier          = TMIdentifierPrefix Identifier {ErrorName: 'TextMate identifier'}; 
+-:TMIdentifierPrefix    = ExclamationMark;
 
 # Values
-ValuePair           = Identifier_(-ValueAssign_Value_)?;
-:ValueAssign        = Colon;
-:Value              = Literal / Number / Boolean / CSharpIdentifier;
-^$Number            = ('0' / ([1-9] [0-9]*));
-$Boolean            = (True / False);
-:True               = 'true';
-:False              = 'false';
-^$CSharpIdentifier  = IdentStart CSharpIdentCont {ErrorName: 'C# identifier'};
-:CSharpIdentCont    = ('.'? [a-zA-Z0-9])*;
+ValuePair               = Identifier_(-ValueAssign_Value_)?;
+:ValueAssign            = Colon;
+:Value                  = Literal / Number / Boolean / CSharpIdentifier;
+!Value                  = [ !CSharpIdentifier / !Number / !Literal / !Boolean];
+^$Number                = ('0' / ([1-9] [0-9]*));
+!Number                 = constant.numeric:<Number>;
+$Boolean                = (True / False);
+!Boolean                = constant.language:<Boolean>;
+:True                   = 'true';
+:False                  = 'false';
+^$CSharpIdentifier      = IdentStart CSharpIdentCont {ErrorName: 'C# identifier'};
+!CSharpIdentifier       = string.unquoted:<CSharpIdentifier>;
+:CSharpIdentCont        = ('.'? [a-zA-Z0-9])*;
 
 # Identifier
-^$Identifier        = Underscore / (IdentStart IdentCont);
-:IdentStart         = [a-zA-Z];
-:IdentCont          = [a-zA-Z0-9]*;
+^$Identifier            = Underscore / (IdentStart IdentCont);
+:IdentStart             = [a-zA-Z];
+:IdentCont              = [a-zA-Z0-9]*;
 
 # Literal
-^$Literal           = (SingleQuotedLiteral / DoubleQuotedLiteral);
-:SingleQuotedLiteral= (-'\'' Char*  -'\'');
-:DoubleQuotedLiteral= (-'"' Char* -'"');
-Char                = [^'\\] / '\\\'' / '\\\\' / EscapeChars / UnicodeChars;
-EscapeChars         = '\\' [\\0abfnrtv"'?];
+^$Literal               = (SingleQuotedLiteral / DoubleQuotedLiteral);
+!Literal                = [ !SingleQuotedLiteral / !DoubleQuotedLiteral ];
+:SingleQuotedLiteral    = (-'\'' Char*  -'\'') {tmscope: string.quoted.single};
+!SingleQuotedLiteral    = string.quoted.single:<SingleQuotedLiteral>;
+:DoubleQuotedLiteral    = (-'"' Char* -'"') {tmscope: string.quoted.double};
+!DoubleQuotedLiteral    = string.quoted.double:<DoubleQuotedLiteral>;
+Char                    = [^'\\] / '\\\'' / '\\\\' / EscapeChars / UnicodeChars;
+EscapeChars             = '\\' [\\0abfnrtv"'?];
 
 # Regular Expression
-Regex               = CharacterClass Quantifier?;
-$CharacterClass     = SquareBracketOpen Negation? ClassContent+ SquareBracketClose;
-:Negation           = '^';
-ClassContent        = CharRange / PredefinedClass / EscapedChar / SingleChar;
-:CharRange          = SingleChar '-' SingleChar;
-SingleChar          = [^\\\[\]\-] / UnicodeChars;
-EscapedChar         = '\\' [.\\\[\]\-\^];
-PredefinedClass     = '\\d' / '\\D' / '\\w' / '\\W' / '\\s' / '\\S' / '\\t' / '\\r' / '\\n' / '\\v' / '\\f';
-:Quantifier         = CurlyBracketOpen Number CurlyBracketClose;
+Regex                   = CharacterClass Quantifier?;
+$CharacterClass         = SquareBracketOpen Negation? ClassContent+ SquareBracketClose;
+:Negation               = '^';
+ClassContent            = CharRange / PredefinedClass / EscapedChar / SingleChar;
+:CharRange              = SingleChar '-' SingleChar;
+SingleChar              = [^\\\[\]\-] / UnicodeChars;
+EscapedChar             = '\\' [.\\\[\]\-\^];
+PredefinedClass         = '\\d' / '\\D' / '\\w' / '\\W' / '\\s' / '\\S' / '\\t' / '\\r' / '\\n' / '\\v' / '\\f';
+:Quantifier             = CurlyBracketOpen Number CurlyBracketClose;
 
 # All characters
-AllChar             = Dot;
+AllChar                 = Dot;
 
 # Operator
-Or                  = '/';
+Or                      = '/';
 
 # Quantifier
-Optional            = '?';
-ZeroOrMore          = '*';
-OneOrMore           = '+';
+Optional                = '?';
+ZeroOrMore              = '*';
+OneOrMore               = '+';
 
-# Rule markers
-Drop                = '-';
-IsTerminal          = '$' DontEscapeOutput?;
-:DontEscapeOutput   = '$';
-TreatInline         = Colon;
-UseRuleNameAsError  = '^';
+# Definition markers
+Drop                    = '-';
+IsTerminal              = '$' DontEscapeOutput?;
+:DontEscapeOutput       = '$';
+TreatInline             = Colon;
+UseDefinitionNameAsError= '^';
 
-$$UnicodeChars      = '\\u' [0-9a-fA-F]{4};
+$$UnicodeChars          = '\\u' [0-9a-fA-F]{4};
 
 # Grammar structure
-^-:LineEnd          = ';';
--_                  = (NewLine / WhiteSpace / Comment)*;
-^WhiteSpace         = [ \t];
-^NewLine            = '\r\n' / [\r\n];
-Comment             = '#' [^\r\n]*;
+^-:LineEnd              = ';';
+-_                      = (NewLine / WhiteSpace / Comment)*;
+^WhiteSpace             = [ \t];
+^NewLine                = '\r\n' / [\r\n];
+Comment                 = '#' [^\r\n]* {tmscope: comment.line};
 
 # Shared characters
-:Equal              = '=';
-:Dot                = '.';
-:Colon              = ':';
-:BracketOpen        = '(';
-:BracketClose       = ')';
-:CurlyBracketOpen   = '{';
-:CurlyBracketClose  = '}';
-:SquareBracketOpen  = '[';
-:SquareBracketClose = ']';
-:AngleBracketOpen   = '<';
-:AngleBracketClose  = '>';
-:Underscore         = '_';
-:ExclamationMark    = '!';
+:Equal                  = '=';
+:Dot                    = '.';
+:Colon                  = ':';
+:BracketOpen            = '(';
+:BracketClose           = ')';
+:CurlyBracketOpen       = '{';
+:CurlyBracketClose      = '}';
+:SquareBracketOpen      = '[';
+:SquareBracketClose     = ']';
+:AngleBracketOpen       = '<';
+:AngleBracketClose      = '>';
+:Underscore             = '_';
+:ExclamationMark        = '!';
 

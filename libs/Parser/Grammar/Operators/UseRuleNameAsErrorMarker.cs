@@ -2,15 +2,14 @@ using Parseidon.Parser.Grammar.Block;
 
 namespace Parseidon.Parser.Grammar.Operators;
 
-public class UseRuleNameAsErrorMarker : AbstractMarker
+public class UseDefinitionNameAsErrorMarker : AbstractMarker
 {
-    public UseRuleNameAsErrorMarker(AbstractDefinitionElement? element, MessageContext messageContext, ASTNode node) : base(element, messageContext, node) { }
-
+    public UseDefinitionNameAsErrorMarker(AbstractDefinitionElement? element, MessageContext messageContext, ASTNode node) : base(element, messageContext, node) { }
 
     public override String ToParserCode(Grammar grammar)
     {
-        Definition rule = GetRule();
-        String errorName = rule.KeyValuePairs.TryGetValue("ErrorName", out String temp) ? $"\"{temp}\"" : $"\"{rule.Name}\"" ?? "errorName";
+        Definition definition = GetDefinition();
+        String errorName = definition.KeyValuePairs.TryGetValue("ErrorName", out String temp) ? $"\"{temp}\"" : $"\"{definition.Name}\"" ?? "errorName";
         String result = "";
         result += $"SetErrorName(actualNode, state, {errorName},\n";
         result += Indent($"(actualNode, errorName) => {Element?.ToParserCode(grammar)}") + "\n";

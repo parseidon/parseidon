@@ -19,7 +19,7 @@ public class Grammar : AbstractNamedElement
         Definitions = definitions;
         TMDefinitions = tmDefinitions;
         Options = options;
-        CheckDuplicatedRules(Definitions);
+        CheckDuplicatedDefinitions(Definitions);
         Definitions.ForEach((element) => element.Parent = this);
     }
 
@@ -56,7 +56,7 @@ public class Grammar : AbstractNamedElement
 
     public String ToLanguageConfig()
     {
-        String GetTextValueOfRule(Definition definition)
+        String GetTextValueOfDefinition(Definition definition)
         {
             AbstractDefinitionElement definitionElement = definition.DefinitionElement;
             while (definitionElement is not TextTerminal)
@@ -64,7 +64,7 @@ public class Grammar : AbstractNamedElement
                 if (definitionElement is AbstractMarker marker)
                     definitionElement = marker.Element ?? throw new Exception("Element required!");
                 else
-                    throw new Exception("Quoted rules can only include literals!");
+                    throw new Exception("Quoted definitions can only include literals!");
             }
             return (definitionElement as TextTerminal)!.AsText().ReplaceAll("\\'", "'").ReplaceAll("\\\"", "\"").ReplaceAll("\\\\", "\\");
         }
@@ -75,7 +75,7 @@ public class Grammar : AbstractNamedElement
         {
             if (definition.KeyValuePairs.ContainsKey("quote"))
             {
-                String quoteValue = GetTextValueOfRule(definition);
+                String quoteValue = GetTextValueOfDefinition(definition);
                 autoClosingPairs.Add(new KeyValuePair<String, String>(quoteValue, quoteValue));
                 surroundingPairs.Add(new KeyValuePair<String, String>(quoteValue, quoteValue));
             }
@@ -87,13 +87,13 @@ public class Grammar : AbstractNamedElement
                 {
                     if ((correspondingDefinition != definition) && correspondingDefinition.KeyValuePairs.ContainsKey("bracketclose") && (correspondingDefinition.KeyValuePairs["bracketclose"] == bracketIdentifier))
                     {
-                        closeBracket = GetTextValueOfRule(correspondingDefinition);
+                        closeBracket = GetTextValueOfDefinition(correspondingDefinition);
                         break;
                     }
                 }
                 if (!String.IsNullOrEmpty(closeBracket))
                 {
-                    String openBracket = GetTextValueOfRule(definition);
+                    String openBracket = GetTextValueOfDefinition(definition);
                     brackets.Add(new KeyValuePair<String, String>(openBracket, closeBracket!));
                     autoClosingPairs.Add(new KeyValuePair<String, String>(openBracket, closeBracket!));
                     surroundingPairs.Add(new KeyValuePair<String, String>(openBracket, closeBracket!));
@@ -327,7 +327,7 @@ public class Grammar : AbstractNamedElement
 
             {{Indent(Indent(GetBasicCode()))}}
 
-            {{Indent(Indent(GetCheckRuleCode()))}}
+            {{Indent(Indent(GetCheckDefinitionCode()))}}
                 }
             }
             """.TrimLineEndWhitespace();
@@ -336,42 +336,40 @@ public class Grammar : AbstractNamedElement
     public override bool MatchesVariableText()
     {
         Boolean result = false;
-        foreach (Definition rule in Definitions)
-            result = result || rule.MatchesVariableText();
+        foreach (Definition definition in Definitions)
+            result = result || definition.MatchesVariableText();
         return result;
     }
 
     internal override void IterateElements(Func<AbstractGrammarElement, Boolean> process)
     {
         if (process(this))
-            foreach (Definition rule in Definitions)
-                rule.IterateElements(process);
+            foreach (Definition definition in Definitions)
+                definition.IterateElements(process);
     }
 
-    public Definition? FindRuleByName(String name)
+    public Definition? FindDefinitionByName(String name)
     {
-        List<Definition> rules = new List<Definition>();
         foreach (Definition element in Definitions)
             if (element.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
                 return element;
         return null;
     }
 
-    public TMDefinition? FindTMRuleByName(String name)
+    public TMDefinition? FindTMDefinitionByName(String name)
     {
-        List<TMDefinition> definition = new List<TMDefinition>();
         foreach (TMDefinition element in TMDefinitions)
             if (element.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
                 return element;
         return null;
     }
 
-    public void CheckDuplicatedRules(List<Definition> rules)
+    public void CheckDuplicatedDefinitions(List<Definition> definitions)
     {
-        HashSet<String> existingRules = new HashSet<String>(StringComparer.InvariantCultureIgnoreCase);
-        foreach (Definition rule in rules)
-            if (!existingRules.Add(rule.Name))
-                throw rule.GetException($"Rule '{rule.Name}' already exists!");
+        HashSet<String> existingDefinitions = new HashSet<String>(StringComparer.InvariantCultureIgnoreCase);
+        foreach (Definition definition in definitions)
+            if (!existingDefinitions.Add(definition.Name))
+                throw definition.GetException($"Definition '{definition.Name}' already exists!");
     }
 
     public Int32 GetElementIdOf(AbstractNamedElement element)
@@ -381,15 +379,15 @@ public class Grammar : AbstractNamedElement
         throw GetException($"Can not find identifier '{element.Name}'!");
     }
 
-    public Definition GetRootRule()
+    public Definition GetRootDefinition()
     {
         String? rootName = GetOptionValue("root");
         if (String.IsNullOrWhiteSpace(rootName))
             throw GetException("Grammar must have root option!");
-        Definition? rule = FindRuleByName(rootName);
-        if (rule is null)
+        Definition? definition = FindDefinitionByName(rootName);
+        if (definition is null)
             throw GetException($"Can not find root definition '{rootName}'!");
-        return rule;
+        return definition;
     }
 
     public TMDefinition GetTMRootDefinition()
@@ -397,7 +395,7 @@ public class Grammar : AbstractNamedElement
         String? rootName = GetOptionValue("root");
         if (String.IsNullOrWhiteSpace(rootName))
             throw GetException("Grammar must have root option!");
-        TMDefinition? definition = FindTMRuleByName($"{rootName}");
+        TMDefinition? definition = FindTMDefinitionByName($"{rootName}");
         if (definition is null)
             throw GetException($"Can not find TextMate root definition '!{rootName}'!");
         return definition;
@@ -415,32 +413,32 @@ public class Grammar : AbstractNamedElement
         throw GetException($"Can not find option '{key}'!");
     }
 
-    private Boolean IterateUsedRules(AbstractGrammarElement element, List<Definition> rules)
+    private Boolean IterateUsedDefinitions(AbstractGrammarElement element, List<Definition> definitions)
     {
-        if ((element is Definition rule) && (rules.IndexOf(rule) < 0) && !rule.HasMarker<TreatInlineMarker>())
-            rules.Add(rule);
+        if ((element is Definition definition) && (definitions.IndexOf(definition) < 0) && !definition.HasMarker<TreatInlineMarker>())
+            definitions.Add(definition);
         else
-            if ((element is ReferenceElement referenceElement) && (!referenceElement.TreatReferenceInline) && (FindRuleByName(referenceElement.ReferenceName) is Definition referencedRule) && (rules.IndexOf(referencedRule) < 0))
-                referencedRule.IterateElements((element) => IterateUsedRules(element, rules));
+            if ((element is ReferenceElement referenceElement) && (!referenceElement.TreatReferenceInline) && (FindDefinitionByName(referenceElement.ReferenceName) is Definition referencedDefinition) && (definitions.IndexOf(referencedDefinition) < 0))
+                referencedDefinition.IterateElements((element) => IterateUsedDefinitions(element, definitions));
         return true;
     }
 
-    private List<Definition> GetUsedRules()
+    private List<Definition> GetUsedDefinitions()
     {
         List<Definition> result = new List<Definition>();
-        Definition rootRule = GetRootRule();
-        result.Add(rootRule);
-        rootRule.IterateElements((element) => IterateUsedRules(element, result));
+        Definition rootDefinition = GetRootDefinition();
+        result.Add(rootDefinition);
+        rootDefinition.IterateElements((element) => IterateUsedDefinitions(element, result));
         result.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
         return result;
     }
 
-    private Boolean IterateRelevantGrammarRules(AbstractGrammarElement element, List<Definition> rules, Boolean forceAdd)
+    private Boolean IterateRelevantGrammarDefinitions(AbstractGrammarElement element, List<Definition> definitions, Boolean forceAdd)
     {
-        if ((element is Definition rule) && (rules.IndexOf(rule) < 0) && !(rule.DropRule) && (rule.MatchesVariableText() || forceAdd))
-            rules.Add(rule);
+        if ((element is Definition definition) && (definitions.IndexOf(definition) < 0) && !(definition.DropDefinition) && (definition.MatchesVariableText() || forceAdd))
+            definitions.Add(definition);
         else
-            if ((element is ReferenceElement referenceElement) && (!referenceElement.TreatReferenceInline) && (FindRuleByName(referenceElement.ReferenceName) is Definition referencedRule) && (rules.IndexOf(referencedRule) < 0))
+            if ((element is ReferenceElement referenceElement) && (!referenceElement.TreatReferenceInline) && (FindDefinitionByName(referenceElement.ReferenceName) is Definition referencedDefinition) && (definitions.IndexOf(referencedDefinition) < 0))
             {
                 Boolean hasDropMarker = false;
                 AbstractGrammarElement? parent = element.Parent;
@@ -469,37 +467,37 @@ public class Grammar : AbstractNamedElement
                         }
                     }
 
-                    referencedRule.IterateElements(
-                        (element) => IterateRelevantGrammarRules(element, rules, hasOrParent || hasOptionalParent)
+                    referencedDefinition.IterateElements(
+                        (element) => IterateRelevantGrammarDefinitions(element, definitions, hasOrParent || hasOptionalParent)
                     );
                 }
             }
-        Boolean result = !((element is Definition rule1) && (rule1.HasMarker<IsTerminalMarker>()));
+        Boolean result = !((element is Definition definition1) && (definition1.HasMarker<IsTerminalMarker>()));
         return result;
     }
 
-    private List<Definition> GetRelevantGrammarRules()
+    private List<Definition> GetRelevantGrammarDefinitions()
     {
         List<Definition> result = new List<Definition>();
-        Definition rootRule = GetRootRule();
-        result.Add(rootRule);
-        rootRule.IterateElements((element) => IterateRelevantGrammarRules(element, result, false));
+        Definition rootDefinition = GetRootDefinition();
+        result.Add(rootDefinition);
+        rootDefinition.IterateElements((element) => IterateRelevantGrammarDefinitions(element, result, false));
         result.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
         return result;
     }
 
-    protected String GetCheckRuleCode()
+    protected String GetCheckDefinitionCode()
     {
         StringBuilder builder = new StringBuilder();
-        foreach (Definition rule in GetUsedRules())
+        foreach (Definition definition in GetUsedDefinitions())
         {
-            String ruleCode =
+            String definitionCode =
                 $$"""
-                private Boolean CheckRule_{{rule.Name}}(ASTNode parentNode, ParserState state, String? errorName)
+                private Boolean CheckDefinition_{{definition.Name}}(ASTNode parentNode, ParserState state, String? errorName)
                 {
                     Int32 oldPosition = state.Position;
-                    ASTNode actualNode = new ASTNode({{GetElementIdOf(rule)}}, "{{rule.Name}}", "", state.Position);
-                    Boolean result = {{GetElementsCode(new List<Definition>() { rule }, "Rule", null)}}
+                    ASTNode actualNode = new ASTNode({{GetElementIdOf(definition)}}, "{{definition.Name}}", "", state.Position);
+                    Boolean result = {{GetElementsCode(new List<Definition>() { definition }, null)}}
                     Int32 foundPosition = state.Position;
                     if (result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
                         parentNode.AddChild(actualNode);
@@ -508,19 +506,18 @@ public class Grammar : AbstractNamedElement
 
                 """;
 
-            builder.AppendLine(ruleCode);
+            builder.AppendLine(definitionCode);
         }
         return builder.ToString();
     }
 
     protected String GetParseResultCode()
     {
-        String GetEventName(Definition rule) => $"Process{rule.Name.Humanize().Dehumanize()}Node";
-        Definition rootRule = GetRootRule();
-        List<Definition> usedRules = GetRelevantGrammarRules();
+        String GetEventName(Definition definition) => $"Process{definition.Name.Humanize().Dehumanize()}Node";
+        List<Definition> usedDefinitions = GetRelevantGrammarDefinitions();
         String visitorCalls = "";
-        foreach (Definition rule in usedRules)
-            visitorCalls += $"case {GetElementIdOf(rule)}: return visitor.{GetEventName(rule)}(context, node, messages);\n";
+        foreach (Definition definition in usedDefinitions)
+            visitorCalls += $"case {GetElementIdOf(definition)}: return visitor.{GetEventName(definition)}(context, node, messages);\n";
 
         String result =
             $$"""
@@ -638,7 +635,7 @@ public class Grammar : AbstractNamedElement
 
     protected String GetParseCode()
     {
-        Definition rootRule = GetRootRule();
+        Definition rootDefinition = GetRootDefinition();
         String result =
             $$"""
             public ParseResult Parse(String text)
@@ -646,7 +643,7 @@ public class Grammar : AbstractNamedElement
                 ParserState state = new ParserState(text, new MessageContext(text));
                 ASTNode actualNode = new ASTNode(-1, "ROOT", "", 0);
                 String? errorName = null;
-                Boolean successful = {{rootRule.GetReferenceCode(this)}} && state.Position >= text.Length - 1;
+                Boolean successful = {{rootDefinition.GetReferenceCode(this)}} && state.Position >= text.Length - 1;
                 if (successful)
                     state.NoError(state.Position);
                 return new ParseResult(successful ? actualNode : null, state.MessageContext, state.Messages);
@@ -655,7 +652,7 @@ public class Grammar : AbstractNamedElement
         return result;
     }
 
-    private String GetElementsCode(IEnumerable<Definition> elements, String comment, Definition? separatorTerminal)
+    private String GetElementsCode(IEnumerable<Definition> elements, Definition? separatorTerminal)
     {
         String result = String.Join("", elements.Select(x => x.ToParserCode(this))) + ";";
         if (result.IndexOf("\n") > 0)
@@ -665,11 +662,11 @@ public class Grammar : AbstractNamedElement
 
     protected String GetIVisitorCode()
     {
-        String GetEventName(Definition rule) => $"Process{rule.Name.Humanize().Dehumanize()}Node";
-        List<Definition> usedRules = GetRelevantGrammarRules();
+        String GetEventName(Definition definition) => $"Process{definition.Name.Humanize().Dehumanize()}Node";
+        List<Definition> usedDefinitions = GetRelevantGrammarDefinitions();
         String visitorEvents = "";
-        foreach (Definition rule in usedRules)
-            visitorEvents += $"ProcessNodeResult {GetEventName(rule)}(Object context, ASTNode node, IList<ParserMessage> messages);\n";
+        foreach (Definition definition in usedDefinitions)
+            visitorEvents += $"ProcessNodeResult {GetEventName(definition)}(Object context, ASTNode node, IList<ParserMessage> messages);\n";
         String result =
             $$"""
             public interface IVisitResult

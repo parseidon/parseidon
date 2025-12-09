@@ -22,7 +22,7 @@ public class Definition : AbstractNamedElement
     public String GetReferenceCode(Grammar grammar) =>
         HasMarker<TreatInlineMarker>()
         ? ToParserCode(grammar)
-        : $"CheckRule_{Name}(actualNode, state, errorName)";
+        : $"CheckDefinition_{Name}(actualNode, state, errorName)";
 
     public override String ToParserCode(Grammar grammar) => DefinitionElement.ToParserCode(grammar);
 
@@ -34,7 +34,7 @@ public class Definition : AbstractNamedElement
 
     public AbstractDefinitionElement DefinitionElement { get; }
     public IReadOnlyDictionary<String, String> KeyValuePairs { get; }
-    public Boolean DropRule { get => HasMarker<DropMarker>() || HasMarker<TreatInlineMarker>(); }
-    public override bool MatchesVariableText() => DropRule ? false : DefinitionElement.MatchesVariableText();
+    public Boolean DropDefinition { get => HasMarker<DropMarker>() || HasMarker<TreatInlineMarker>(); }
+    public override bool MatchesVariableText() => DropDefinition ? false : DefinitionElement.MatchesVariableText();
 
 }
