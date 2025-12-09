@@ -31,7 +31,7 @@ public abstract class AbstractOneChildOperator : AbstractDefinitionElement
             Element!.IterateElements(process);
     }
 
-    internal override RegExResult GetRegEx(Grammar grammar)
+    internal protected override RegExResult GetRegEx(Grammar grammar)
     {
         return Element?.GetRegEx(grammar) ?? base.GetRegEx(grammar);
     }

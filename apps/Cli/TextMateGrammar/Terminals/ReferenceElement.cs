@@ -29,10 +29,15 @@ public class ReferenceElement : AbstractValueTerminal
 
     public Boolean TreatReferenceInline { get => Parent is TreatInlineMarker; }
 
-    internal override RegExResult GetRegEx(Grammar grammar)
+    internal protected override RegExResult GetRegEx(Grammar grammar)
     {
         if (grammar.FindRuleByName(ReferenceName) is Definition referencedRule)
         {
+            if (referencedRule.KeyValuePairs.ContainsKey("tmscope"))
+            {
+                var regEx = referencedRule.DefinitionElement.GetRegEx(grammar);
+                return new RegExResult($"({regEx.RegEx})", new[] { referencedRule.KeyValuePairs["tmscope"] }.Concat(regEx.Captures).ToArray());
+            }
             return referencedRule.DefinitionElement.GetRegEx(grammar);
         }
         throw GetException($"Can not find element '{ReferenceName}'");

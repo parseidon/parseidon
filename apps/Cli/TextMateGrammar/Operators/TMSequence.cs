@@ -10,6 +10,8 @@ public class TMSequence : AbstractDefinitionElement
     public TMSequence(List<AbstractDefinitionElement> elements, MessageContext messageContext, ASTNode node) : base(messageContext, node)
     {
         Elements = elements;
+        foreach (var element in Elements)
+            element.Parent = this;
     }
 
     public String? ScopeName { get; set; }
@@ -38,7 +40,7 @@ public class TMSequence : AbstractDefinitionElement
                 element.IterateElements(process);
     }
 
-    internal override RegExResult GetRegEx(Grammar grammar)
+    internal protected override RegExResult GetRegEx(Grammar grammar)
     {
         String regEx = String.Empty;
         String[] captures = Array.Empty<String>();

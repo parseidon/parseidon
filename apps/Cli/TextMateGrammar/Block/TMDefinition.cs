@@ -3,16 +3,19 @@ using Parseidon.Parser;
 using Parseidon.Cli.TextMateGrammar.Operators;
 using System.Text.Json.Serialization;
 using System.IO.Pipelines;
+using Parseidon.Cli.TextMateGrammar.Terminals;
 
 namespace Parseidon.Cli.TextMateGrammar.Block;
 
 public class TMDefinition : AbstractNamedElement
 {
-    public TMDefinition(String name, String? scopeName, TMSequence beginSequence, TMSequence? endSequence, MessageContext messageContext, ASTNode node) : base(name, messageContext, node)
+    public TMDefinition(String name, String? scopeName, TMSequence beginSequence, TMIncludes? includes, TMSequence? endSequence, MessageContext messageContext, ASTNode node) : base(name, messageContext, node)
     {
         ScopeName = scopeName;
         BeginSequence = beginSequence;
-        BeginSequence.Parent = this;
+        Includes = includes;
+        if (Includes is not null)
+            Includes.Parent = this;
         EndSequence = endSequence;
         if (EndSequence is not null)
             EndSequence.Parent = this;
@@ -21,23 +24,24 @@ public class TMDefinition : AbstractNamedElement
     internal override void IterateElements(Func<AbstractGrammarElement, Boolean> process)
     {
         if (process(this))
+        {
             BeginSequence.IterateElements(process);
-        // if (process(this))
-        //     BeginSequence.IterateElements(process);
-        if (process(this))
-            EndSequence?.IterateElements(process);
+            if (EndSequence is not null)
+                EndSequence.IterateElements(process);
+        }
     }
 
     public String? ScopeName { get; }
     public TMSequence BeginSequence { get; }
     public TMSequence? EndSequence { get; }
+    public TMIncludes? Includes { get; }
 
     internal TextMateRepositoryEntry GetRepositoryEntry(Grammar grammar)
     {
         Dictionary<String, TextMateCapture> GetCaptures(AbstractDefinitionElement.RegExResult regEx)
         {
             Dictionary<String, TextMateCapture> result = new Dictionary<string, TextMateCapture>();
-            Int32 index = 0;
+            Int32 index = 1;
             foreach (var capture in regEx.Captures)
             {
                 result[index.ToString()] = new TextMateCapture() { Name = capture };
@@ -48,7 +52,17 @@ public class TMDefinition : AbstractNamedElement
 
         TextMateRepositoryEntry result = new TextMateRepositoryEntry();
         result.Name = ScopeName;
-        if (EndSequence is null)
+        if ((BeginSequence is null) && (EndSequence is null))
+        {
+            if ((Includes is not null) && (Includes.Includes.Count > 0))
+            {
+                var patterns = new List<TextMatePatternInclude>();
+                foreach (var include in Includes.Includes)
+                    patterns.Add(new TextMatePatternInclude() { Include = $"#{include.ReferenceName.ToLower()}" });
+                result.Patterns = patterns;
+            }
+        }
+        else if (EndSequence is null)
         {
             var regEx = BeginSequence.GetRegEx(grammar);
             result.Match = regEx.RegEx;
@@ -61,6 +75,13 @@ public class TMDefinition : AbstractNamedElement
             result.Begin = regEx.RegEx;
             if (regEx.Captures.Count() > 0)
                 result.BeginCaptures = GetCaptures(regEx);
+            if ((Includes is not null) && (Includes.Includes.Count > 0))
+            {
+                var patterns = new List<TextMatePatternInclude>();
+                foreach (var include in Includes.Includes)
+                    patterns.Add(new TextMatePatternInclude() { Include = $"#{include.ReferenceName.ToLower()}" });
+                result.Patterns = patterns;
+            }
             regEx = EndSequence.GetRegEx(grammar);
             result.End = regEx.RegEx;
             if (regEx.Captures.Count() > 0)

@@ -2,7 +2,7 @@ using Parseidon.Parser;
 
 namespace Parseidon.Cli.TextMateGrammar.Terminals;
 
-public class TMRegExTerminal : AbstractFinalTerminal
+public class TMRegExTerminal : AbstractDefinitionElement
 {
     public TMRegExTerminal(String regEx, MessageContext messageContext, ASTNode node) : base(messageContext, node)
     {
@@ -12,4 +12,9 @@ public class TMRegExTerminal : AbstractFinalTerminal
     }
 
     public String RegEx { get; }
+
+    internal protected override RegExResult GetRegEx(Grammar grammar)
+    {
+        return new RegExResult(RegEx, Array.Empty<String>());
+    }
 }

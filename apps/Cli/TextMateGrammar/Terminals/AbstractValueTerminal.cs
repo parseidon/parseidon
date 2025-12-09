@@ -10,7 +10,7 @@ public abstract class AbstractValueTerminal : AbstractFinalTerminal
 
     public abstract String AsText();
 
-    internal override RegExResult GetRegEx(Grammar grammar)
+    internal protected override RegExResult GetRegEx(Grammar grammar)
     {
         return new RegExResult(AsText(), Array.Empty<String>());
     }

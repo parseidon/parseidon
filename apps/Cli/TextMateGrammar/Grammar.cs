@@ -7,6 +7,8 @@ using Parseidon.Cli.TextMateGrammar.Block;
 using Parseidon.Cli.TextMateGrammar.Operators;
 using System.Text.Json.Serialization;
 using System.Text.Json;
+using System.Text.Encodings.Web;
+using System.Collections.Immutable;
 
 namespace Parseidon.Cli.TextMateGrammar;
 
@@ -25,16 +27,21 @@ public class Grammar : AbstractNamedElement
     public List<TMDefinition> TMDefinitions { get; }
     public List<ValuePair> Options { get; }
 
+    public String ParserCode { get => ToParserCode(this); }
     public String TextMateGrammar { get => ToTextMateGrammar(this); }
+    public String LanguageConfig { get => ToLanguageConfig(); }
+    public String Package { get => ToPackage(); }
 
     public String ToTextMateGrammar(Grammar grammar)
     {
+        TMDefinition rootDefinition = GetTMRootDefinition();
+
         TextMateGrammarDocument document = new TextMateGrammarDocument
         {
             DisplayName = GetOptionValue("displayname"),
             ScopeName = GetOptionValue("scopename"),
             FileTypes = GetFileTypes(),
-            Patterns = new List<TMDefinition.TextMatePatternInclude>(),
+            Patterns = new List<TMDefinition.TextMatePatternInclude>() { new TMDefinition.TextMatePatternInclude() { Include = $"#{rootDefinition.Name.ToLower()}" } },
             Repository = GetTextMateRepository(grammar)
         };
 
@@ -47,7 +54,122 @@ public class Grammar : AbstractNamedElement
         return JsonSerializer.Serialize(document, serializerOptions);
     }
 
-    public String ParserCode { get => ToParserCode(this); }
+    public String ToLanguageConfig()
+    {
+        String GetTextValueOfRule(Definition definition)
+        {
+            AbstractDefinitionElement definitionElement = definition.DefinitionElement;
+            while (definitionElement is not TextTerminal)
+            {
+                if (definitionElement is AbstractMarker marker)
+                    definitionElement = marker.Element ?? throw new Exception("Element required!");
+                else
+                    throw new Exception("Quoted rules can only include literals!");
+            }
+            return (definitionElement as TextTerminal)!.AsText().ReplaceAll("\\'", "'").ReplaceAll("\\\"", "\"").ReplaceAll("\\\\", "\\");
+        }
+        List<KeyValuePair<String, String>> brackets = new List<KeyValuePair<String, String>>();
+        List<KeyValuePair<String, String>> autoClosingPairs = new List<KeyValuePair<String, String>>();
+        List<KeyValuePair<String, String>> surroundingPairs = new List<KeyValuePair<String, String>>();
+        foreach (Definition definition in Definitions)
+        {
+            if (definition.KeyValuePairs.ContainsKey("quote"))
+            {
+                String quoteValue = GetTextValueOfRule(definition);
+                autoClosingPairs.Add(new KeyValuePair<String, String>(quoteValue, quoteValue));
+                surroundingPairs.Add(new KeyValuePair<String, String>(quoteValue, quoteValue));
+            }
+            if (definition.KeyValuePairs.ContainsKey("bracketopen"))
+            {
+                String bracketIdentifier = definition.KeyValuePairs["bracketopen"];
+                String? closeBracket = null;
+                foreach (Definition correspondingDefinition in Definitions)
+                {
+                    if ((correspondingDefinition != definition) && correspondingDefinition.KeyValuePairs.ContainsKey("bracketclose") && (correspondingDefinition.KeyValuePairs["bracketclose"] == bracketIdentifier))
+                    {
+                        closeBracket = GetTextValueOfRule(correspondingDefinition);
+                        break;
+                    }
+                }
+                if (!String.IsNullOrEmpty(closeBracket))
+                {
+                    String openBracket = GetTextValueOfRule(definition);
+                    brackets.Add(new KeyValuePair<String, String>(openBracket, closeBracket));
+                    autoClosingPairs.Add(new KeyValuePair<String, String>(openBracket, closeBracket));
+                    surroundingPairs.Add(new KeyValuePair<String, String>(openBracket, closeBracket));
+                }
+                else
+                    throw new Exception($"A closing bracket for \"bracketopen: {bracketIdentifier}\" is required!");
+            }
+        }
+        String? lineComment = TryGetOptionValue("linecomment");
+        KeyValuePair<String, String>? blockComment = null;
+
+        VSCodeLanguageConfDocument document = new VSCodeLanguageConfDocument
+        {
+            Comments = new VSCodeLanguageConfComments
+            {
+                LineComment = lineComment,
+                BlockComment = blockComment
+            },
+            Brackets = brackets,
+            AutoClosingPairs = autoClosingPairs,
+            SurroundingPairs = surroundingPairs
+        };
+
+        JsonSerializerOptions serializerOptions = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            Converters = { new KeyValuePairArrayConverter() }
+        };
+
+        return JsonSerializer.Serialize(document, serializerOptions);
+    }
+
+    public String ToPackage()
+    {
+        String languageDisplayName = GetOptionValue("displayname");
+        String languageName = (TryGetOptionValue("name") ?? languageDisplayName).ToLower().Replace(" ", "");
+
+        VSCodePackageDocument document = new VSCodePackageDocument
+        {
+            Name = languageName,
+            DisplayName = languageDisplayName,
+            Description = TryGetOptionValue("description"),
+            Version = GetOptionValue("version"),
+            Contributes =
+                new VSCodePackageContributes
+                {
+                    Languages = ImmutableArray.Create<VSCodePackageLanguage>().Add(
+                        new VSCodePackageLanguage
+                        {
+                            Id = languageName,
+                            Aliases = ImmutableArray.Create<String>().Add(languageDisplayName).Add(languageName),
+                            Extensions = GetFileTypes()
+                        }
+                    ),
+                    Grammars = ImmutableArray.Create<VSCodePackageGrammar>().Add(
+                        new VSCodePackageGrammar
+                        {
+                            Language = languageName,
+                            ScopeName = TryGetOptionValue("scopename") ?? $"source.{languageName}",
+                            Path = $"./syntaxes/{languageName}.tmLanguage.json"
+                        }
+                    )
+                }
+        };
+
+        JsonSerializerOptions serializerOptions = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        };
+
+        return JsonSerializer.Serialize(document, serializerOptions);
+    }
 
     private IReadOnlyDictionary<String, TMDefinition.TextMateRepositoryEntry> GetTextMateRepository(Grammar grammar)
     {
@@ -82,10 +204,105 @@ public class Grammar : AbstractNamedElement
         public IReadOnlyDictionary<String, TMDefinition.TextMateRepositoryEntry> Repository { get; init; } = new Dictionary<String, TMDefinition.TextMateRepositoryEntry>();
     }
 
+    private sealed class VSCodeLanguageConfDocument
+    {
+        [JsonPropertyName("comments")]
+        public VSCodeLanguageConfComments Comments { get; init; } = new VSCodeLanguageConfComments();
 
+        [JsonPropertyName("brackets")]
+        public IList<KeyValuePair<String, String>> Brackets { get; init; } = Array.Empty<KeyValuePair<String, String>>();
 
+        [JsonPropertyName("autoClosingPairs")]
+        public IList<KeyValuePair<String, String>> AutoClosingPairs { get; init; } = Array.Empty<KeyValuePair<String, String>>();
 
+        [JsonPropertyName("surroundingPairs")]
+        public IList<KeyValuePair<String, String>> SurroundingPairs { get; init; } = Array.Empty<KeyValuePair<String, String>>();
+    }
 
+    private sealed class VSCodeLanguageConfComments
+    {
+        [JsonPropertyName("lineComment")]
+        public String? LineComment { get; init; }
+
+        [JsonPropertyName("blockComment")]
+        public KeyValuePair<String, String>? BlockComment { get; init; }
+    }
+
+    private sealed class KeyValuePairArrayConverter : JsonConverter<KeyValuePair<String, String>>
+    {
+        public override KeyValuePair<String, String> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Write(Utf8JsonWriter writer, KeyValuePair<String, String> value, JsonSerializerOptions options)
+        {
+            writer.WriteStartArray();
+            writer.WriteStringValue(value.Key);
+            writer.WriteStringValue(value.Value);
+            writer.WriteEndArray();
+        }
+    }
+
+    private sealed class VSCodePackageDocument
+    {
+        [JsonPropertyName("name")]
+        public String Name { get; init; } = String.Empty;
+
+        [JsonPropertyName("displayName")]
+        public String DisplayName { get; init; } = String.Empty;
+
+        [JsonPropertyName("description")]
+        public String? Description { get; init; } = String.Empty;
+
+        [JsonPropertyName("version")]
+        public String Version { get; init; } = String.Empty;
+
+        [JsonPropertyName("engines")]
+        public IReadOnlyDictionary<String, String> Engines { get; init; } = ImmutableDictionary.Create<String, String>().Add("vscode", "^1.106.1");
+
+        [JsonPropertyName("categories")]
+        public IReadOnlyList<String> Categories { get; init; } = ImmutableArray.Create<String>().Add("Programming Languages");
+
+        [JsonPropertyName("contributes")]
+        public VSCodePackageContributes Contributes { get; init; } = new VSCodePackageContributes();
+    }
+
+    private sealed class VSCodePackageContributes
+    {
+        [JsonPropertyName("languages")]
+        public IReadOnlyList<VSCodePackageLanguage> Languages { get; init; } = Array.Empty<VSCodePackageLanguage>();
+
+        [JsonPropertyName("grammars")]
+        public IReadOnlyList<VSCodePackageGrammar> Grammars { get; init; } = Array.Empty<VSCodePackageGrammar>();
+    }
+
+    private sealed class VSCodePackageLanguage
+    {
+        [JsonPropertyName("id")]
+        public String Id { get; init; } = String.Empty;
+
+        [JsonPropertyName("aliases")]
+        public IReadOnlyList<String> Aliases { get; init; } = Array.Empty<String>();
+
+        [JsonPropertyName("extensions")]
+        public IReadOnlyList<String> Extensions { get; init; } = Array.Empty<String>();
+
+        [JsonPropertyName("configuration")]
+        public String Configuration { get; init; } = "./language-configuration.json";
+    }
+
+    private sealed class VSCodePackageGrammar
+    {
+        [JsonPropertyName("language")]
+        public String Language { get; init; } = String.Empty;
+
+        [JsonPropertyName("scopeName")]
+        public String ScopeName { get; init; } = String.Empty;
+
+        [JsonPropertyName("path")]
+        public String Path { get; init; } = String.Empty;
+    }
 
     public override String ToParserCode(Grammar grammar)
     {
@@ -140,6 +357,15 @@ public class Grammar : AbstractNamedElement
         return null;
     }
 
+    public TMDefinition? FindTMRuleByName(String name)
+    {
+        List<TMDefinition> definition = new List<TMDefinition>();
+        foreach (TMDefinition element in TMDefinitions)
+            if (element.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
+                return element;
+        return null;
+    }
+
     public void CheckDuplicatedRules(List<Definition> rules)
     {
         HashSet<String> existingRules = new HashSet<String>(StringComparer.InvariantCultureIgnoreCase);
@@ -157,23 +383,36 @@ public class Grammar : AbstractNamedElement
 
     public Definition GetRootRule()
     {
-        String? axiomName = GetOptionValue("rootnode");
-        if (String.IsNullOrWhiteSpace(axiomName))
-            throw GetException("Grammar must have axiom option!");
-        Definition? rule = FindRuleByName(axiomName);
+        String? rootName = GetOptionValue("root");
+        if (String.IsNullOrWhiteSpace(rootName))
+            throw GetException("Grammar must have root option!");
+        Definition? rule = FindRuleByName(rootName);
         if (rule is null)
-            throw GetException($"Can not find axiom option '{axiomName}'!");
+            throw GetException($"Can not find root definition '{rootName}'!");
         return rule;
     }
 
-    private String GetOptionValue(String key)
+    public TMDefinition GetTMRootDefinition()
+    {
+        String? rootName = GetOptionValue("root");
+        if (String.IsNullOrWhiteSpace(rootName))
+            throw GetException("Grammar must have root option!");
+        TMDefinition? definition = FindTMRuleByName($"{rootName}");
+        if (definition is null)
+            throw GetException($"Can not find TextMate root definition '!{rootName}'!");
+        return definition;
+    }
+
+    private String GetOptionValue(String key) => TryGetOptionValue(key) ?? throw GetException($"Can not find option '{key}'!");
+
+    private String? TryGetOptionValue(String key)
     {
         foreach (ValuePair value in Options)
         {
             if (value.Name.Equals(key, StringComparison.OrdinalIgnoreCase))
                 return value.Value;
         }
-        throw GetException($"Can not find option '{key}'!");
+        return null;
     }
 
     private Boolean IterateUsedRules(AbstractGrammarElement element, List<Definition> rules)
@@ -858,3 +1097,4 @@ public class Grammar : AbstractNamedElement
     }
 
 }
+

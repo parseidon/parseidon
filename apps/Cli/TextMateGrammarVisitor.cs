@@ -12,6 +12,8 @@ public class TextMateGrammarVisitor : INodeVisitor
     public interface IGetResults
     {
         String TextMateGrammar { get; }
+        String LanguageConfig { get; }
+        String Package { get; }
     }
 
     private class CreateCodeVisitorContext
@@ -39,6 +41,8 @@ public class TextMateGrammarVisitor : INodeVisitor
         public Boolean Successful { get; }
         public IReadOnlyList<ParserMessage> Messages { get; }
         public String TextMateGrammar { get => _grammar.TextMateGrammar; }
+        public String LanguageConfig { get => _grammar.LanguageConfig; }
+        public String Package { get => _grammar.Package; }
     }
 
     private T Pop<T>(CreateCodeVisitorContext context, Int32 position) where T : AbstractGrammarElement
@@ -347,7 +351,10 @@ public class TextMateGrammarVisitor : INodeVisitor
     public ProcessNodeResult ProcessTMDefinitionNode(object context, ASTNode node, IList<ParserMessage> messages)
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
-        TMSequence? endSequence = Pop<TMSequence>(typedContext, node.Position);
+        TMSequence? endSequence = TryPop<TMSequence>(typedContext, node.Position);
+        TMIncludes? includes = TryPop<TMIncludes>(typedContext, node.Position);
+        if ((endSequence is null) && (includes is null))
+            throw new GrammarException("There mus be a TextMate sequence or includes!", typedContext.MessageContext.CalculateLocation(node.Position));
         TMSequence? beginSequence = TryPop<TMSequence>(typedContext, node.Position);
         if (beginSequence is null)
         {
@@ -356,7 +363,7 @@ public class TextMateGrammarVisitor : INodeVisitor
         }
         TMScopeName? scopeName = TryPop<TMScopeName>(typedContext, node.Position);
         ReferenceElement name = Pop<ReferenceElement>(typedContext, node.Position);
-        AbstractGrammarElement newTMDefinition = new TMDefinition(name.ReferenceName, scopeName?.ScopeName, beginSequence, endSequence, typedContext.MessageContext, node);
+        AbstractGrammarElement newTMDefinition = new TMDefinition(name.ReferenceName, scopeName?.ScopeName, beginSequence, includes, endSequence, typedContext.MessageContext, node);
         Push(typedContext, newTMDefinition);
         return ProcessNodeResult.Success;
     }
@@ -371,7 +378,6 @@ public class TextMateGrammarVisitor : INodeVisitor
     public ProcessNodeResult ProcessTMRegExNode(object context, ASTNode node, IList<ParserMessage> messages)
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
-        // TextTerminal expression = Pop<TextTerminal>(typedContext, node.Position);
         Push(typedContext, new TMRegExTerminal(node.Text, typedContext.MessageContext, node));
         return ProcessNodeResult.Success;
     }
@@ -381,14 +387,21 @@ public class TextMateGrammarVisitor : INodeVisitor
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
         AbstractDefinitionElement definition = Pop<AbstractDefinitionElement>(typedContext, node.Position);
         TMScopeName? scopeName = TryPop<TMScopeName>(typedContext, node.Position);
-        if ((scopeName is not null) && (definition is TMSequence sequence))
-            sequence.ScopeName = scopeName.ScopeName;
+        if (scopeName is not null)
+        {
+            if (definition is not TMSequence)
+                definition = new TMSequence(new List<AbstractDefinitionElement>() { definition }, typedContext.MessageContext, node);
+            (definition as TMSequence)!.ScopeName = scopeName.ScopeName;
+        }
         Push(typedContext, definition);
         return ProcessNodeResult.Success;
     }
 
     public ProcessNodeResult ProcessTMIncludesNode(object context, ASTNode node, IList<ParserMessage> messages)
     {
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        List<ReferenceElement> includes = PopList<ReferenceElement>(typedContext);
+        Push(typedContext, new TMIncludes(includes, typedContext.MessageContext, node));
         return ProcessNodeResult.Success;
     }
 
@@ -404,7 +417,7 @@ public class TextMateGrammarVisitor : INodeVisitor
     public ProcessNodeResult ProcessTMScopeNameNode(object context, ASTNode node, IList<ParserMessage> messages)
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
-        Push(typedContext, new TMScopeName(Pop<ReferenceElement>(typedContext, node.Position).ReferenceName, typedContext.MessageContext, node));
+        Push(typedContext, new TMScopeName(node.Text, typedContext.MessageContext, node));
         return ProcessNodeResult.Success;
     }
 }

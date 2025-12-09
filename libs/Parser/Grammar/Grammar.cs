@@ -94,12 +94,12 @@ public class Grammar : AbstractNamedElement
 
     public Definition GetRootRule()
     {
-        String? axiomName = GetOptionValue("rootnode");
-        if (String.IsNullOrWhiteSpace(axiomName))
-            throw GetException("Grammar must have axiom option!");
-        Definition? rule = FindRuleByName(axiomName);
+        String? rootName = GetOptionValue("root");
+        if (String.IsNullOrWhiteSpace(rootName))
+            throw GetException("Grammar must have root option!");
+        Definition? rule = FindRuleByName(rootName);
         if (rule is null)
-            throw GetException($"Can not find axiom option '{axiomName}'!");
+            throw GetException($"Can not find root definition '{rootName}'!");
         return rule;
     }
 

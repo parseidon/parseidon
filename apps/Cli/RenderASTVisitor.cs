@@ -48,7 +48,7 @@ public class RenderASTVisitor : IVisitor
                 stringBuilder.Append(crossings[i] ? "  " : "  ");
             if (crossings.Length > 0)
                 stringBuilder.Append("- ");
-            stringBuilder.Append($"{node.Name} ({node.TokenId}): ");
+            stringBuilder.Append($"{node.Name}[{node.TokenId}] ({node.Position}): ");
             if (node.Text != "")
                 stringBuilder.Append(node.Text.FormatLiteral(true));
             stringBuilder.AppendLine();

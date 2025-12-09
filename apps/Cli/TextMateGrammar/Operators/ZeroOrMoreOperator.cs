@@ -16,4 +16,10 @@ public class ZeroOrMoreOperator : AbstractOneChildOperator
     }
 
     public override bool MatchesVariableText() => true;
+
+    internal protected override RegExResult GetRegEx(Grammar grammar)
+    {
+        var elementRegEx = Element?.GetRegEx(grammar) ?? base.GetRegEx(grammar);
+        return new RegExResult($"(?:{elementRegEx.RegEx})*", elementRegEx.Captures);
+    }
 }
