@@ -11,6 +11,9 @@ public class CreateCodeVisitor : INodeVisitor
     public interface IGetResults
     {
         String ParserCode { get; }
+        String TextMateGrammar { get; }
+        String LanguageConfig { get; }
+        String Package { get; }
     }
 
     private class CreateCodeVisitorContext
@@ -38,6 +41,9 @@ public class CreateCodeVisitor : INodeVisitor
         public Boolean Successful { get; }
         public IReadOnlyList<ParserMessage> Messages { get; }
         public String ParserCode { get => _grammar.ParserCode; }
+        public String TextMateGrammar { get => _grammar.TextMateGrammar; }
+        public String LanguageConfig { get => _grammar.LanguageConfig; }
+        public String Package { get => _grammar.Package; }
     }
 
     private T Pop<T>(CreateCodeVisitorContext context, Int32 position) where T : AbstractGrammarElement
@@ -346,8 +352,10 @@ public class CreateCodeVisitor : INodeVisitor
     public ProcessNodeResult ProcessTMDefinitionNode(object context, ASTNode node, IList<ParserMessage> messages)
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
-        TMSequence? endSequence = Pop<TMSequence>(typedContext, node.Position);
+        TMSequence? endSequence = TryPop<TMSequence>(typedContext, node.Position);
         TMIncludes? includes = TryPop<TMIncludes>(typedContext, node.Position);
+        if ((endSequence is null) && (includes is null))
+            throw new GrammarException("There mus be a TextMate sequence or includes!", typedContext.MessageContext.CalculateLocation(node.Position));
         TMSequence? beginSequence = TryPop<TMSequence>(typedContext, node.Position);
         if (beginSequence is null)
         {

@@ -38,6 +38,8 @@
 
         <!-- Include Humanizer explicitly since Parser depends on it -->
         <PackageReference Include="Humanizer.Core" Version="2.14.1" GeneratePathProperty="true" />
+        <PackageReference Include="System.Collections.Immutable" Version="10.0.0" GeneratePathProperty="true" />
+        <PackageReference Include="System.Text.Json" Version="10.0.0" GeneratePathProperty="true" />
     </ItemGroup>
 
     <PropertyGroup>
@@ -54,6 +56,8 @@
         <None Include="$(OutputPath)Parseidon.Parser.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
         <None Include="$(OutputPath)Parseidon.Helper.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
         <None Include="$(PkgHumanizer_Core)\lib\netstandard2.0\Humanizer.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(PkgSystem_Collections_Immutable)\lib\netstandard2.0\System.Collections.Immutable.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(PkgSystem_Text_Json)\lib\netstandard2.0\System.Text.Json.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     </ItemGroup>
 
     <!-- Make dependencies available to the generator at runtime -->

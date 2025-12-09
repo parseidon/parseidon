@@ -195,9 +195,9 @@ static IVisitResult CreateAST(ParseResult parseResult, FileInfo outputFile, Stri
 
 static IVisitResult CreateTextMateGrammar(ParseResult parseResult, FileInfo outputFile, String overrideOption)
 {
-    TextMateGrammarVisitor visitor = new TextMateGrammarVisitor();
+    CreateCodeVisitor visitor = new CreateCodeVisitor();
     IVisitResult visitResult = parseResult.Visit(visitor);
-    if (visitResult.Successful && visitResult is TextMateGrammarVisitor.IGetResults grammarResult)
+    if (visitResult.Successful && visitResult is CreateCodeVisitor.IGetResults grammarResult)
     {
         File.WriteAllText(outputFile.FullName, grammarResult.TextMateGrammar ?? "");
         AnsiConsole.MarkupLine($"[green] The TextMate grammar '{outputFile.FullName}' is sucessfully created![/]");
@@ -207,9 +207,9 @@ static IVisitResult CreateTextMateGrammar(ParseResult parseResult, FileInfo outp
 
 static IVisitResult CreateVSCodePackage(ParseResult parseResult, DirectoryInfo outputFolder, String overrideOption)
 {
-    TextMateGrammarVisitor visitor = new TextMateGrammarVisitor();
+    CreateCodeVisitor visitor = new CreateCodeVisitor();
     IVisitResult visitResult = parseResult.Visit(visitor);
-    if (visitResult.Successful && visitResult is TextMateGrammarVisitor.IGetResults grammarResult)
+    if (visitResult.Successful && visitResult is CreateCodeVisitor.IGetResults grammarResult)
     {
         if (outputFolder.Exists)
             outputFolder.Delete(true);
