@@ -340,7 +340,7 @@ public class CreateCodeVisitor : INodeVisitor
         if (name is null)
         {
             name = value as ReferenceElement;
-            value = new BooleanTerminal(true, typedContext.MessageContext, node);
+            value = new TextTerminal("", typedContext.MessageContext, node);
         }
         ValuePair valuePair = new ValuePair(name!.ReferenceName, value.AsText(), typedContext.MessageContext, node);
         Push(typedContext, valuePair);

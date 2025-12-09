@@ -186,9 +186,10 @@ public class Grammar : AbstractNamedElement
                         (UInt32 row, UInt32 column) = MessageContext!.CalculateLocation(definition.Node.Position);
                         throw new GrammarException($"TextMate definition '{definition.Name}' already exists!", row, column);
                     }
-                String? scopeName = definition.KeyValuePairs.TryGetValue(TextMateScopeProperty, out var value) ? value : null;
+                String? scopeName = definition.KeyValuePairs[TextMatePatternProperty];
+                scopeName = String.IsNullOrEmpty(scopeName) ? null : scopeName;
                 TMSequence sequence = new TMSequence(new List<AbstractDefinitionElement>() { definition.DefinitionElement }, messageContext, definition.Node);
-                TMDefinition newDefinition = new TMDefinition(definition.Name, scopeName, sequence, null, null, messageContext, definition.Node);
+                tmdefinitions.Add(new TMDefinition(definition.Name, scopeName, sequence, null, null, messageContext, definition.Node));
             }
         foreach (TMDefinition tmdefinition in tmdefinitions)
             result[tmdefinition.Name.ToLower()] = tmdefinition.GetRepositoryEntry(grammar);
