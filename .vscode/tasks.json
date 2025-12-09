@@ -29,10 +29,10 @@
 		{
 			"type": "shell",
 			"label": "Create VS Code extension",
-			"command": "${workspaceFolder}/Output/bin/Parseidon.Cli/Debug/net9.0/dotnet-parseidon",
+			"command": "${workspaceFolder}/Output/bin/Parseidon.Cli/Debug/net10.0/dotnet-parseidon",
 			"args": [
 				"vscode",
-				"${workspaceFolder}/Output/common/parseidon.pgram",
+				"${workspaceFolder}/common/parseidon.pgram",
 				"${workspaceFolder}/Output/VSCodePackage",
 				"-o",
 				"override"
