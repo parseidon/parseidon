@@ -336,8 +336,13 @@ public class CreateCodeVisitor : INodeVisitor
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
         AbstractValueTerminal value = Pop<AbstractValueTerminal>(typedContext, node.Position);
-        ReferenceElement name = Pop<ReferenceElement>(typedContext, node.Position);
-        ValuePair valuePair = new ValuePair(name.ReferenceName, value.AsText(), typedContext.MessageContext, node);
+        ReferenceElement? name = TryPop<ReferenceElement>(typedContext, node.Position);
+        if (name is null)
+        {
+            name = value as ReferenceElement;
+            value = new BooleanTerminal(true, typedContext.MessageContext, node);
+        }
+        ValuePair valuePair = new ValuePair(name!.ReferenceName, value.AsText(), typedContext.MessageContext, node);
         Push(typedContext, valuePair);
         return ProcessNodeResult.Success;
     }
@@ -372,7 +377,7 @@ public class CreateCodeVisitor : INodeVisitor
     public ProcessNodeResult ProcessTMIdentifierNode(object context, ASTNode node, IList<ParserMessage> messages)
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
-        Push(typedContext, new ReferenceElement(node.Text.Trim(), typedContext.MessageContext, node));
+        Push(typedContext, new TMReferenceElement(node.Text.Trim(), typedContext.MessageContext, node));
         return ProcessNodeResult.Success;
     }
 
