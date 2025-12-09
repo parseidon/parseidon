@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Parseidon.Parser.Grammar.Operators;
+using Parseidon.Parser.Grammar.Terminals;
 
 namespace Parseidon.Parser.Grammar.Block;
 
@@ -32,6 +33,7 @@ public class TMDefinition : AbstractNamedElement
     public TMSequence? BeginSequence { get; }
     public TMSequence? EndSequence { get; }
     public TMIncludes? Includes { get; }
+
 
     internal TextMateRepositoryEntry GetRepositoryEntry(Grammar grammar)
     {
@@ -76,7 +78,24 @@ public class TMDefinition : AbstractNamedElement
             {
                 var patterns = new List<TextMatePatternInclude>();
                 foreach (var include in Includes.Includes)
-                    patterns.Add(new TextMatePatternInclude() { Include = $"#{include.ReferenceName.ToLower()}" });
+                {
+                    if (include is TMReferenceElement)
+                    {
+                        var definition = grammar.FindTMDefinitionByName(include.ReferenceName);
+                        if (definition is null)
+                            throw GetException($"Can not find TextMate definition '{include.ReferenceName}'!");
+                        patterns.Add(new TextMatePatternInclude() { Include = $"#{definition.Name.ToLower()}" });
+                    }
+                    else if (include is ReferenceElement)
+                    {
+                        var definition = grammar.FindDefinitionByName(include.ReferenceName);
+                        if (definition is null)
+                            throw GetException($"Can not find definition '{include.ReferenceName}'!");
+                        if (!definition.KeyValuePairs.ContainsKey(Grammar.TextMatePatternProperty))
+                            throw GetException($"Definition '{definition.Name}' has no '{Grammar.TextMatePatternProperty}' property!");
+                        patterns.Add(new TextMatePatternInclude() { Include = $"#{definition.Name.ToLower()}" });
+                    }
+                }
                 result.Patterns = patterns;
             }
             regEx = EndSequence!.GetRegEx(grammar);

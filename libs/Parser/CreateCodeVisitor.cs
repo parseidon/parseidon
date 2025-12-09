@@ -11,7 +11,7 @@ public class CreateCodeVisitor : INodeVisitor
     public interface IGetResults
     {
         String ParserCode { get; }
-        String TextMateGrammar { get; }
+        String GetTextMateGrammar(MessageContext messageContext);
         String LanguageConfig { get; }
         String Package { get; }
     }
@@ -41,7 +41,7 @@ public class CreateCodeVisitor : INodeVisitor
         public Boolean Successful { get; }
         public IReadOnlyList<ParserMessage> Messages { get; }
         public String ParserCode { get => _grammar.ParserCode; }
-        public String TextMateGrammar { get => _grammar.TextMateGrammar; }
+        public String GetTextMateGrammar(MessageContext messageContext) => _grammar.ToTextMateGrammar(messageContext);
         public String LanguageConfig { get => _grammar.LanguageConfig; }
         public String Package { get => _grammar.Package; }
     }

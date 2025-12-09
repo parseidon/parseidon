@@ -24,7 +24,8 @@ Suffix                  = Primary (Optional / ZeroOrMore / OneOrMore)?_;
 TMDefinition            = TMIdentifier_-Equal_(TMNamedExpression / TMExpression)_LineEnd_;
 :TMNamedExpression      = TMScopeName -BracketOpen_TMExpression_-BracketClose;
 :TMExpression           = (TMMatchSequence_(TMIncludes?_TMMatchSequence_)?) / TMIncludes;
-TMIncludes              = SquareBracketOpen_(TMIdentifier_(-Or_TMIdentifier_)*)? SquareBracketClose;
+TMIncludes              = SquareBracketOpen_(TMInclude_(-Or_TMInclude_)*)? SquareBracketClose;
+:TMInclude              = TMIdentifier / Identifier;
 TMMatchSequence         = (TMMatch_)+;
 TMMatch                 = TMScopeName? -AngleBracketOpen_Expression_-AngleBracketClose 
                         / TMRegEx
