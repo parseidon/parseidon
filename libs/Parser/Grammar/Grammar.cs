@@ -181,7 +181,7 @@ public class Grammar : AbstractNamedElement
         var result = new Dictionary<String, TMDefinition.TextMateRepositoryEntry>(StringComparer.OrdinalIgnoreCase);
         List<TMDefinition> tmdefinitions = TMDefinitions.ToList();
         foreach (var definition in Definitions)
-            if (definition.KeyValuePairs.ContainsKey(TextMatePatternProperty))
+            if (definition.KeyValuePairs.ContainsKey(TextMatePropertyPattern))
             {
                 foreach (TMDefinition tmdefinition in tmdefinitions)
                     if (tmdefinition.Name.Equals(definition.Name, StringComparison.OrdinalIgnoreCase))
@@ -189,7 +189,7 @@ public class Grammar : AbstractNamedElement
                         (UInt32 row, UInt32 column) = MessageContext!.CalculateLocation(definition.Node.Position);
                         throw new GrammarException($"TextMate definition '{definition.Name}' already exists!", row, column);
                     }
-                String? scopeName = definition.KeyValuePairs[TextMatePatternProperty];
+                String? scopeName = definition.KeyValuePairs[TextMatePropertyPattern];
                 scopeName = String.IsNullOrEmpty(scopeName) ? null : scopeName;
                 TMSequence sequence = new TMSequence(new List<AbstractDefinitionElement>() { definition.DefinitionElement }, messageContext, definition.Node);
                 tmdefinitions.Add(new TMDefinition(definition.Name, scopeName, sequence, null, null, messageContext, definition.Node));
