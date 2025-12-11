@@ -91,8 +91,8 @@ public class TMDefinition : AbstractNamedElement
                         var definition = grammar.FindDefinitionByName(include.ReferenceName);
                         if (definition is null)
                             throw GetException($"Can not find definition '{include.ReferenceName}'!");
-                        if (!definition.KeyValuePairs.ContainsKey(Grammar.TextMatePatternProperty))
-                            throw GetException($"Definition '{definition.Name}' has no '{Grammar.TextMatePatternProperty}' property!");
+                        if (!definition.KeyValuePairs.ContainsKey(Grammar.TextMatePropertyPattern))
+                            throw GetException($"Definition '{definition.Name}' has no '{Grammar.TextMatePropertyPattern}' property!");
                         patterns.Add(new TextMatePatternInclude() { Include = $"#{definition.Name.ToLower()}" });
                     }
                 }

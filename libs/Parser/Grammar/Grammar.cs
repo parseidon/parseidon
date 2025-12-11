@@ -31,9 +31,9 @@ public class Grammar : AbstractNamedElement
     public String LanguageConfig { get => ToLanguageConfig(); }
     public String Package { get => ToPackage(); }
 
-    internal const String TextMateScopeProperty = "tmscope";
-    internal const String TextMatePatternProperty = "tmpattern";
-    internal const String GrammarErrorNameProperty = "errorname";
+    internal const String GrammarPropertyErrorName = "errorname";
+    internal const String TextMatePropertyScope = "tmscope";
+    internal const String TextMatePropertyPattern = "tmpattern";
 
     public String ToTextMateGrammar(MessageContext messageContext)
     {

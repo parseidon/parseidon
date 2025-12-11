@@ -33,10 +33,10 @@ public class ReferenceElement : AbstractValueTerminal
     {
         if (grammar.FindDefinitionByName(ReferenceName) is Definition referencedDefinition)
         {
-            if (referencedDefinition.KeyValuePairs.ContainsKey(Grammar.TextMateScopeProperty))
+            if (referencedDefinition.KeyValuePairs.ContainsKey(Grammar.TextMatePropertyScope))
             {
                 var regEx = referencedDefinition.DefinitionElement.GetRegEx(grammar);
-                return new RegExResult($"({regEx.RegEx})", new[] { referencedDefinition.KeyValuePairs[Grammar.TextMateScopeProperty] }.Concat(regEx.Captures).ToArray());
+                return new RegExResult($"({regEx.RegEx})", new[] { referencedDefinition.KeyValuePairs[Grammar.TextMatePropertyScope] }.Concat(regEx.Captures).ToArray());
             }
             return referencedDefinition.DefinitionElement.GetRegEx(grammar);
         }
