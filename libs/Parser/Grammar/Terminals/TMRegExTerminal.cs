@@ -6,7 +6,7 @@ public class TMRegExTerminal : AbstractFinalTerminal
     {
         RegEx = regEx;
         if (RegEx.Length == 0)
-            throw new ArgumentException("");
+            throw GetException("A regular expression can not be empty!");
     }
 
     public String RegEx { get; }

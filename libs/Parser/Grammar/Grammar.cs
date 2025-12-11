@@ -76,7 +76,7 @@ public class Grammar : AbstractNamedElement
                 if (definitionElement is AbstractMarker marker)
                     definitionElement = marker.Element ?? throw new Exception("Element required!");
                 else
-                    throw new Exception("Quoted definitions can only include literals!");
+                    throw GetException("Quoted definitions can only include literals!");
             }
             return (definitionElement as TextTerminal)!.AsText().ReplaceAll(new (String Search, String Replace)[] { ("\\'", "'"), ("\\\"", "\""), ("\\\\", "\\") });
         }
@@ -111,7 +111,7 @@ public class Grammar : AbstractNamedElement
                     surroundingPairs.Add(new KeyValuePair<String, String>(openBracket, closeBracket!));
                 }
                 else
-                    throw new Exception($"A closing bracket for \"bracketopen: {bracketIdentifier}\" is required!");
+                    throw GetException($"A closing bracket for \"bracketopen: {bracketIdentifier}\" is required!");
             }
         }
         String? lineComment = TryGetOptionValue(Grammar.TextMateOptionLineComment);
@@ -194,7 +194,7 @@ public class Grammar : AbstractNamedElement
                     if (tmdefinition.Name.Equals(definition.Name, StringComparison.OrdinalIgnoreCase))
                     {
                         (UInt32 row, UInt32 column) = MessageContext!.CalculateLocation(definition.Node.Position);
-                        throw new GrammarException($"TextMate definition '{definition.Name}' already exists!", row, column);
+                        throw GetException($"TextMate definition '{definition.Name}' already exists!");
                     }
                 String? scopeName = definition.KeyValuePairs[TextMatePropertyPattern];
                 scopeName = String.IsNullOrEmpty(scopeName) ? null : scopeName;
