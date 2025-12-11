@@ -18,19 +18,59 @@ public static class StringExtensions
         return source.Substring(0, index) + replacement + source.Substring(index + length);
     }
 
-    public static String ReplaceAll(this String input, String replaceThis, String withThis)
+    public static String ReplaceAll(this String input, (String Search, String Replace)[] rules)
     {
-        Int32 position = 0;
-        while (position <= (input.Length - replaceThis.Length))
+        if (input == null) throw new ArgumentNullException(nameof(input));
+        if (rules == null) throw new ArgumentNullException(nameof(rules));
+
+        var stringBuilder = new System.Text.StringBuilder(input.Length);
+
+        Int32 i = 0;
+        while (i < input.Length)
         {
-            if (((position + replaceThis.Length) <= input.Length) && (input.Substring(position, replaceThis.Length) == replaceThis))
+            Boolean matched = false;
+
+            // Reihenfolge der Regeln bestimmt Priorität:
+            // Erste passende Regel gewinnt.
+            foreach (var rule in rules)
             {
-                input = input.ReplaceAt(position, replaceThis.Length, withThis);
-                position += withThis.Length - 1;
+                var search = rule.Search;
+                if (string.IsNullOrEmpty(search))
+                    continue;
+
+                Int32 len = search.Length;
+                if (i + len > input.Length)
+                    continue;
+
+                // Schneller Vergleich ohne Substring-Allocation
+                Boolean equal = true;
+                for (Int32 j = 0; j < len; j++)
+                {
+                    if (input[i + j] != search[j])
+                    {
+                        equal = false;
+                        break;
+                    }
+                }
+
+                if (equal)
+                {
+                    stringBuilder.Append(rule.Replace ?? String.Empty);
+                    i += len;        // Verbraucht alle Zeichen dieses Matches
+                    matched = true;
+                    break;           // WICHTIG: nicht andere Regeln noch prüfen
+                }
             }
-            position++;
+
+            if (!matched)
+            {
+                // Kein Match: Originalzeichen übernehmen
+                stringBuilder.Append(input[i]);
+                i++;
+            }
         }
-        return input;
+
+        return stringBuilder.ToString();
     }
 
     public static Boolean ContainsNewLine(this String input)
