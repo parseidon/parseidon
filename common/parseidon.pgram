@@ -55,12 +55,12 @@ TMRegExChar             = [^'\\]
                         / EscapedChar
                         / PredefinedClass
                         / UnicodeChars;
-$TMScopeName            = IdentStart TMScopeNameCont -Colon {ErrorName: 'TextMate scope name', tmscope: string.unquoted};
+$TMScopeName            = IdentStart TMScopeNameCont -Colon {errorname: 'TextMate scope name', tmscope: string.unquoted};
 !TMScopeName            = <TMScopeName> !'(?:<)';
 :TMScopeNameCont        = (('.' / '_' / '-')? [a-zA-Z0-9])*;
 
 # TextMate Identifier
-^$TMIdentifier          = TMIdentifierPrefix Identifier {ErrorName: 'TextMate identifier', tmscope: keyword.other}; 
+^$TMIdentifier          = TMIdentifierPrefix Identifier {errorname: 'TextMate identifier', tmscope: keyword.other}; 
 !TMIdentifier           = <TMIdentifier>; # !'(?!:)';
 -:TMIdentifierPrefix    = ExclamationMark;
 
@@ -73,7 +73,7 @@ ValuePair               = Identifier_(-ValueAssign_Value_)?;
 $Boolean                = (True / False) {tmpattern: constant.language};
 :True                   = 'true';
 :False                  = 'false';
-^$CSharpIdentifier      = IdentStart CSharpIdentCont {tmpattern: string.unquoted, ErrorName: 'C# identifier'};
+^$CSharpIdentifier      = IdentStart CSharpIdentCont {tmpattern: string.unquoted, errorname: 'C# identifier'};
 :CSharpIdentCont        = ('.'? [a-zA-Z0-9])*;
 
 # Identifier

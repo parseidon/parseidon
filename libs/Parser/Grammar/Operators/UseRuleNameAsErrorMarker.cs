@@ -9,7 +9,7 @@ public class UseDefinitionNameAsErrorMarker : AbstractMarker
     public override String ToParserCode(Grammar grammar)
     {
         Definition definition = GetDefinition();
-        String errorName = definition.KeyValuePairs.TryGetValue("ErrorName", out String temp) ? $"\"{temp}\"" : $"\"{definition.Name}\"" ?? "errorName";
+        String errorName = definition.KeyValuePairs.TryGetValue(Grammar.GrammarErrorNameProperty, out String temp) ? $"\"{temp}\"" : $"\"{definition.Name}\"" ?? "errorName";
         String result = "";
         result += $"SetErrorName(actualNode, state, {errorName},\n";
         result += Indent($"(actualNode, errorName) => {Element?.ToParserCode(grammar)}") + "\n";

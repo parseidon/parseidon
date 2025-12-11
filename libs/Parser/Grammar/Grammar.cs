@@ -33,6 +33,7 @@ public class Grammar : AbstractNamedElement
 
     internal const String TextMateScopeProperty = "tmscope";
     internal const String TextMatePatternProperty = "tmpattern";
+    internal const String GrammarErrorNameProperty = "errorname";
 
     public String ToTextMateGrammar(MessageContext messageContext)
     {
