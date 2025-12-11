@@ -8,10 +8,6 @@ public static class StringExtensions
 {
     public static string ReplaceAt(this String source, Int32 index, Int32 length, String replacement)
     {
-        if (source == null)
-            throw new ArgumentNullException(nameof(source));
-        if (replacement == null)
-            throw new ArgumentNullException(nameof(replacement));
         if (index < 0 || index > source.Length - length)
             throw new ArgumentOutOfRangeException(nameof(index));
 
@@ -20,9 +16,6 @@ public static class StringExtensions
 
     public static String ReplaceAll(this String input, (String Search, String Replace)[] rules)
     {
-        if (input == null) throw new ArgumentNullException(nameof(input));
-        if (rules == null) throw new ArgumentNullException(nameof(rules));
-
         var stringBuilder = new System.Text.StringBuilder(input.Length);
 
         Int32 i = 0;
@@ -95,19 +88,12 @@ public static class StringExtensions
 
     public static String FormatLiteral(this String value, Boolean useQuotes)
     {
-        if (value == null)
-        {
-            throw new ArgumentNullException(nameof(value));
-        }
-
         const Char quote = '"';
 
         var builder = new StringBuilder();
 
         if (useQuotes)
-        {
             builder.Append(quote);
-        }
 
         for (Int32 i = 0; i < value.Length; i++)
         {
@@ -117,19 +103,16 @@ public static class StringExtensions
                 var category = CharUnicodeInfo.GetUnicodeCategory(value, i);
                 if (category == UnicodeCategory.Surrogate)
                 {
-                    // an unpaired surrogate
                     builder.Append($"\\u{((int)c).ToString("x4")}");
                 }
                 else if (NeedsEscaping(category))
                 {
-                    // a surrogate pair that needs to be escaped
                     var unicode = char.ConvertToUtf32(value, i);
                     builder.Append($"\\U{unicode.ToString("x8")}");
-                    i++; // skip the already-encoded second surrogate of the pair
+                    i++;
                 }
                 else
                 {
-                    // copy a printable surrogate pair directly
                     builder.Append(c);
                     builder.Append(value[++i]);
                 }
@@ -148,11 +131,8 @@ public static class StringExtensions
                 builder.Append(c);
             }
         }
-
         if (useQuotes)
-        {
             builder.Append(quote);
-        }
 
         return builder.ToString();
     }

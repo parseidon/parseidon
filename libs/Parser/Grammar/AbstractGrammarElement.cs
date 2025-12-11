@@ -6,10 +6,8 @@ public abstract class AbstractGrammarElement
 {
     public AbstractGrammarElement(MessageContext messageContext, ASTNode node)
     {
-        if (messageContext is null)
-            throw new ArgumentNullException(nameof(messageContext));
-        if (node is null)
-            throw new ArgumentNullException(nameof(node));
+        if (messageContext is null) throw new ArgumentNullException(nameof(messageContext));
+        if (node is null) throw new ArgumentNullException(nameof(node));
         MessageContext = messageContext;
         Node = node;
     }
