@@ -49,8 +49,24 @@ public abstract class AbstractGrammarElement
     protected static string ToLiteral(String valueTextForCompiler, Boolean isEscaped)
     {
         if (isEscaped)
-            valueTextForCompiler = valueTextForCompiler.ReplaceAll("\\'", "'").ReplaceAll("\\\"", "\"").ReplaceAll("\\\\", "\\");
-        return valueTextForCompiler.FormatLiteral(false).ReplaceAll("\"", "\\\"");
+        {
+            var rules = new (string Search, string Replace)[]
+            {
+                ("\\'", "'"),
+                ("\\\"", "\""),
+                ("\\\\", "\\"),
+                ("\\0", "\0"),
+                ("\\a", "\a"),
+                ("\\b", "\b"),
+                ("\\f", "\f"),
+                ("\\n", "\n"),
+                ("\\r", "\r"),
+                ("\\t", "\t"),
+                ("\\v", "\v")
+            };
+            valueTextForCompiler = valueTextForCompiler.ReplaceAll(rules);
+        }
+        return valueTextForCompiler.FormatLiteral(false).ReplaceAll(new (string Search, string Replace)[] { ("\"", "\\\"") });
     }
 
     public virtual String ToParserCode(Grammar grammar) => throw new NotImplementedException($"Not implemented: {this.GetType().Name}.ToString()");

@@ -72,7 +72,7 @@ $Boolean                = (True / False);
 :DoubleQuotedLiteral    = (-'"' Char* -'"') {tmscope: string.quoted.double};
 !DoubleQuotedLiteral    = string.quoted.double:<DoubleQuotedLiteral>;
 Char                    = [^'\\] / '\\\'' / '\\\\' / EscapeChars / UnicodeChars;
-EscapeChars             = '\\' [\\0abfnrtv"'?];
+EscapeChars             = '\\' [\\0abfnrstv"'?];
 
 # Regular Expression
 Regex                   = CharacterClass Quantifier?;
