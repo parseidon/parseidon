@@ -164,7 +164,7 @@ static IVisitResult CreateParser(ParseResult parseResult, FileInfo outputFile, S
         //*                                      *//
         //****************************************//
 
-        {stringResult.Result}
+        {stringResult.Output}
         """;
         if (outputFile.Exists && overrideOption.Equals("backup"))
         {
@@ -199,7 +199,7 @@ static IVisitResult CreateTextMateGrammar(ParseResult parseResult, FileInfo outp
     if (visitResult.Successful && visitResult is ParseidonVisitor.IGetResults grammarResult)
     {
         var stringResult = grammarResult.TextMateGrammar;
-        File.WriteAllText(outputFile.FullName, stringResult.Result);
+        File.WriteAllText(outputFile.FullName, stringResult.Output);
         AnsiConsole.MarkupLine($"[green] The TextMate grammar '{outputFile.FullName}' is sucessfully created![/]");
     }
     return visitResult;
@@ -216,11 +216,11 @@ static IVisitResult CreateVSCodePackage(ParseResult parseResult, DirectoryInfo o
         outputFolder.Create();
         (new DirectoryInfo(Path.Combine(outputFolder.FullName, "syntaxes"))).Create();
         var languageResult = grammarResult.LanguageConfig;
-        File.WriteAllText(Path.Combine(outputFolder.FullName, $"language-configuration.json"), languageResult.Result);
+        File.WriteAllText(Path.Combine(outputFolder.FullName, $"language-configuration.json"), languageResult.Output);
         var vscodePackageResult = grammarResult.VSCodePackage;
-        File.WriteAllText(Path.Combine(outputFolder.FullName, $"package.json"), vscodePackageResult.Result);
+        File.WriteAllText(Path.Combine(outputFolder.FullName, $"package.json"), vscodePackageResult.Output);
         var textmateGrammarResult = grammarResult.TextMateGrammar;
-        File.WriteAllText(Path.Combine(outputFolder.FullName, $"syntaxes/parseidon.tmLanguage.json"), textmateGrammarResult.Result);
+        File.WriteAllText(Path.Combine(outputFolder.FullName, $"syntaxes/parseidon.tmLanguage.json"), textmateGrammarResult.Output);
         AnsiConsole.MarkupLine($"[green] The VS Code package in '{outputFolder.FullName}' is sucessfully created![/]");
     }
     return visitResult;

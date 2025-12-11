@@ -38,7 +38,7 @@ public class Grammar : AbstractNamedElement
     internal const String TextMatePropertyScope = "tmscope";
     internal const String TextMatePropertyPattern = "tmpattern";
 
-    public CreateStringResult ToTextMateGrammar(MessageContext messageContext)
+    public CreateOutputResult ToTextMateGrammar(MessageContext messageContext)
     {
         TMDefinition rootDefinition = GetTMRootDefinition();
 
@@ -59,12 +59,12 @@ public class Grammar : AbstractNamedElement
             Converters = { new KeyValuePairArrayConverter() }
         };
 
-        return new CreateStringResult(true, JsonSerializer.Serialize(document, serializerOptions), new List<ParserMessage>());
+        return new CreateOutputResult(true, JsonSerializer.Serialize(document, serializerOptions), new List<ParserMessage>());
     }
 
-    public CreateStringResult ToLanguageConfig(MessageContext messageContext)
+    public CreateOutputResult ToLanguageConfig(MessageContext messageContext)
     {
-        return new CreateStringResult(true, ToLanguageConfig(), new List<ParserMessage>());
+        return new CreateOutputResult(true, ToLanguageConfig(), new List<ParserMessage>());
     }
 
     public String ToLanguageConfig()
@@ -141,9 +141,9 @@ public class Grammar : AbstractNamedElement
         return JsonSerializer.Serialize(document, serializerOptions);
     }
 
-    public CreateStringResult ToVSCodePackage(MessageContext messageContext)
+    public CreateOutputResult ToVSCodePackage(MessageContext messageContext)
     {
-        return new CreateStringResult(true, ToVSCodePackage(), new List<ParserMessage>());
+        return new CreateOutputResult(true, ToVSCodePackage(), new List<ParserMessage>());
     }
 
     public String ToVSCodePackage()
@@ -189,16 +189,9 @@ public class Grammar : AbstractNamedElement
         return JsonSerializer.Serialize(document, serializerOptions);
     }
 
-    public CreateStringResult ToParserCode(MessageContext messageContext)
+    public CreateOutputResult ToParserCode(MessageContext messageContext)
     {
-        return new CreateStringResult(true, ToParserCode(this), new List<ParserMessage>());
-    }
-
-    public override String ToParserCode(Grammar grammar)
-    {
-        return
-            $$"""
-            #nullable enable
+        return new CreateOutputResult(true, ToParserCode(this), new List<ParserMessage>());
 
             using System.Text;
             using System.Text.RegularExpressions;
@@ -1128,16 +1121,16 @@ public class Grammar : AbstractNamedElement
         }
     }
 
-    public sealed record CreateStringResult
+    public sealed record CreateOutputResult
     {
-        public CreateStringResult(Boolean successful, String result, IReadOnlyList<ParserMessage> messages)
+        public CreateOutputResult(Boolean successful, String result, IReadOnlyList<ParserMessage> messages)
         {
             Successful = successful;
-            Result = result;
+            Output = result;
             Messages = messages;
         }
         Boolean Successful { get; }
-        public String Result { get; }
+        public String Output { get; }
         public IReadOnlyList<ParserMessage> Messages { get; }
     }
 }
