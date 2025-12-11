@@ -217,8 +217,8 @@ static IVisitResult CreateVSCodePackage(ParseResult parseResult, DirectoryInfo o
         (new DirectoryInfo(Path.Combine(outputFolder.FullName, "syntaxes"))).Create();
         var languageResult = grammarResult.LanguageConfig;
         File.WriteAllText(Path.Combine(outputFolder.FullName, $"language-configuration.json"), languageResult.Result);
-        var packageResult = grammarResult.Package;
-        File.WriteAllText(Path.Combine(outputFolder.FullName, $"package.json"), packageResult.Result);
+        var vscodePackageResult = grammarResult.VSCodePackage;
+        File.WriteAllText(Path.Combine(outputFolder.FullName, $"package.json"), vscodePackageResult.Result);
         var textmateGrammarResult = grammarResult.TextMateGrammar;
         File.WriteAllText(Path.Combine(outputFolder.FullName, $"syntaxes/parseidon.tmLanguage.json"), textmateGrammarResult.Result);
         AnsiConsole.MarkupLine($"[green] The VS Code package in '{outputFolder.FullName}' is sucessfully created![/]");

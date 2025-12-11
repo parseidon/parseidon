@@ -13,7 +13,7 @@ public class ParseidonVisitor : INodeVisitor
         Grammar.Grammar.CreateStringResult ParserCode { get; }
         Grammar.Grammar.CreateStringResult TextMateGrammar { get; }
         Grammar.Grammar.CreateStringResult LanguageConfig { get; }
-        Grammar.Grammar.CreateStringResult Package { get; }
+        Grammar.Grammar.CreateStringResult VSCodePackage { get; }
     }
 
     private class CreateCodeVisitorContext
@@ -49,7 +49,7 @@ public class ParseidonVisitor : INodeVisitor
 
         public Grammar.Grammar.CreateStringResult LanguageConfig => _grammar.ToLanguageConfig(MessageContext);
 
-        public Grammar.Grammar.CreateStringResult Package => _grammar.ToVSCodePackage(MessageContext);
+        public Grammar.Grammar.CreateStringResult VSCodePackage => _grammar.ToVSCodePackage(MessageContext);
     }
 
     private T Pop<T>(CreateCodeVisitorContext context, Int32 position) where T : AbstractGrammarElement
