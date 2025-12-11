@@ -37,20 +37,22 @@ public class TMDefinition : AbstractNamedElement
 
     internal TextMateRepositoryEntry GetRepositoryEntry(Grammar grammar)
     {
+        String grammarSuffix = grammar.GetGrammarSuffix();
+        
         Dictionary<String, TextMateCapture> GetCaptures(AbstractDefinitionElement.RegExResult regEx)
         {
             Dictionary<String, TextMateCapture> result = new Dictionary<string, TextMateCapture>();
             Int32 index = 1;
             foreach (var capture in regEx.Captures)
             {
-                result[index.ToString()] = new TextMateCapture() { Name = capture };
+                result[index.ToString()] = new TextMateCapture() { Name = Grammar.AppendGrammarSuffix(capture, grammarSuffix) ?? capture };
                 index++;
             }
             return result;
         }
 
         TextMateRepositoryEntry result = new TextMateRepositoryEntry();
-        result.Name = ScopeName;
+        result.Name = Grammar.AppendGrammarSuffix(ScopeName, grammarSuffix);
         if ((BeginSequence is null) && (EndSequence is null))
         {
             if ((Includes is not null) && (Includes.Includes.Count > 0))

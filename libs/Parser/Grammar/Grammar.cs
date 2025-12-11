@@ -356,6 +356,9 @@ public class Grammar : AbstractNamedElement
     {
         if (String.IsNullOrEmpty(scopeName))
             return scopeName;
+        // Prüfen, ob der Scope-Name bereits mit dem Grammar-Suffix endet
+        if (scopeName!.EndsWith($".{grammarSuffix}", StringComparison.OrdinalIgnoreCase))
+            return scopeName;
         return $"{scopeName}.{grammarSuffix}";
     }
 

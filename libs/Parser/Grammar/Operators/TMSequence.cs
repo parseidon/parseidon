@@ -48,7 +48,9 @@ public class TMSequence : AbstractDefinitionElement
             regEx = $"(?:{regEx})";
         else
         {
-            captures = new[] { ScopeName }.Concat(captures).ToArray();
+            String grammarSuffix = grammar.GetGrammarSuffix();
+            String extendedScopeName = Grammar.AppendGrammarSuffix(ScopeName, grammarSuffix) ?? ScopeName;
+            captures = new[] { extendedScopeName }.Concat(captures).ToArray();
             regEx = $"({regEx})";
         }
         return new RegExResult(regEx, captures);
