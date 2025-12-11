@@ -50,7 +50,9 @@ public class Grammar : AbstractNamedElement
         JsonSerializerOptions serializerOptions = new JsonSerializerOptions
         {
             WriteIndented = true,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            Converters = { new KeyValuePairArrayConverter() }
         };
 
         return JsonSerializer.Serialize(document, serializerOptions);
@@ -68,7 +70,7 @@ public class Grammar : AbstractNamedElement
                 else
                     throw new Exception("Quoted definitions can only include literals!");
             }
-            return (definitionElement as TextTerminal)!.AsText().ReplaceAll("\\'", "'").ReplaceAll("\\\"", "\"").ReplaceAll("\\\\", "\\");
+            return (definitionElement as TextTerminal)!.AsText().ReplaceAll(new (String Search, String Replace)[] { ("\\'", "'"), ("\\\"", "\""), ("\\\\", "\\") });
         }
         List<KeyValuePair<String, String>> brackets = new List<KeyValuePair<String, String>>();
         List<KeyValuePair<String, String>> autoClosingPairs = new List<KeyValuePair<String, String>>();
