@@ -43,13 +43,13 @@ public class ParseidonVisitor : INodeVisitor
         public Boolean Successful { get; }
         public IReadOnlyList<ParserMessage> Messages { get; }
 
-        public Grammar.Grammar.CreateStringResult ParserCode => _grammar.ParserCode;
+        public Grammar.Grammar.CreateStringResult ParserCode => _grammar.ToParserCode(MessageContext);
 
         public Grammar.Grammar.CreateStringResult TextMateGrammar => _grammar.ToTextMateGrammar(MessageContext);
 
-        public Grammar.Grammar.CreateStringResult LanguageConfig => _grammar.LanguageConfig;
+        public Grammar.Grammar.CreateStringResult LanguageConfig => _grammar.ToLanguageConfig(MessageContext);
 
-        public Grammar.Grammar.CreateStringResult Package => _grammar.Package;
+        public Grammar.Grammar.CreateStringResult Package => _grammar.ToVSCodePackage(MessageContext);
     }
 
     private T Pop<T>(CreateCodeVisitorContext context, Int32 position) where T : AbstractGrammarElement
