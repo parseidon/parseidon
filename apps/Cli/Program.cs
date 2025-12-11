@@ -102,7 +102,6 @@ return await rootCommand.InvokeAsync(args);
 
 static int RunParser(FileInfo grammarFile, Func<Int32> validateInput, String overrideOption, Func<ParseResult, IVisitResult> processResult)
 {
-    // int exitCode = ValidateFileInput(grammarFile, outputFile, overrideOption);
     Int32 exitCode = validateInput();
     if (exitCode != 0)
         return exitCode;
