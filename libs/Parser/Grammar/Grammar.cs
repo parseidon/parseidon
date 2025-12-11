@@ -191,29 +191,43 @@ public class Grammar : AbstractNamedElement
 
     public CreateOutputResult ToParserCode(MessageContext messageContext)
     {
-        return new CreateOutputResult(true, ToParserCode(this), new List<ParserMessage>());
+        List<ParserMessage> messages = new List<ParserMessage>();
+        String result = String.Empty;
+        Boolean successful = false;
+        try
+        {
+            result =
+                $$"""
+                #nullable enable
 
-            using System.Text;
-            using System.Text.RegularExpressions;
+                using System.Text;
+                using System.Text.RegularExpressions;
 
-            namespace {{GetOptionValue(Grammar.GrammarOptionNamespace)}}
-            {
-            {{Indent(GetIVisitorCode())}}
-
-            {{Indent(GetParseResultCode())}}
-
-            {{Indent(GetGlobalClassesCode())}}
-
-                public class {{GetOptionValue(Grammar.GrammarOptionClass)}}
+                namespace {{GetOptionValue(Grammar.GrammarOptionNamespace)}}
                 {
-            {{Indent(Indent(GetParseCode()))}}
+                {{Indent(GetIVisitorCode())}}
 
-            {{Indent(Indent(GetBasicCode()))}}
+                {{Indent(GetParseResultCode())}}
 
-            {{Indent(Indent(GetCheckDefinitionCode()))}}
+                {{Indent(GetGlobalClassesCode())}}
+
+                    public class {{GetOptionValue(Grammar.GrammarOptionClass)}}
+                    {
+                {{Indent(Indent(GetParseCode()))}}
+
+                {{Indent(Indent(GetBasicCode()))}}
+
+                {{Indent(Indent(GetCheckDefinitionCode()))}}
+                    }
                 }
-            }
-            """.TrimLineEndWhitespace();
+                """.TrimLineEndWhitespace();
+            successful = true;
+        }
+        catch (GrammarException e)
+        {
+            messages.Add(new ParserMessage(e.Message, ParserMessage.MessageType.Error, (e.Row, e.Column)));
+        }
+        return new CreateOutputResult(successful, result, messages);
     }
 
     private IReadOnlyDictionary<String, TMDefinition.TextMateRepositoryEntry> GetTextMateRepository(Grammar grammar, MessageContext messageContext)
@@ -1129,6 +1143,7 @@ public class Grammar : AbstractNamedElement
             Output = result;
             Messages = messages;
         }
+        public static CreateOutputResult Empty => new CreateOutputResult(false, "", new List<ParserMessage>());
         public Boolean Successful { get; }
         public String Output { get; }
         public IReadOnlyList<ParserMessage> Messages { get; }
