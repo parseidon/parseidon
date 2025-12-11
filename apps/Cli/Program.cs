@@ -2,6 +2,7 @@
 using Spectre.Console;
 using System.CommandLine;
 using Parseidon.Cli;
+using Parseidon.Parser.Grammar;
 
 var rootCommand = new RootCommand("Parser generator for .NET");
 
@@ -26,19 +27,35 @@ rootCommand.Add(parseCommand);
 var astCommand = new Command("ast", "Create the AST (Abstract Syntax Tree) for the grammar as a YAML file");
 rootCommand.Add(astCommand);
 
+var textMateCommand = new Command("textmate", "Create a TextMate grammar from the provided grammar definition");
+rootCommand.Add(textMateCommand);
+
+var vsCodeCommand = new Command("vscode", "Create a VS Code extension with the syntax highlighting from the provided grammar definition");
+rootCommand.Add(vsCodeCommand);
+
 var grammarFileArgument = new Argument<FileInfo>(name: "GRAMMAR-FILE", description: "The grammar file to be used");
 parseCommand.Add(grammarFileArgument);
 astCommand.Add(grammarFileArgument);
+textMateCommand.Add(grammarFileArgument);
+vsCodeCommand.Add(grammarFileArgument);
 
 var outputFileArgument = new Argument<FileInfo>(name: "OUTPUT-FILE", description: "The output file");
 parseCommand.Add(outputFileArgument);
 astCommand.Add(outputFileArgument);
+textMateCommand.Add(outputFileArgument);
+
+var outputFolderArgument = new Argument<DirectoryInfo>(name: "OUTPUT-FOLDER", description: "The output folder");
+vsCodeCommand.Add(outputFolderArgument);
 
 parseCommand.SetHandler(
     (grammarFile, outputFile, overrideOption, parserNamespace, parserClassname) =>
     {
-        int exitCode = RunParser(grammarFile, outputFile, overrideOption, (result) =>
-            CreateParser(result, outputFile, overrideOption, parserNamespace, parserClassname));
+        int exitCode = RunParser(
+            grammarFile,
+            () => ValidateFileInput(grammarFile, outputFile, overrideOption),
+            overrideOption,
+            (result) => CreateParser(result, outputFile, overrideOption, parserNamespace, parserClassname)
+        );
         Environment.Exit(exitCode);
     },
     grammarFileArgument, outputFileArgument, overrideOption, namespaceOption, classnameOption);
@@ -46,31 +63,62 @@ parseCommand.SetHandler(
 astCommand.SetHandler(
     (grammarFile, outputFile, overrideOption) =>
     {
-        int exitCode = RunParser(grammarFile, outputFile, overrideOption, (result) =>
-            CreateAST(result, outputFile, overrideOption));
+        int exitCode = RunParser(
+            grammarFile,
+            () => ValidateFileInput(grammarFile, outputFile, overrideOption),
+            overrideOption,
+            (result) => CreateAST(result, outputFile, overrideOption)
+        );
         Environment.Exit(exitCode);
     },
     grammarFileArgument, outputFileArgument, overrideOption);
 
+textMateCommand.SetHandler(
+    (grammarFile, outputFile, overrideOption) =>
+    {
+        int exitCode = RunParser(
+            grammarFile,
+            () => ValidateFileInput(grammarFile, outputFile, overrideOption),
+            overrideOption,
+            (result) => CreateTextMateGrammar(result, outputFile, overrideOption)
+        );
+        Environment.Exit(exitCode);
+    },
+    grammarFileArgument, outputFileArgument, overrideOption);
+
+vsCodeCommand.SetHandler(
+    (grammarFile, outputFolder, overrideOption) =>
+    {
+        int exitCode = RunParser(
+            grammarFile,
+            () => ValidateFolderInput(grammarFile, outputFolder, overrideOption),
+            overrideOption,
+            (result) => CreateVSCodePackage(result, outputFolder, overrideOption)
+        );
+        Environment.Exit(exitCode);
+    },
+    grammarFileArgument, outputFolderArgument, overrideOption);
+
 return await rootCommand.InvokeAsync(args);
 
-static int RunParser(FileInfo grammarFile, FileInfo outputFile, String overrideOption, Func<ParseResult, IVisitResult> processResult)
+static int RunParser(FileInfo grammarFile, Func<Int32> validateInput, String overrideOption, Func<ParseResult, OutputResult> processResult)
 {
-    int exitCode = ValidateFileInput(grammarFile, outputFile, overrideOption);
+    Int32 exitCode = validateInput();
     if (exitCode != 0)
         return exitCode;
 
     ParseidonParser Parser = new ParseidonParser();
     ParseResult parseResult = Parser.Parse(File.ReadAllText(grammarFile.FullName));
-    IVisitResult? visitResult = null;
+    OutputResult? outputResult = null;
     if (parseResult.Successful)
-        visitResult = processResult(parseResult);
+        outputResult = processResult(parseResult);
 
-    int visitResultExitCode = ProcessMessages(visitResult?.Messages);
     int parseResultExitCode = ProcessMessages(parseResult.Messages);
+    int visitResultExitCode = ProcessMessages(outputResult?.VisitorMessages);
+    int createOutputResultExitCode = ProcessMessages(outputResult?.CreateOutputMessages);
 
     // Exit Code 1 wenn einer der beiden Fehler hatte
-    if (visitResultExitCode != 0 || parseResultExitCode != 0)
+    if (visitResultExitCode != 0 || parseResultExitCode != 0 || createOutputResultExitCode != 0)
         return 1;
 
     return 0;
@@ -99,54 +147,117 @@ static void PrintMessage(ParserMessage.MessageType messageType, String message)
     AnsiConsole.MarkupLine($"[{color}]{messageTypeText}: {Markup.Escape(message)}[/]");
 }
 
-static IVisitResult CreateParser(ParseResult parseResult, FileInfo outputFile, String overrideOption, String parserNamespace, String parserClassname)
+static OutputResult CreateParser(ParseResult parseResult, FileInfo outputFile, String overrideOption, String parserNamespace, String parserClassname)
 {
-    IVisitor visitor = new CreateCodeVisitor();
+    IVisitor visitor = new ParseidonVisitor();
     IVisitResult visitResult = parseResult.Visit(visitor);
 
-    if (visitResult.Successful && visitResult is CreateCodeVisitor.IGetCode)
+    Grammar.CreateOutputResult outputResult = Grammar.CreateOutputResult.Empty;
+
+    if (visitResult.Successful && visitResult is ParseidonVisitor.IGetResults typedVisitResult)
     {
-        String code = (visitResult as CreateCodeVisitor.IGetCode)!.Code ?? "";
-        code =
-            $"""
-        //****************************************//
-        //*                                      *//
-        //* This code is generated by parseidon. *//
-        //*     https://github.com/parseidon     *//
-        //*                                      *//
-        //*         {DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")}          *//
-        //*                                      *//
-        //****************************************//
-
-        {code}
-        """;
-        if (outputFile.Exists && overrideOption.Equals("backup"))
+        outputResult = typedVisitResult.ParserCode;
+        if (outputResult.Successful)
         {
-            Int32 backupFileNo = 1;
-            while (File.Exists($"{outputFile.FullName}.{backupFileNo}.bak"))
-                backupFileNo++;
-            File.Copy(outputFile.FullName, $"{outputFile.FullName}.{backupFileNo}.bak", true);
-        }
+            var code =
+                $"""
+                //****************************************//
+                //*                                      *//
+                //* This code is generated by parseidon. *//
+                //*     https://github.com/parseidon     *//
+                //*                                      *//
+                //*         {DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")}          *//
+                //*                                      *//
+                //****************************************//
 
-        File.WriteAllText(outputFile.FullName, code);
-        AnsiConsole.MarkupLine($"[green] The parser '{outputFile.FullName}' is sucessfully created![/]");
+                {outputResult.Output}
+                """;
+            if (outputFile.Exists && overrideOption.Equals("backup"))
+            {
+                Int32 backupFileNo = 1;
+                while (File.Exists($"{outputFile.FullName}.{backupFileNo}.bak"))
+                    backupFileNo++;
+                File.Copy(outputFile.FullName, $"{outputFile.FullName}.{backupFileNo}.bak", true);
+            }
+
+            File.WriteAllText(outputFile.FullName, code);
+            AnsiConsole.MarkupLine($"[green] The parser '{outputFile.FullName}' is successfully created![/]");
+        }
     }
-    return visitResult;
+    return new OutputResult(visitResult.Successful && outputResult.Successful, visitResult.Messages, outputResult.Messages);
 }
 
-static IVisitResult CreateAST(ParseResult parseResult, FileInfo outputFile, String overrideOption)
+static OutputResult CreateAST(ParseResult parseResult, FileInfo outputFile, String overrideOption)
 {
     RenderASTVisitor visitor = new RenderASTVisitor();
     IVisitResult visitResult = parseResult.Visit(visitor);
-    if (visitResult.Successful && visitResult is RenderASTVisitor.IGetAST)
+    Grammar.CreateOutputResult outputResult = Grammar.CreateOutputResult.Empty;
+    if (visitResult.Successful && visitResult is RenderASTVisitor.IGetAST typedVisitResult)
     {
-        File.WriteAllText(outputFile.FullName, (visitResult as RenderASTVisitor.IGetAST)!.AST ?? "");
-        AnsiConsole.MarkupLine($"[green] The AST-file '{outputFile.FullName}' is sucessfully created![/]");
+        outputResult = typedVisitResult.AST;
+        if (outputResult.Successful)
+        {
+            File.WriteAllText(outputFile.FullName, outputResult.Output);
+            AnsiConsole.MarkupLine($"[green] The AST-file '{outputFile.FullName}' is successfully created![/]");
+        }
     }
-    return visitResult;
+    return new OutputResult(visitResult.Successful && outputResult.Successful, visitResult.Messages, outputResult.Messages);
 }
 
-static int ValidateFileInput(FileInfo grammarFile, FileInfo outputFile, String overrideOption)
+static OutputResult CreateTextMateGrammar(ParseResult parseResult, FileInfo outputFile, String overrideOption)
+{
+    ParseidonVisitor visitor = new ParseidonVisitor();
+    IVisitResult visitResult = parseResult.Visit(visitor);
+    Grammar.CreateOutputResult outputResult = Grammar.CreateOutputResult.Empty;
+    if (visitResult.Successful && visitResult is ParseidonVisitor.IGetResults typedVisitResult)
+    {
+        outputResult = typedVisitResult.TextMateGrammar;
+        if (outputResult.Successful)
+        {
+            File.WriteAllText(outputFile.FullName, outputResult.Output);
+            AnsiConsole.MarkupLine($"[green] The TextMate grammar '{outputFile.FullName}' is successfully created![/]");
+        }
+    }
+    return new OutputResult(visitResult.Successful && outputResult.Successful, visitResult.Messages, outputResult.Messages);
+}
+
+static OutputResult CreateVSCodePackage(ParseResult parseResult, DirectoryInfo outputFolder, String overrideOption)
+{
+    ParseidonVisitor visitor = new ParseidonVisitor();
+    IVisitResult visitResult = parseResult.Visit(visitor);
+    Boolean successful = false;
+    List<ParserMessage> outputMessages = new List<ParserMessage>();
+    if (visitResult.Successful && visitResult is ParseidonVisitor.IGetResults typedVisitResult)
+    {
+        var textmateGrammarResult = typedVisitResult.TextMateGrammar;
+        outputMessages = outputMessages.Concat(textmateGrammarResult.Messages).ToList();
+        if (textmateGrammarResult.Successful)
+        {
+            var languageResult = typedVisitResult.LanguageConfig;
+            outputMessages = outputMessages.Concat(languageResult.Messages).ToList();
+            if (languageResult.Successful)
+            {
+                var vscodePackageResult = typedVisitResult.VSCodePackage;
+                outputMessages = outputMessages.Concat(vscodePackageResult.Messages).ToList();
+                if (vscodePackageResult.Successful)
+                {
+                    if (outputFolder.Exists)
+                        outputFolder.Delete(true);
+                    outputFolder.Create();
+                    new DirectoryInfo(Path.Combine(outputFolder.FullName, "syntaxes")).Create();
+                    File.WriteAllText(Path.Combine(outputFolder.FullName, $"language-configuration.json"), languageResult.Output);
+                    File.WriteAllText(Path.Combine(outputFolder.FullName, $"package.json"), vscodePackageResult.Output);
+                    File.WriteAllText(Path.Combine(outputFolder.FullName, $"syntaxes/parseidon.tmLanguage.json"), textmateGrammarResult.Output);
+                    AnsiConsole.MarkupLine($"[green] The VS Code package in '{outputFolder.FullName}' is successfully created![/]");
+                    successful = true;
+                }
+            }
+        }
+    }
+    return new OutputResult(successful, visitResult.Messages, outputMessages);
+}
+
+static Int32 ValidateFileInput(FileInfo grammarFile, FileInfo outputFile, String overrideOption)
 {
     if (!grammarFile.Exists)
     {
@@ -170,3 +281,39 @@ static int ValidateFileInput(FileInfo grammarFile, FileInfo outputFile, String o
     return 0;
 }
 
+static Int32 ValidateFolderInput(FileInfo grammarFile, DirectoryInfo outputFolder, String overrideOption)
+{
+    if (!grammarFile.Exists)
+    {
+        PrintMessage(ParserMessage.MessageType.Error, $"The file '{grammarFile.FullName}' could not be found!");
+        return 1;
+    }
+    if (outputFolder.Exists)
+    {
+        if (overrideOption.Equals("abort"))
+        {
+            PrintMessage(ParserMessage.MessageType.Error, $"The file '{outputFolder.FullName}' already exists!");
+            return 1;
+        }
+        if (overrideOption.Equals("ask"))
+        {
+            PrintMessage(ParserMessage.MessageType.Error, $"The file '{outputFolder.FullName}' already exists!");
+            if (!AnsiConsole.Prompt(new ConfirmationPrompt("Should it be overwritten?")))
+                return 1;
+        }
+    }
+    return 0;
+}
+
+internal class OutputResult
+{
+    public OutputResult(Boolean successful, IReadOnlyList<ParserMessage> visitorMessages, IReadOnlyList<ParserMessage> createOutputMessages)
+    {
+        Successful = successful;
+        VisitorMessages = visitorMessages;
+        CreateOutputMessages = createOutputMessages;
+    }
+    internal Boolean Successful { get; }
+    internal IReadOnlyList<ParserMessage> VisitorMessages { get; }
+    internal IReadOnlyList<ParserMessage> CreateOutputMessages { get; }
+}

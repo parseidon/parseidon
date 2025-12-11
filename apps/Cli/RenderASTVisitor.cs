@@ -1,6 +1,7 @@
 using System.Text;
 using Parseidon.Helper;
 using Parseidon.Parser;
+using Parseidon.Parser.Grammar;
 
 namespace Parseidon.Cli;
 
@@ -8,7 +9,7 @@ public class RenderASTVisitor : IVisitor
 {
     public interface IGetAST
     {
-        String? AST { get; }
+        Grammar.CreateOutputResult AST { get; }
     }
 
     private class RenderASTVisitorContext
@@ -23,7 +24,7 @@ public class RenderASTVisitor : IVisitor
 
     private class RenderASTVisitorResult : IVisitResult, IGetAST
     {
-        public RenderASTVisitorResult(Boolean successful, IReadOnlyList<ParserMessage> messages, String? ast)
+        public RenderASTVisitorResult(Boolean successful, IReadOnlyList<ParserMessage> messages, Grammar.CreateOutputResult ast)
         {
             Successful = successful;
             Messages = messages;
@@ -32,7 +33,7 @@ public class RenderASTVisitor : IVisitor
 
         public Boolean Successful { get; }
         public IReadOnlyList<ParserMessage> Messages { get; }
-        public String? AST { get; }
+        public Grammar.CreateOutputResult AST { get; }
     }
 
     public Object GetContext(ParseResult parseResult)
@@ -48,7 +49,7 @@ public class RenderASTVisitor : IVisitor
                 stringBuilder.Append(crossings[i] ? "  " : "  ");
             if (crossings.Length > 0)
                 stringBuilder.Append("- ");
-            stringBuilder.Append($"{node.Name} ({node.TokenId}): ");
+            stringBuilder.Append($"{node.Name}[{node.TokenId}] ({node.Position}): ");
             if (node.Text != "")
                 stringBuilder.Append(node.Text.FormatLiteral(true));
             stringBuilder.AppendLine();
@@ -65,6 +66,7 @@ public class RenderASTVisitor : IVisitor
         StringBuilder stringBuilder = new StringBuilder();
         if (typedContext.ParseResult is not null)
             PrintNode(typedContext.ParseResult.RootNode!, new bool[] { }, stringBuilder);
-        return new RenderASTVisitorResult(successful, messages, stringBuilder.ToString());
+        Grammar.CreateOutputResult outputResult = new Grammar.CreateOutputResult(true, stringBuilder.ToString(), new List<ParserMessage>());
+        return new RenderASTVisitorResult(successful, messages, outputResult);
     }
 }

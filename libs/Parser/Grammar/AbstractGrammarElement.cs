@@ -6,10 +6,8 @@ public abstract class AbstractGrammarElement
 {
     public AbstractGrammarElement(MessageContext messageContext, ASTNode node)
     {
-        if (messageContext is null)
-            throw new ArgumentNullException(nameof(messageContext));
-        if (node is null)
-            throw new ArgumentNullException(nameof(node));
+        if (messageContext is null) throw new ArgumentNullException(nameof(messageContext));
+        if (node is null) throw new ArgumentNullException(nameof(node));
         MessageContext = messageContext;
         Node = node;
     }
@@ -46,14 +44,14 @@ public abstract class AbstractGrammarElement
         return (Grammar)result!;
     }
 
-    protected static string ToLiteral(String valueTextForCompiler, Boolean isEscaped)
+    protected static string ToLiteral(String value, Boolean isEscaped)
     {
         if (isEscaped)
-            valueTextForCompiler = valueTextForCompiler.ReplaceAll("\\'", "'").ReplaceAll("\\\"", "\"").ReplaceAll("\\\\", "\\");
-        return valueTextForCompiler.FormatLiteral(false).ReplaceAll("\"", "\\\"");
+            value = value.Unescape();
+        return value.FormatLiteral(false).ReplaceAll(new (String Search, String Replace)[] { ("\"", "\\\"") });
     }
 
-    public virtual String ToString(Grammar grammar) => throw new NotImplementedException($"Not implemented: {this.GetType().Name}.ToString()");
+    public virtual String ToParserCode(Grammar grammar) => throw new NotImplementedException($"Not implemented: {this.GetType().Name}.ToString()");
 
     public virtual Boolean MatchesVariableText() => false;
 

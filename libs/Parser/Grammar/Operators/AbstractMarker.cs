@@ -7,20 +7,20 @@ public abstract class AbstractMarker : AbstractOneChildOperator
 {
     public AbstractMarker(AbstractDefinitionElement? element, MessageContext messageContext, ASTNode node) : base(element, messageContext, node) { }
 
-    protected SimpleRule GetRule()
+    protected Definition GetDefinition()
     {
         AbstractGrammarElement? current = Parent;
         while (current is not null)
         {
-            if (current is SimpleRule rule)
-                return rule;
+            if (current is Definition definition)
+                return definition;
             current = current.Parent;
         }
-        throw new InvalidCastException("Found nor rule for marker!");
+        throw new InvalidCastException("Found no definition for marker!");
     }
 
     public override bool MatchesVariableText() => true;
 
-    public override String ToString(Grammar grammar) => Element?.ToString(grammar) ?? String.Empty;
+    public override String ToParserCode(Grammar grammar) => Element?.ToParserCode(grammar) ?? String.Empty;
 
 }

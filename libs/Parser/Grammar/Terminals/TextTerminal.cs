@@ -1,3 +1,5 @@
+using Parseidon.Helper;
+
 namespace Parseidon.Parser.Grammar.Terminals;
 
 public class TextTerminal : AbstractValueTerminal
@@ -9,8 +11,7 @@ public class TextTerminal : AbstractValueTerminal
 
     public String Text { get; }
 
-    public override String ToString(Grammar grammar) => $"CheckText(actualNode, state, errorName, \"{ToLiteral(Text, true)}\")";
+    public override String ToParserCode(Grammar grammar) => $"CheckText(actualNode, state, errorName, \"{ToLiteral(Text, true)}\")";
 
-    public override String AsText() => Text;
-
+    public override String AsText() => Text.Unescape();
 }

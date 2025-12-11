@@ -14,13 +14,13 @@ public class ReferenceElement : AbstractValueTerminal
 
     public String ReferenceName { get; }
 
-    public override String ToString(Grammar grammar)
+    public override String ToParserCode(Grammar grammar)
     {
-        if (grammar.FindRuleByName(ReferenceName) is SimpleRule referencedRule)
+        if (grammar.FindDefinitionByName(ReferenceName) is Definition referencedDefinition)
         {
             if (TreatReferenceInline)
-                return referencedRule.ToString(grammar);
-            return referencedRule.GetReferenceCode(grammar);
+                return referencedDefinition.ToParserCode(grammar);
+            return referencedDefinition.GetReferenceCode(grammar);
         }
         throw GetException($"Can not find element '{ReferenceName}'");
     }
@@ -28,4 +28,18 @@ public class ReferenceElement : AbstractValueTerminal
     public override string AsText() => ReferenceName;
 
     public Boolean TreatReferenceInline { get => Parent is TreatInlineMarker; }
+
+    internal protected override RegExResult GetRegEx(Grammar grammar)
+    {
+        if (grammar.FindDefinitionByName(ReferenceName) is Definition referencedDefinition)
+        {
+            if (referencedDefinition.KeyValuePairs.TryGetValue(Grammar.TextMatePropertyScope, out var textMatePropertyScope))
+            {
+                var regEx = referencedDefinition.DefinitionElement.GetRegEx(grammar);
+                return new RegExResult($"({regEx.RegEx})", new[] { textMatePropertyScope }.Concat(regEx.Captures).ToArray());
+            }
+            return referencedDefinition.DefinitionElement.GetRegEx(grammar);
+        }
+        throw GetException($"Can not find element '{ReferenceName}'");
+    }
 }

@@ -1,142 +1,373 @@
 using System.Text;
+using System.Text.Json;
 using Humanizer;
 using Parseidon.Helper;
 using Parseidon.Parser.Grammar.Terminals;
 using Parseidon.Parser.Grammar.Block;
 using Parseidon.Parser.Grammar.Operators;
+using System.Text.Json.Serialization;
+using System.Text.Encodings.Web;
+using System.Collections.Immutable;
 
 namespace Parseidon.Parser.Grammar;
 
 public class Grammar : AbstractNamedElement
 {
-    public Grammar(List<SimpleRule> rules, List<ValuePair> options, MessageContext messageContext, ASTNode node) : base("", messageContext, node)
+    public Grammar(List<Definition> definitions, List<TMDefinition> tmDefinitions, List<ValuePair> options, MessageContext messageContext, ASTNode node) : base("", messageContext, node)
     {
-        Rules = rules;
+        Definitions = definitions;
+        TMDefinitions = tmDefinitions;
         Options = options;
-        CheckDuplicatedRules(Rules);
-        Rules.ForEach((element) => element.Parent = this);
+        CheckDuplicatedDefinitions(Definitions);
+        Definitions.ForEach((element) => element.Parent = this);
     }
 
-    public List<SimpleRule> Rules { get; }
+    public List<Definition> Definitions { get; }
+    public List<TMDefinition> TMDefinitions { get; }
     public List<ValuePair> Options { get; }
 
-    public override String ToString(Grammar grammar)
+    internal const String GrammarOptionNamespace = "namespace";
+    internal const String GrammarOptionClass = "class";
+    internal const String GrammarOptionRoot = "root";
+    internal const String GrammarPropertyErrorName = "errorname";
+    internal const String TextMateOptionDisplayName = "displayname";
+    internal const String TextMateOptionScopeName = "scopename";
+    internal const String TextMateOptionFileType = "filetype";
+    internal const String TextMateOptionVersion = "version";
+    internal const String TextMateOptionLineComment = "linecomment";
+    internal const String TextMatePropertyScope = "tmscope";
+    internal const String TextMatePropertyPattern = "tmpattern";
+
+    public CreateOutputResult ToTextMateGrammar(MessageContext messageContext)
     {
-        return
-            $$"""
-            #nullable enable
+        List<ParserMessage> messages = new List<ParserMessage>();
+        TextMateGrammarDocument document = new TextMateGrammarDocument();
+        Boolean successful = false;
+        try
+        {
+            TMDefinition rootDefinition = GetTMRootDefinition();
 
-            using System.Text;
-            using System.Text.RegularExpressions;
-
-            namespace {{GetOptionValue("namespace")}}
+            document = new TextMateGrammarDocument
             {
-            {{Indent(GetIVisitorCode())}}
-
-            {{Indent(GetParseResultCode())}}
-
-            {{Indent(GetGlobalClassesCode())}}
-
-                public class {{GetOptionValue("class")}}
-                {
-            {{Indent(Indent(GetParseCode()))}}
-
-            {{Indent(Indent(GetBasicCode()))}}
-
-            {{Indent(Indent(GetCheckRuleCode()))}}
-                }
-            }
-            """.TrimLineEndWhitespace();
+                DisplayName = GetOptionValue(Grammar.TextMateOptionDisplayName),
+                ScopeName = GetOptionValue(Grammar.TextMateOptionScopeName),
+                FileTypes = GetFileTypes(),
+                Patterns = new List<TMDefinition.TextMatePatternInclude>() { new TMDefinition.TextMatePatternInclude() { Include = $"#{rootDefinition.Name.ToLower()}" } },
+                Repository = GetTextMateRepository(this, messageContext)
+            };
+            successful = true;
+        }
+        catch (GrammarException e)
+        {
+            messages.Add(new ParserMessage(e.Message, ParserMessage.MessageType.Error, (e.Row, e.Column)));
+        }
+        JsonSerializerOptions serializerOptions = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            Converters = { new KeyValuePairArrayConverter() }
+        };
+        return new CreateOutputResult(successful, JsonSerializer.Serialize(document, serializerOptions), messages);
     }
 
-    public override String ToString() => ToString(this);
+    public CreateOutputResult ToLanguageConfig(MessageContext messageContext)
+    {
+        List<ParserMessage> messages = new List<ParserMessage>();
+        VSCodeLanguageConfDocument document = new VSCodeLanguageConfDocument();
+        Boolean successful = false;
+        try
+        {
+            String GetTextValueOfDefinition(Definition definition)
+            {
+                AbstractDefinitionElement definitionElement = definition.DefinitionElement;
+                while (definitionElement is not TextTerminal)
+                {
+                    if (definitionElement is AbstractMarker marker)
+                        definitionElement = marker.Element ?? throw new Exception("Element required!");
+                    else
+                        throw GetException("Quoted definitions can only include literals!");
+                }
+                return (definitionElement as TextTerminal)!.AsText().ReplaceAll(new (String Search, String Replace)[] { ("\\'", "'"), ("\\\"", "\""), ("\\\\", "\\") });
+            }
+            List<KeyValuePair<String, String>> brackets = new List<KeyValuePair<String, String>>();
+            List<KeyValuePair<String, String>> autoClosingPairs = new List<KeyValuePair<String, String>>();
+            List<KeyValuePair<String, String>> surroundingPairs = new List<KeyValuePair<String, String>>();
+            foreach (Definition definition in Definitions)
+            {
+                if (definition.KeyValuePairs.ContainsKey("quote"))
+                {
+                    String quoteValue = GetTextValueOfDefinition(definition);
+                    autoClosingPairs.Add(new KeyValuePair<String, String>(quoteValue, quoteValue));
+                    surroundingPairs.Add(new KeyValuePair<String, String>(quoteValue, quoteValue));
+                }
+                if (definition.KeyValuePairs.TryGetValue("bracketopen", out String bracketIdentifier))
+                {
+                    Definition? correspondingDefinition = Definitions
+                        .Where(d => (d != definition) && d.KeyValuePairs.TryGetValue("bracketclose", out String closeBracketValue) && (closeBracketValue == bracketIdentifier))
+                        .FirstOrDefault();
+                    String? closeBracket = correspondingDefinition != null ? GetTextValueOfDefinition(correspondingDefinition) : null;
+                    if (!String.IsNullOrEmpty(closeBracket))
+                    {
+                        String openBracket = GetTextValueOfDefinition(definition);
+                        brackets.Add(new KeyValuePair<String, String>(openBracket, closeBracket!));
+                        autoClosingPairs.Add(new KeyValuePair<String, String>(openBracket, closeBracket!));
+                        surroundingPairs.Add(new KeyValuePair<String, String>(openBracket, closeBracket!));
+                    }
+                    else
+                        throw GetException($"A closing bracket for \"bracketopen: {bracketIdentifier}\" is required!");
+                }
+            }
+            String? lineComment = TryGetOptionValue(Grammar.TextMateOptionLineComment);
+            KeyValuePair<String, String>? blockComment = null;
+            document = new VSCodeLanguageConfDocument
+            {
+                Comments = new VSCodeLanguageConfComments
+                {
+                    LineComment = lineComment,
+                    BlockComment = blockComment
+                },
+                Brackets = brackets,
+                AutoClosingPairs = autoClosingPairs,
+                SurroundingPairs = surroundingPairs
+            };
+            successful = true;
+        }
+        catch (GrammarException e)
+        {
+            messages.Add(new ParserMessage(e.Message, ParserMessage.MessageType.Error, (e.Row, e.Column)));
+        }
+
+        JsonSerializerOptions serializerOptions = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            Converters = { new KeyValuePairArrayConverter() }
+        };
+        return new CreateOutputResult(successful, JsonSerializer.Serialize(document, serializerOptions), messages);
+    }
+
+    public CreateOutputResult ToVSCodePackage(MessageContext messageContext)
+    {
+        List<ParserMessage> messages = new List<ParserMessage>();
+        VSCodePackageDocument document = new VSCodePackageDocument();
+        Boolean successful = false;
+        try
+        {
+            String languageDisplayName = GetOptionValue(Grammar.TextMateOptionDisplayName);
+            String languageName = (TryGetOptionValue("name") ?? languageDisplayName).ToLower().Replace(" ", "");
+
+            document = new VSCodePackageDocument
+            {
+                Name = languageName,
+                DisplayName = languageDisplayName,
+                Description = TryGetOptionValue("description"),
+                Version = GetOptionValue(Grammar.TextMateOptionVersion),
+                Contributes =
+                    new VSCodePackageContributes
+                    {
+                        Languages = ImmutableArray.Create<VSCodePackageLanguage>().Add(
+                            new VSCodePackageLanguage
+                            {
+                                Id = languageName,
+                                Aliases = ImmutableArray.Create<String>().Add(languageDisplayName).Add(languageName),
+                                Extensions = GetFileTypes()
+                            }
+                        ),
+                        Grammars = ImmutableArray.Create<VSCodePackageGrammar>().Add(
+                            new VSCodePackageGrammar
+                            {
+                                Language = languageName,
+                                ScopeName = TryGetOptionValue(Grammar.TextMateOptionScopeName) ?? $"source.{languageName}",
+                                Path = $"./syntaxes/{languageName}.tmLanguage.json"
+                            }
+                        )
+                    }
+            };
+            successful = true;
+        }
+        catch (GrammarException e)
+        {
+            messages.Add(new ParserMessage(e.Message, ParserMessage.MessageType.Error, (e.Row, e.Column)));
+        }
+        JsonSerializerOptions serializerOptions = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        };
+
+        return new CreateOutputResult(successful, JsonSerializer.Serialize(document, serializerOptions), messages);
+    }
+
+    public CreateOutputResult ToParserCode(MessageContext messageContext)
+    {
+        List<ParserMessage> messages = new List<ParserMessage>();
+        String result = String.Empty;
+        Boolean successful = false;
+        try
+        {
+            result =
+                $$"""
+                #nullable enable
+
+                using System.Text;
+                using System.Text.RegularExpressions;
+
+                namespace {{GetOptionValue(Grammar.GrammarOptionNamespace)}}
+                {
+                {{Indent(GetIVisitorCode())}}
+
+                {{Indent(GetParseResultCode())}}
+
+                {{Indent(GetGlobalClassesCode())}}
+
+                    public class {{GetOptionValue(Grammar.GrammarOptionClass)}}
+                    {
+                {{Indent(Indent(GetParseCode()))}}
+
+                {{Indent(Indent(GetBasicCode()))}}
+
+                {{Indent(Indent(GetCheckDefinitionCode()))}}
+                    }
+                }
+                """.TrimLineEndWhitespace();
+            successful = true;
+        }
+        catch (GrammarException e)
+        {
+            messages.Add(new ParserMessage(e.Message, ParserMessage.MessageType.Error, (e.Row, e.Column)));
+        }
+        return new CreateOutputResult(successful, result, messages);
+    }
+
+    private IReadOnlyDictionary<String, TMDefinition.TextMateRepositoryEntry> GetTextMateRepository(Grammar grammar, MessageContext messageContext)
+    {
+        var result = new Dictionary<String, TMDefinition.TextMateRepositoryEntry>(StringComparer.OrdinalIgnoreCase);
+        List<TMDefinition> tmDefinitions = TMDefinitions.ToList();
+        foreach (var definition in Definitions.Where(d => d.KeyValuePairs.ContainsKey(TextMatePropertyPattern)))
+        {
+            foreach (TMDefinition tmDefinition in tmDefinitions.Where(td => td.Name.Equals(definition.Name, StringComparison.OrdinalIgnoreCase)))
+                throw GetException($"TextMate definition '{definition.Name}' already exists!");
+            String? scopeName = definition.KeyValuePairs[TextMatePropertyPattern];
+            scopeName = String.IsNullOrEmpty(scopeName) ? null : scopeName;
+            TMSequence sequence = new TMSequence(new List<AbstractDefinitionElement>() { definition.DefinitionElement }, messageContext, definition.Node);
+            tmDefinitions.Add(new TMDefinition(definition.Name, scopeName, sequence, null, null, messageContext, definition.Node));
+        }
+        foreach (TMDefinition tmDefinition in tmDefinitions)
+            result[tmDefinition.Name.ToLower()] = tmDefinition.GetRepositoryEntry(grammar);
+        return result;
+    }
+
+    private String[] GetFileTypes()
+    {
+        String rawValue = GetOptionValue(Grammar.TextMateOptionFileType);
+        String[] parts = rawValue.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(p => p.Trim()).Where(p => p.Length > 0).ToArray(); ;
+        return parts.Length == 0 ? new[] { rawValue.Trim() } : parts;
+    }
 
     public override bool MatchesVariableText()
     {
         Boolean result = false;
-        foreach (SimpleRule rule in Rules)
-            result = result || rule.MatchesVariableText();
+        foreach (Definition definition in Definitions)
+            result = result || definition.MatchesVariableText();
         return result;
     }
 
     internal override void IterateElements(Func<AbstractGrammarElement, Boolean> process)
     {
         if (process(this))
-            foreach (SimpleRule rule in Rules)
-                rule.IterateElements(process);
+            foreach (Definition definition in Definitions)
+                definition.IterateElements(process);
     }
 
-    public SimpleRule? FindRuleByName(String name)
+    public Definition? FindDefinitionByName(String name)
     {
-        List<SimpleRule> rules = new List<SimpleRule>();
-        foreach (SimpleRule element in Rules)
-            if (element.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
-                return element;
-        return null;
+        return Definitions.FirstOrDefault(element => element.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
     }
 
-    public void CheckDuplicatedRules(List<SimpleRule> rules)
+    public TMDefinition? FindTMDefinitionByName(String name)
     {
-        HashSet<String> existingRules = new HashSet<String>(StringComparer.InvariantCultureIgnoreCase);
-        foreach (SimpleRule rule in rules)
-            if (!existingRules.Add(rule.Name))
-                throw rule.GetException($"Rule '{rule.Name}' already exists!");
+        return TMDefinitions.FirstOrDefault(element => element.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
+    }
+
+    public void CheckDuplicatedDefinitions(List<Definition> definitions)
+    {
+        var duplicates = definitions
+            .GroupBy(d => d.Name, StringComparer.InvariantCultureIgnoreCase)
+            .Where(g => g.Count() > 1)
+            .SelectMany(g => g);
+
+        foreach (Definition definition in duplicates)
+            throw definition.GetException($"Definition '{definition.Name}' already exists!");
     }
 
     public Int32 GetElementIdOf(AbstractNamedElement element)
     {
-        if ((element is SimpleRule) && (Rules.IndexOf((SimpleRule)element) >= 0))
-            return Rules.IndexOf((SimpleRule)element);
+        if ((element is Definition) && (Definitions.IndexOf((Definition)element) >= 0))
+            return Definitions.IndexOf((Definition)element);
         throw GetException($"Can not find identifier '{element.Name}'!");
     }
 
-    public SimpleRule GetRootRule()
+    public Definition GetRootDefinition()
     {
-        String? axiomName = GetOptionValue("rootnode");
-        if (String.IsNullOrWhiteSpace(axiomName))
-            throw GetException("Grammar must have axiom option!");
-        SimpleRule? rule = FindRuleByName(axiomName);
-        if (rule is null)
-            throw GetException($"Can not find axiom option '{axiomName}'!");
-        return rule;
+        String? rootName = GetOptionValue(Grammar.GrammarOptionRoot);
+        if (String.IsNullOrWhiteSpace(rootName))
+            throw GetException("Grammar must have root option!");
+        Definition? definition = FindDefinitionByName(rootName);
+        if (definition is null)
+            throw GetException($"Can not find root definition '{rootName}'!");
+        return definition;
     }
 
-    private String GetOptionValue(String key)
+    public TMDefinition GetTMRootDefinition()
     {
-        foreach (ValuePair value in Options)
-        {
-            if (value.Name.Equals(key, StringComparison.OrdinalIgnoreCase))
-                return value.Value;
-        }
-        throw GetException($"Can not find option '{key}'!");
+        String? rootName = GetOptionValue(Grammar.GrammarOptionRoot);
+        if (String.IsNullOrWhiteSpace(rootName))
+            throw GetException("Grammar must have root option!");
+        TMDefinition? definition = FindTMDefinitionByName($"{rootName}");
+        if (definition is null)
+            throw GetException($"Can not find TextMate root definition '!{rootName}'!");
+        return definition;
     }
 
-    private Boolean IterateUsedRules(AbstractGrammarElement element, List<SimpleRule> rules)
+    private String GetOptionValue(String key) => TryGetOptionValue(key) ?? throw GetException($"Can not find option '{key}'!");
+
+    private String? TryGetOptionValue(String key)
     {
-        if ((element is SimpleRule rule) && (rules.IndexOf(rule) < 0) && !rule.HasMarker<TreatInlineMarker>())
-            rules.Add(rule);
+        return Options
+            .Where(value => value.Name.Equals(key, StringComparison.OrdinalIgnoreCase))
+            .Select(value => value.Value)
+            .FirstOrDefault();
+    }
+
+    private Boolean IterateUsedDefinitions(AbstractGrammarElement element, List<Definition> definitions)
+    {
+        if ((element is Definition definition) && (definitions.IndexOf(definition) < 0) && !definition.HasMarker<TreatInlineMarker>())
+            definitions.Add(definition);
         else
-            if ((element is ReferenceElement referenceElement) && (!referenceElement.TreatReferenceInline) && (FindRuleByName(referenceElement.ReferenceName) is SimpleRule referencedRule) && (rules.IndexOf(referencedRule) < 0))
-                referencedRule.IterateElements((element) => IterateUsedRules(element, rules));
+            if ((element is ReferenceElement referenceElement) && (!referenceElement.TreatReferenceInline) && (FindDefinitionByName(referenceElement.ReferenceName) is Definition referencedDefinition) && (definitions.IndexOf(referencedDefinition) < 0))
+                referencedDefinition.IterateElements((element) => IterateUsedDefinitions(element, definitions));
         return true;
     }
 
-    private List<SimpleRule> GetUsedRules()
+    private List<Definition> GetUsedDefinitions()
     {
-        List<SimpleRule> result = new List<SimpleRule>();
-        SimpleRule rootRule = GetRootRule();
-        result.Add(rootRule);
-        rootRule.IterateElements((element) => IterateUsedRules(element, result));
+        List<Definition> result = new List<Definition>();
+        Definition rootDefinition = GetRootDefinition();
+        result.Add(rootDefinition);
+        rootDefinition.IterateElements((element) => IterateUsedDefinitions(element, result));
         result.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
         return result;
     }
 
-    private Boolean IterateRelevantGrammarRules(AbstractGrammarElement element, List<SimpleRule> rules, Boolean forceAdd)
+    private Boolean IterateRelevantGrammarDefinitions(AbstractGrammarElement element, List<Definition> definitions, Boolean forceAdd)
     {
-        if ((element is SimpleRule rule) && (rules.IndexOf(rule) < 0) && !(rule.DropRule) && (rule.MatchesVariableText() || forceAdd))
-            rules.Add(rule);
+        if ((element is Definition definition) && (definitions.IndexOf(definition) < 0) && !(definition.DropDefinition) && (definition.MatchesVariableText() || forceAdd))
+            definitions.Add(definition);
         else
-            if ((element is ReferenceElement referenceElement) && (!referenceElement.TreatReferenceInline) && (FindRuleByName(referenceElement.ReferenceName) is SimpleRule referencedRule) && (rules.IndexOf(referencedRule) < 0))
+            if ((element is ReferenceElement referenceElement) && (!referenceElement.TreatReferenceInline) && (FindDefinitionByName(referenceElement.ReferenceName) is Definition referencedDefinition) && (definitions.IndexOf(referencedDefinition) < 0))
             {
                 Boolean hasDropMarker = false;
                 AbstractGrammarElement? parent = element.Parent;
@@ -165,37 +396,37 @@ public class Grammar : AbstractNamedElement
                         }
                     }
 
-                    referencedRule.IterateElements(
-                        (element) => IterateRelevantGrammarRules(element, rules, hasOrParent || hasOptionalParent)
+                    referencedDefinition.IterateElements(
+                        (element) => IterateRelevantGrammarDefinitions(element, definitions, hasOrParent || hasOptionalParent)
                     );
                 }
             }
-        Boolean result = !((element is SimpleRule rule1) && (rule1.HasMarker<IsTerminalMarker>()));
+        Boolean result = !((element is Definition definition1) && (definition1.HasMarker<IsTerminalMarker>()));
         return result;
     }
 
-    private List<SimpleRule> GetRelevantGrammarRules()
+    private List<Definition> GetRelevantGrammarDefinitions()
     {
-        List<SimpleRule> result = new List<SimpleRule>();
-        SimpleRule rootRule = GetRootRule();
-        result.Add(rootRule);
-        rootRule.IterateElements((element) => IterateRelevantGrammarRules(element, result, false));
+        List<Definition> result = new List<Definition>();
+        Definition rootDefinition = GetRootDefinition();
+        result.Add(rootDefinition);
+        rootDefinition.IterateElements((element) => IterateRelevantGrammarDefinitions(element, result, false));
         result.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
         return result;
     }
 
-    protected String GetCheckRuleCode()
+    protected String GetCheckDefinitionCode()
     {
         StringBuilder builder = new StringBuilder();
-        foreach (SimpleRule rule in GetUsedRules())
+        foreach (Definition definition in GetUsedDefinitions())
         {
-            String ruleCode =
+            String definitionCode =
                 $$"""
-                private Boolean CheckRule_{{rule.Name}}(ASTNode parentNode, ParserState state, String? errorName)
+                private Boolean CheckDefinition_{{definition.Name}}(ASTNode parentNode, ParserState state, String? errorName)
                 {
                     Int32 oldPosition = state.Position;
-                    ASTNode actualNode = new ASTNode({{GetElementIdOf(rule)}}, "{{rule.Name}}", "", state.Position);
-                    Boolean result = {{GetElementsCode(new List<SimpleRule>() { rule }, "Rule", null)}}
+                    ASTNode actualNode = new ASTNode({{GetElementIdOf(definition)}}, "{{definition.Name}}", "", state.Position);
+                    Boolean result = {{GetElementsCode(new List<Definition>() { definition }, null)}}
                     Int32 foundPosition = state.Position;
                     if (result && ((actualNode.Children.Count > 0) || (actualNode.Text != "")))
                         parentNode.AddChild(actualNode);
@@ -204,19 +435,19 @@ public class Grammar : AbstractNamedElement
 
                 """;
 
-            builder.AppendLine(ruleCode);
+            builder.AppendLine(definitionCode);
         }
         return builder.ToString();
     }
 
     protected String GetParseResultCode()
     {
-        String GetEventName(SimpleRule rule) => $"Process{rule.Name.Humanize().Dehumanize()}Node";
-        SimpleRule rootRule = GetRootRule();
-        List<SimpleRule> usedRules = GetRelevantGrammarRules();
-        String visitorCalls = "";
-        foreach (SimpleRule rule in usedRules)
-            visitorCalls += $"case {GetElementIdOf(rule)}: return visitor.{GetEventName(rule)}(context, node, messages);\n";
+        String GetEventName(Definition definition) => $"Process{definition.Name.Humanize().Dehumanize()}Node";
+        List<Definition> usedDefinitions = GetRelevantGrammarDefinitions();
+        StringBuilder visitorCallsBuilder = new StringBuilder();
+        foreach (Definition definition in usedDefinitions)
+            visitorCallsBuilder.AppendLine($"case {GetElementIdOf(definition)}: return visitor.{GetEventName(definition)}(context, node, messages);");
+        String visitorCalls = visitorCallsBuilder.ToString();
 
         String result =
             $$"""
@@ -334,7 +565,7 @@ public class Grammar : AbstractNamedElement
 
     protected String GetParseCode()
     {
-        SimpleRule rootRule = GetRootRule();
+        Definition rootDefinition = GetRootDefinition();
         String result =
             $$"""
             public ParseResult Parse(String text)
@@ -342,7 +573,7 @@ public class Grammar : AbstractNamedElement
                 ParserState state = new ParserState(text, new MessageContext(text));
                 ASTNode actualNode = new ASTNode(-1, "ROOT", "", 0);
                 String? errorName = null;
-                Boolean successful = {{rootRule.GetReferenceCode(this)}} && state.Position >= text.Length - 1;
+                Boolean successful = {{rootDefinition.GetReferenceCode(this)}} && state.Position >= text.Length - 1;
                 if (successful)
                     state.NoError(state.Position);
                 return new ParseResult(successful ? actualNode : null, state.MessageContext, state.Messages);
@@ -351,9 +582,9 @@ public class Grammar : AbstractNamedElement
         return result;
     }
 
-    private String GetElementsCode(IEnumerable<SimpleRule> elements, String comment, SimpleRule? separatorTerminal)
+    private String GetElementsCode(IEnumerable<Definition> elements, Definition? separatorTerminal)
     {
-        String result = String.Join("", elements.Select(x => x.ToString(this))) + ";";
+        String result = String.Join("", elements.Select(x => x.ToParserCode(this))) + ";";
         if (result.IndexOf("\n") > 0)
             result = $"\n{result}";
         return Indent(Indent(result));
@@ -361,11 +592,12 @@ public class Grammar : AbstractNamedElement
 
     protected String GetIVisitorCode()
     {
-        String GetEventName(SimpleRule rule) => $"Process{rule.Name.Humanize().Dehumanize()}Node";
-        List<SimpleRule> usedRules = GetRelevantGrammarRules();
-        String visitorEvents = "";
-        foreach (SimpleRule rule in usedRules)
-            visitorEvents += $"ProcessNodeResult {GetEventName(rule)}(Object context, ASTNode node, IList<ParserMessage> messages);\n";
+        String GetEventName(Definition definition) => $"Process{definition.Name.Humanize().Dehumanize()}Node";
+        List<Definition> usedDefinitions = GetRelevantGrammarDefinitions();
+        StringBuilder visitorEventsBuilder = new StringBuilder();
+        foreach (Definition definition in usedDefinitions)
+            visitorEventsBuilder.AppendLine($"ProcessNodeResult {GetEventName(definition)}(Object context, ASTNode node, IList<ParserMessage> messages);");
+        String visitorEvents = visitorEventsBuilder.ToString();
         String result =
             $$"""
             public interface IVisitResult
@@ -792,4 +1024,135 @@ public class Grammar : AbstractNamedElement
         return result;
     }
 
+    private sealed class TextMateGrammarDocument
+    {
+        [JsonPropertyName("displayName")]
+        public String DisplayName { get; set; } = String.Empty;
+
+        [JsonPropertyName("scopeName")]
+        public String ScopeName { get; set; } = String.Empty;
+
+        [JsonPropertyName("fileTypes")]
+        public IReadOnlyList<String> FileTypes { get; set; } = Array.Empty<String>();
+
+        [JsonPropertyName("patterns")]
+        public IReadOnlyList<TMDefinition.TextMatePatternInclude> Patterns { get; set; } = Array.Empty<TMDefinition.TextMatePatternInclude>();
+
+        [JsonPropertyName("repository")]
+        public IReadOnlyDictionary<String, TMDefinition.TextMateRepositoryEntry> Repository { get; set; } = new Dictionary<String, TMDefinition.TextMateRepositoryEntry>();
+    }
+
+    private sealed class VSCodeLanguageConfDocument
+    {
+        [JsonPropertyName("comments")]
+        public VSCodeLanguageConfComments Comments { get; set; } = new VSCodeLanguageConfComments();
+
+        [JsonPropertyName("brackets")]
+        public IList<KeyValuePair<String, String>> Brackets { get; set; } = Array.Empty<KeyValuePair<String, String>>();
+
+        [JsonPropertyName("autoClosingPairs")]
+        public IList<KeyValuePair<String, String>> AutoClosingPairs { get; set; } = Array.Empty<KeyValuePair<String, String>>();
+
+        [JsonPropertyName("surroundingPairs")]
+        public IList<KeyValuePair<String, String>> SurroundingPairs { get; set; } = Array.Empty<KeyValuePair<String, String>>();
+    }
+
+    private sealed class VSCodeLanguageConfComments
+    {
+        [JsonPropertyName("lineComment")]
+        public String? LineComment { get; set; }
+
+        [JsonPropertyName("blockComment")]
+        public KeyValuePair<String, String>? BlockComment { get; set; }
+    }
+
+    private sealed class VSCodePackageDocument
+    {
+        [JsonPropertyName("name")]
+        public String Name { get; set; } = String.Empty;
+
+        [JsonPropertyName("displayName")]
+        public String DisplayName { get; set; } = String.Empty;
+
+        [JsonPropertyName("description")]
+        public String? Description { get; set; } = String.Empty;
+
+        [JsonPropertyName("version")]
+        public String Version { get; set; } = String.Empty;
+
+        [JsonPropertyName("engines")]
+        public IReadOnlyDictionary<String, String> Engines { get; set; } = ImmutableDictionary.Create<String, String>().Add("vscode", "^1.106.1");
+
+        [JsonPropertyName("categories")]
+        public IReadOnlyList<String> Categories { get; set; } = ImmutableArray.Create<String>().Add("Programming Languages");
+
+        [JsonPropertyName("contributes")]
+        public VSCodePackageContributes Contributes { get; set; } = new VSCodePackageContributes();
+    }
+
+    private sealed class VSCodePackageContributes
+    {
+        [JsonPropertyName("languages")]
+        public IReadOnlyList<VSCodePackageLanguage> Languages { get; set; } = Array.Empty<VSCodePackageLanguage>();
+
+        [JsonPropertyName("grammars")]
+        public IReadOnlyList<VSCodePackageGrammar> Grammars { get; set; } = Array.Empty<VSCodePackageGrammar>();
+    }
+
+    private sealed class VSCodePackageLanguage
+    {
+        [JsonPropertyName("id")]
+        public String Id { get; set; } = String.Empty;
+
+        [JsonPropertyName("aliases")]
+        public IReadOnlyList<String> Aliases { get; set; } = Array.Empty<String>();
+
+        [JsonPropertyName("extensions")]
+        public IReadOnlyList<String> Extensions { get; set; } = Array.Empty<String>();
+
+        [JsonPropertyName("configuration")]
+        public String Configuration { get; set; } = "./language-configuration.json";
+    }
+
+    private sealed class VSCodePackageGrammar
+    {
+        [JsonPropertyName("language")]
+        public String Language { get; set; } = String.Empty;
+
+        [JsonPropertyName("scopeName")]
+        public String ScopeName { get; set; } = String.Empty;
+
+        [JsonPropertyName("path")]
+        public String Path { get; set; } = String.Empty;
+    }
+
+    private sealed class KeyValuePairArrayConverter : JsonConverter<KeyValuePair<String, String>>
+    {
+        public override KeyValuePair<String, String> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Write(Utf8JsonWriter writer, KeyValuePair<String, String> value, JsonSerializerOptions options)
+        {
+            writer.WriteStartArray();
+            writer.WriteStringValue(value.Key);
+            writer.WriteStringValue(value.Value);
+            writer.WriteEndArray();
+        }
+    }
+
+    public sealed record CreateOutputResult
+    {
+        public CreateOutputResult(Boolean successful, String result, IReadOnlyList<ParserMessage> messages)
+        {
+            Successful = successful;
+            Output = result;
+            Messages = messages;
+        }
+        public static CreateOutputResult Empty => new CreateOutputResult(false, "", new List<ParserMessage>());
+        public Boolean Successful { get; }
+        public String Output { get; }
+        public IReadOnlyList<ParserMessage> Messages { get; }
+    }
 }
