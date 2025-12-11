@@ -150,7 +150,7 @@ public class Grammar : AbstractNamedElement
         return new CreateOutputResult(successful, JsonSerializer.Serialize(document, serializerOptions), messages);
     }
 
-    public CreateOutputResult ToVSCodePackage(MessageContext messageContext)
+    public CreateOutputResult ToVSCodePackage(MessageContext messageContext, String? versionOverride = null)
     {
         List<ParserMessage> messages = new List<ParserMessage>();
         VSCodePackageDocument document = new VSCodePackageDocument();
@@ -165,7 +165,7 @@ public class Grammar : AbstractNamedElement
                 Name = languageName,
                 DisplayName = languageDisplayName,
                 Description = TryGetOptionValue(Grammar.TextMateOptionDescription),
-                Version = GetOptionValue(Grammar.TextMateOptionVersion),
+                Version = versionOverride ?? GetOptionValue(Grammar.TextMateOptionVersion),
                 Contributes =
                     new VSCodePackageContributes
                     {
@@ -342,6 +342,21 @@ public class Grammar : AbstractNamedElement
             .Where(value => value.Name.Equals(key, StringComparison.OrdinalIgnoreCase))
             .Select(value => value.Value)
             .FirstOrDefault();
+    }
+
+    internal String GetGrammarSuffix()
+    {
+        String scopeName = GetOptionValue(Grammar.TextMateOptionScopeName);
+        // Extract the last part after the last dot (e.g., "parseidon" from "source.parseidon")
+        Int32 lastDotIndex = scopeName.LastIndexOf('.');
+        return lastDotIndex >= 0 ? scopeName.Substring(lastDotIndex + 1) : scopeName;
+    }
+
+    internal static String? AppendGrammarSuffix(String? scopeName, String grammarSuffix)
+    {
+        if (String.IsNullOrEmpty(scopeName))
+            return scopeName;
+        return $"{scopeName}.{grammarSuffix}";
     }
 
     private Boolean IterateUsedDefinitions(AbstractGrammarElement element, List<Definition> definitions)

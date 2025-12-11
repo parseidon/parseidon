@@ -39,6 +39,13 @@ var vsCodeCommand = new Command("vscode")
 };
 rootCommand.Add(vsCodeCommand);
 
+var versionOption = new Option<String?>("--version", "-v")
+{
+    Description = "Override the version number in package.json",
+    DefaultValueFactory = _ => null
+};
+vsCodeCommand.Add(versionOption);
+
 var grammarFileArgument = new Argument<FileInfo>(name: "GRAMMAR-FILE")
 {
     Description = "The grammar file to be used"
@@ -107,10 +114,11 @@ vsCodeCommand.SetAction((parseResult) =>
         FileInfo grammarFile = parseResult.GetValue(grammarFileArgument)!;
         DirectoryInfo outputFolder = parseResult.GetValue(outputFolderArgument)!;
         String doOverride = parseResult.GetValue<String>(overrideOption)!;
+        String? version = parseResult.GetValue<String?>(versionOption);
         return RunParser(
             grammarFile,
             () => ValidateFolderInput(grammarFile, outputFolder, doOverride),
-            (result) => CreateVSCodePackage(result, outputFolder, doOverride)
+            (result) => CreateVSCodePackage(result, outputFolder, doOverride, version)
         );
     }
 );
@@ -173,7 +181,7 @@ static OutputResult CreateParser(Parseidon.Parser.ParseResult parseResult, FileI
 
     if (visitResult.Successful && visitResult is ParseidonVisitor.IGetResults typedVisitResult)
     {
-        outputResult = typedVisitResult.ParserCode;
+        outputResult = typedVisitResult.GetParserCode();
         if (outputResult.Successful)
         {
             var code =
@@ -228,7 +236,7 @@ static OutputResult CreateTextMateGrammar(Parseidon.Parser.ParseResult parseResu
     Grammar.CreateOutputResult outputResult = Grammar.CreateOutputResult.Empty;
     if (visitResult.Successful && visitResult is ParseidonVisitor.IGetResults typedVisitResult)
     {
-        outputResult = typedVisitResult.TextMateGrammar;
+        outputResult = typedVisitResult.GetTextMateGrammar();
         if (outputResult.Successful)
         {
             File.WriteAllText(outputFile.FullName, outputResult.Output);
@@ -238,7 +246,7 @@ static OutputResult CreateTextMateGrammar(Parseidon.Parser.ParseResult parseResu
     return new OutputResult(visitResult.Successful && outputResult.Successful, visitResult.Messages, outputResult.Messages);
 }
 
-static OutputResult CreateVSCodePackage(Parseidon.Parser.ParseResult parseResult, DirectoryInfo outputFolder, String overrideOption)
+static OutputResult CreateVSCodePackage(Parseidon.Parser.ParseResult parseResult, DirectoryInfo outputFolder, String overrideOption, String? versionOverride = null)
 {
     ParseidonVisitor visitor = new ParseidonVisitor();
     IVisitResult visitResult = parseResult.Visit(visitor);
@@ -246,15 +254,15 @@ static OutputResult CreateVSCodePackage(Parseidon.Parser.ParseResult parseResult
     List<ParserMessage> outputMessages = new List<ParserMessage>();
     if (visitResult.Successful && visitResult is ParseidonVisitor.IGetResults typedVisitResult)
     {
-        var textmateGrammarResult = typedVisitResult.TextMateGrammar;
+        var textmateGrammarResult = typedVisitResult.GetTextMateGrammar();
         outputMessages = outputMessages.Concat(textmateGrammarResult.Messages).ToList();
         if (textmateGrammarResult.Successful)
         {
-            var languageResult = typedVisitResult.LanguageConfig;
+            var languageResult = typedVisitResult.GetLanguageConfig();
             outputMessages = outputMessages.Concat(languageResult.Messages).ToList();
             if (languageResult.Successful)
             {
-                var vscodePackageResult = typedVisitResult.VSCodePackage;
+                var vscodePackageResult = typedVisitResult.GetVSCodePackage(versionOverride);
                 outputMessages = outputMessages.Concat(vscodePackageResult.Messages).ToList();
                 if (vscodePackageResult.Successful)
                 {

@@ -10,10 +10,10 @@ public class ParseidonVisitor : INodeVisitor
 {
     public interface IGetResults
     {
-        Grammar.Grammar.CreateOutputResult ParserCode { get; }
-        Grammar.Grammar.CreateOutputResult TextMateGrammar { get; }
-        Grammar.Grammar.CreateOutputResult LanguageConfig { get; }
-        Grammar.Grammar.CreateOutputResult VSCodePackage { get; }
+        Grammar.Grammar.CreateOutputResult GetParserCode();
+        Grammar.Grammar.CreateOutputResult GetTextMateGrammar();
+        Grammar.Grammar.CreateOutputResult GetLanguageConfig();
+        Grammar.Grammar.CreateOutputResult GetVSCodePackage(String? versionOverride);
     }
 
     private sealed class CreateCodeVisitorContext
@@ -43,13 +43,15 @@ public class ParseidonVisitor : INodeVisitor
         public Boolean Successful { get; }
         public IReadOnlyList<ParserMessage> Messages { get; }
 
-        public Grammar.Grammar.CreateOutputResult ParserCode => _grammar.ToParserCode(MessageContext);
+        public Grammar.Grammar.CreateOutputResult GetParserCode() => _grammar.ToParserCode(MessageContext);
 
-        public Grammar.Grammar.CreateOutputResult TextMateGrammar => _grammar.ToTextMateGrammar(MessageContext);
+        public Grammar.Grammar.CreateOutputResult GetTextMateGrammar() => _grammar.ToTextMateGrammar(MessageContext);
 
-        public Grammar.Grammar.CreateOutputResult LanguageConfig => _grammar.ToLanguageConfig(MessageContext);
+        public Grammar.Grammar.CreateOutputResult GetLanguageConfig() => _grammar.ToLanguageConfig(MessageContext);
 
-        public Grammar.Grammar.CreateOutputResult VSCodePackage => _grammar.ToVSCodePackage(MessageContext);
+        public Grammar.Grammar.CreateOutputResult VSCodePackage() => _grammar.ToVSCodePackage(MessageContext, null);
+
+        public Grammar.Grammar.CreateOutputResult GetVSCodePackage(String? versionOverride) => _grammar.ToVSCodePackage(MessageContext, versionOverride);
     }
 
     private T Pop<T>(CreateCodeVisitorContext context, Int32 position) where T : AbstractGrammarElement
