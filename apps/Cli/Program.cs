@@ -6,109 +6,126 @@ using Parseidon.Parser.Grammar;
 
 var rootCommand = new RootCommand("Parser generator for .NET");
 
-var overrideOption = new Option<string>(name: "--override", description: "How to handle if the output file already exists", getDefaultValue: () => "ask")
-    .FromAmong("ask", "abort", "backup", "override");
-overrideOption.AddAlias("-o");
+var overrideOption = new Option<String>("--override", "-o")
+{
+    Description = "How to handle if the output file already exists",
+    DefaultValueFactory = _ => "ask",
+    Recursive = true
+};
+overrideOption.AcceptOnlyFromAmong("ask", "abort", "backup", "override");
+rootCommand.Add(overrideOption);
 
-rootCommand.AddGlobalOption(overrideOption);
-
-var parseCommand = new Command("parser", "Create parser class for the grammar as a C# class");
-
-var namespaceOption = new Option<String>(name: "--namespace", "The namespace for the generated C# class");
-namespaceOption.AddAlias("-n");
-parseCommand.Add(namespaceOption);
-
-var classnameOption = new Option<String>(name: "--classname", "The class name for the generated C# class");
-classnameOption.AddAlias("-c");
-parseCommand.Add(classnameOption);
-
+var parseCommand = new Command("parser")
+{
+    Description = "Create parser class for the grammar as a C# class"
+};
 rootCommand.Add(parseCommand);
 
-var astCommand = new Command("ast", "Create the AST (Abstract Syntax Tree) for the grammar as a YAML file");
+var astCommand = new Command("ast")
+{
+    Description = "Create the AST (Abstract Syntax Tree) for the grammar as a YAML file"
+};
 rootCommand.Add(astCommand);
 
-var textMateCommand = new Command("textmate", "Create a TextMate grammar from the provided grammar definition");
+var textMateCommand = new Command("textmate")
+{
+    Description = "Create a TextMate grammar from the provided grammar definition"
+};
 rootCommand.Add(textMateCommand);
 
-var vsCodeCommand = new Command("vscode", "Create a VS Code extension with the syntax highlighting from the provided grammar definition");
+var vsCodeCommand = new Command("vscode")
+{
+    Description = "Create a VS Code extension with the syntax highlighting from the provided grammar definition"
+};
 rootCommand.Add(vsCodeCommand);
 
-var grammarFileArgument = new Argument<FileInfo>(name: "GRAMMAR-FILE", description: "The grammar file to be used");
+var grammarFileArgument = new Argument<FileInfo>(name: "GRAMMAR-FILE")
+{
+    Description = "The grammar file to be used"
+};
+grammarFileArgument.AcceptLegalFilePathsOnly();
 parseCommand.Add(grammarFileArgument);
 astCommand.Add(grammarFileArgument);
 textMateCommand.Add(grammarFileArgument);
 vsCodeCommand.Add(grammarFileArgument);
 
-var outputFileArgument = new Argument<FileInfo>(name: "OUTPUT-FILE", description: "The output file");
+var outputFileArgument = new Argument<FileInfo>(name: "OUTPUT-FILE")
+{
+    Description = "The output file"
+};
 parseCommand.Add(outputFileArgument);
 astCommand.Add(outputFileArgument);
 textMateCommand.Add(outputFileArgument);
 
-var outputFolderArgument = new Argument<DirectoryInfo>(name: "OUTPUT-FOLDER", description: "The output folder");
+var outputFolderArgument = new Argument<DirectoryInfo>(name: "OUTPUT-FOLDER")
+{
+    Description = "The output folder"
+};
 vsCodeCommand.Add(outputFolderArgument);
 
-parseCommand.SetHandler(
-    (grammarFile, outputFile, overrideOption, parserNamespace, parserClassname) =>
+parseCommand.SetAction((parseResult) =>
     {
-        int exitCode = RunParser(
+        FileInfo grammarFile = parseResult.GetValue(grammarFileArgument)!;
+        FileInfo outputFile = parseResult.GetValue(outputFileArgument)!;
+        String doOverride = parseResult.GetValue<String>(overrideOption)!;
+        return RunParser(
             grammarFile,
-            () => ValidateFileInput(grammarFile, outputFile, overrideOption),
-            overrideOption,
-            (result) => CreateParser(result, outputFile, overrideOption, parserNamespace, parserClassname)
+            () => ValidateFileInput(grammarFile, outputFile, doOverride),
+            (result) => CreateParser(result, outputFile, doOverride)
         );
-        Environment.Exit(exitCode);
-    },
-    grammarFileArgument, outputFileArgument, overrideOption, namespaceOption, classnameOption);
+    }
+);
 
-astCommand.SetHandler(
-    (grammarFile, outputFile, overrideOption) =>
+astCommand.SetAction((parseResult) =>
     {
-        int exitCode = RunParser(
+        FileInfo grammarFile = parseResult.GetValue(grammarFileArgument)!;
+        FileInfo outputFile = parseResult.GetValue(outputFileArgument)!;
+        String doOverride = parseResult.GetValue<String>(overrideOption)!;
+        return RunParser(
             grammarFile,
-            () => ValidateFileInput(grammarFile, outputFile, overrideOption),
-            overrideOption,
-            (result) => CreateAST(result, outputFile, overrideOption)
+            () => ValidateFileInput(grammarFile, outputFile, doOverride),
+            (result) => CreateAST(result, outputFile, doOverride)
         );
-        Environment.Exit(exitCode);
-    },
-    grammarFileArgument, outputFileArgument, overrideOption);
+    }
+);
 
-textMateCommand.SetHandler(
-    (grammarFile, outputFile, overrideOption) =>
+textMateCommand.SetAction((parseResult) =>
     {
-        int exitCode = RunParser(
+        FileInfo grammarFile = parseResult.GetValue(grammarFileArgument)!;
+        FileInfo outputFile = parseResult.GetValue(outputFileArgument)!;
+        String doOverride = parseResult.GetValue<String>(overrideOption)!;
+        return RunParser(
             grammarFile,
-            () => ValidateFileInput(grammarFile, outputFile, overrideOption),
-            overrideOption,
-            (result) => CreateTextMateGrammar(result, outputFile, overrideOption)
+            () => ValidateFileInput(grammarFile, outputFile, doOverride),
+            (result) => CreateTextMateGrammar(result, outputFile, doOverride)
         );
-        Environment.Exit(exitCode);
-    },
-    grammarFileArgument, outputFileArgument, overrideOption);
+    }
+);
 
-vsCodeCommand.SetHandler(
-    (grammarFile, outputFolder, overrideOption) =>
+vsCodeCommand.SetAction((parseResult) =>
     {
-        int exitCode = RunParser(
+        FileInfo grammarFile = parseResult.GetValue(grammarFileArgument)!;
+        DirectoryInfo outputFolder = parseResult.GetValue(outputFolderArgument)!;
+        String doOverride = parseResult.GetValue<String>(overrideOption)!;
+        return RunParser(
             grammarFile,
-            () => ValidateFolderInput(grammarFile, outputFolder, overrideOption),
-            overrideOption,
-            (result) => CreateVSCodePackage(result, outputFolder, overrideOption)
+            () => ValidateFolderInput(grammarFile, outputFolder, doOverride),
+            (result) => CreateVSCodePackage(result, outputFolder, doOverride)
         );
-        Environment.Exit(exitCode);
-    },
-    grammarFileArgument, outputFolderArgument, overrideOption);
+    }
+);
 
-return await rootCommand.InvokeAsync(args);
+System.CommandLine.ParseResult parseResult = rootCommand.Parse(args);
+return await parseResult.InvokeAsync();
 
-static int RunParser(FileInfo grammarFile, Func<Int32> validateInput, String overrideOption, Func<ParseResult, OutputResult> processResult)
+static int RunParser(FileInfo grammarFile, Func<Int32> validateInput, Func<Parseidon.Parser.ParseResult, OutputResult> processResult)
 {
     Int32 exitCode = validateInput();
     if (exitCode != 0)
         return exitCode;
 
     ParseidonParser Parser = new ParseidonParser();
-    ParseResult parseResult = Parser.Parse(File.ReadAllText(grammarFile.FullName));
+    Parseidon.Parser.ParseResult parseResult = Parser.Parse(File.ReadAllText(grammarFile.FullName));
     OutputResult? outputResult = null;
     if (parseResult.Successful)
         outputResult = processResult(parseResult);
@@ -147,7 +164,7 @@ static void PrintMessage(ParserMessage.MessageType messageType, String message)
     AnsiConsole.MarkupLine($"[{color}]{messageTypeText}: {Markup.Escape(message)}[/]");
 }
 
-static OutputResult CreateParser(ParseResult parseResult, FileInfo outputFile, String overrideOption, String parserNamespace, String parserClassname)
+static OutputResult CreateParser(Parseidon.Parser.ParseResult parseResult, FileInfo outputFile, String overrideOption)
 {
     IVisitor visitor = new ParseidonVisitor();
     IVisitResult visitResult = parseResult.Visit(visitor);
@@ -187,7 +204,7 @@ static OutputResult CreateParser(ParseResult parseResult, FileInfo outputFile, S
     return new OutputResult(visitResult.Successful && outputResult.Successful, visitResult.Messages, outputResult.Messages);
 }
 
-static OutputResult CreateAST(ParseResult parseResult, FileInfo outputFile, String overrideOption)
+static OutputResult CreateAST(Parseidon.Parser.ParseResult parseResult, FileInfo outputFile, String overrideOption)
 {
     RenderASTVisitor visitor = new RenderASTVisitor();
     IVisitResult visitResult = parseResult.Visit(visitor);
@@ -204,7 +221,7 @@ static OutputResult CreateAST(ParseResult parseResult, FileInfo outputFile, Stri
     return new OutputResult(visitResult.Successful && outputResult.Successful, visitResult.Messages, outputResult.Messages);
 }
 
-static OutputResult CreateTextMateGrammar(ParseResult parseResult, FileInfo outputFile, String overrideOption)
+static OutputResult CreateTextMateGrammar(Parseidon.Parser.ParseResult parseResult, FileInfo outputFile, String overrideOption)
 {
     ParseidonVisitor visitor = new ParseidonVisitor();
     IVisitResult visitResult = parseResult.Visit(visitor);
@@ -221,7 +238,7 @@ static OutputResult CreateTextMateGrammar(ParseResult parseResult, FileInfo outp
     return new OutputResult(visitResult.Successful && outputResult.Successful, visitResult.Messages, outputResult.Messages);
 }
 
-static OutputResult CreateVSCodePackage(ParseResult parseResult, DirectoryInfo outputFolder, String overrideOption)
+static OutputResult CreateVSCodePackage(Parseidon.Parser.ParseResult parseResult, DirectoryInfo outputFolder, String overrideOption)
 {
     ParseidonVisitor visitor = new ParseidonVisitor();
     IVisitResult visitResult = parseResult.Visit(visitor);
