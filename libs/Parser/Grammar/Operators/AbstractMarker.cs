@@ -16,7 +16,7 @@ public abstract class AbstractMarker : AbstractOneChildOperator
                 return definition;
             current = current.Parent;
         }
-        throw new InvalidCastException("Found nor definition for marker!");
+        throw new InvalidCastException("Found no definition for marker!");
     }
 
     public override bool MatchesVariableText() => true;

@@ -39,14 +39,11 @@ public class TMSequence : AbstractDefinitionElement
 
     internal protected override RegExResult GetRegEx(Grammar grammar)
     {
-        String regEx = String.Empty;
-        String[] captures = Array.Empty<String>();
-        foreach (var element in Elements)
-        {
-            var tempRegEx = element.GetRegEx(grammar);
-            regEx = regEx + tempRegEx.RegEx;
-            captures = captures.Concat(tempRegEx.Captures).ToArray();
-        }
+        String[] captures = Elements
+            .Select(element => element.GetRegEx(grammar).Captures)
+            .SelectMany(c => c)
+            .ToArray();
+        String regEx = String.Concat(Elements.Select(element => element.GetRegEx(grammar).RegEx));
         if (ScopeName is null)
             regEx = $"(?:{regEx})";
         else

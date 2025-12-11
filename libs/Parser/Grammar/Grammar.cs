@@ -101,18 +101,12 @@ public class Grammar : AbstractNamedElement
                     autoClosingPairs.Add(new KeyValuePair<String, String>(quoteValue, quoteValue));
                     surroundingPairs.Add(new KeyValuePair<String, String>(quoteValue, quoteValue));
                 }
-                if (definition.KeyValuePairs.ContainsKey("bracketopen"))
+                if (definition.KeyValuePairs.TryGetValue("bracketopen", out String bracketIdentifier))
                 {
-                    String bracketIdentifier = definition.KeyValuePairs["bracketopen"];
-                    String? closeBracket = null;
-                    foreach (Definition correspondingDefinition in Definitions)
-                    {
-                        if ((correspondingDefinition != definition) && correspondingDefinition.KeyValuePairs.ContainsKey("bracketclose") && (correspondingDefinition.KeyValuePairs["bracketclose"] == bracketIdentifier))
-                        {
-                            closeBracket = GetTextValueOfDefinition(correspondingDefinition);
-                            break;
-                        }
-                    }
+                    Definition? correspondingDefinition = Definitions
+                        .Where(d => (d != definition) && d.KeyValuePairs.TryGetValue("bracketclose", out String closeBracketValue) && (closeBracketValue == bracketIdentifier))
+                        .FirstOrDefault();
+                    String? closeBracket = correspondingDefinition != null ? GetTextValueOfDefinition(correspondingDefinition) : null;
                     if (!String.IsNullOrEmpty(closeBracket))
                     {
                         String openBracket = GetTextValueOfDefinition(definition);
@@ -252,17 +246,15 @@ public class Grammar : AbstractNamedElement
     {
         var result = new Dictionary<String, TMDefinition.TextMateRepositoryEntry>(StringComparer.OrdinalIgnoreCase);
         List<TMDefinition> tmDefinitions = TMDefinitions.ToList();
-        foreach (var definition in Definitions)
-            if (definition.KeyValuePairs.ContainsKey(TextMatePropertyPattern))
-            {
-                foreach (TMDefinition tmDefinition in tmDefinitions)
-                    if (tmDefinition.Name.Equals(definition.Name, StringComparison.OrdinalIgnoreCase))
-                        throw GetException($"TextMate definition '{definition.Name}' already exists!");
-                String? scopeName = definition.KeyValuePairs[TextMatePropertyPattern];
-                scopeName = String.IsNullOrEmpty(scopeName) ? null : scopeName;
-                TMSequence sequence = new TMSequence(new List<AbstractDefinitionElement>() { definition.DefinitionElement }, messageContext, definition.Node);
-                tmDefinitions.Add(new TMDefinition(definition.Name, scopeName, sequence, null, null, messageContext, definition.Node));
-            }
+        foreach (var definition in Definitions.Where(d => d.KeyValuePairs.ContainsKey(TextMatePropertyPattern)))
+        {
+            foreach (TMDefinition tmDefinition in tmDefinitions.Where(td => td.Name.Equals(definition.Name, StringComparison.OrdinalIgnoreCase)))
+                throw GetException($"TextMate definition '{definition.Name}' already exists!");
+            String? scopeName = definition.KeyValuePairs[TextMatePropertyPattern];
+            scopeName = String.IsNullOrEmpty(scopeName) ? null : scopeName;
+            TMSequence sequence = new TMSequence(new List<AbstractDefinitionElement>() { definition.DefinitionElement }, messageContext, definition.Node);
+            tmDefinitions.Add(new TMDefinition(definition.Name, scopeName, sequence, null, null, messageContext, definition.Node));
+        }
         foreach (TMDefinition tmDefinition in tmDefinitions)
             result[tmDefinition.Name.ToLower()] = tmDefinition.GetRepositoryEntry(grammar);
         return result;
@@ -292,26 +284,23 @@ public class Grammar : AbstractNamedElement
 
     public Definition? FindDefinitionByName(String name)
     {
-        foreach (Definition element in Definitions)
-            if (element.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
-                return element;
-        return null;
+        return Definitions.FirstOrDefault(element => element.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
     }
 
     public TMDefinition? FindTMDefinitionByName(String name)
     {
-        foreach (TMDefinition element in TMDefinitions)
-            if (element.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
-                return element;
-        return null;
+        return TMDefinitions.FirstOrDefault(element => element.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
     }
 
     public void CheckDuplicatedDefinitions(List<Definition> definitions)
     {
-        HashSet<String> existingDefinitions = new HashSet<String>(StringComparer.InvariantCultureIgnoreCase);
-        foreach (Definition definition in definitions)
-            if (!existingDefinitions.Add(definition.Name))
-                throw definition.GetException($"Definition '{definition.Name}' already exists!");
+        var duplicates = definitions
+            .GroupBy(d => d.Name, StringComparer.InvariantCultureIgnoreCase)
+            .Where(g => g.Count() > 1)
+            .SelectMany(g => g);
+
+        foreach (Definition definition in duplicates)
+            throw definition.GetException($"Definition '{definition.Name}' already exists!");
     }
 
     public Int32 GetElementIdOf(AbstractNamedElement element)
@@ -347,12 +336,10 @@ public class Grammar : AbstractNamedElement
 
     private String? TryGetOptionValue(String key)
     {
-        foreach (ValuePair value in Options)
-        {
-            if (value.Name.Equals(key, StringComparison.OrdinalIgnoreCase))
-                return value.Value;
-        }
-        return null;
+        return Options
+            .Where(value => value.Name.Equals(key, StringComparison.OrdinalIgnoreCase))
+            .Select(value => value.Value)
+            .FirstOrDefault();
     }
 
     private Boolean IterateUsedDefinitions(AbstractGrammarElement element, List<Definition> definitions)
@@ -457,9 +444,10 @@ public class Grammar : AbstractNamedElement
     {
         String GetEventName(Definition definition) => $"Process{definition.Name.Humanize().Dehumanize()}Node";
         List<Definition> usedDefinitions = GetRelevantGrammarDefinitions();
-        String visitorCalls = "";
+        StringBuilder visitorCallsBuilder = new StringBuilder();
         foreach (Definition definition in usedDefinitions)
-            visitorCalls += $"case {GetElementIdOf(definition)}: return visitor.{GetEventName(definition)}(context, node, messages);\n";
+            visitorCallsBuilder.AppendLine($"case {GetElementIdOf(definition)}: return visitor.{GetEventName(definition)}(context, node, messages);");
+        String visitorCalls = visitorCallsBuilder.ToString();
 
         String result =
             $$"""
@@ -606,9 +594,10 @@ public class Grammar : AbstractNamedElement
     {
         String GetEventName(Definition definition) => $"Process{definition.Name.Humanize().Dehumanize()}Node";
         List<Definition> usedDefinitions = GetRelevantGrammarDefinitions();
-        String visitorEvents = "";
+        StringBuilder visitorEventsBuilder = new StringBuilder();
         foreach (Definition definition in usedDefinitions)
-            visitorEvents += $"ProcessNodeResult {GetEventName(definition)}(Object context, ASTNode node, IList<ParserMessage> messages);\n";
+            visitorEventsBuilder.AppendLine($"ProcessNodeResult {GetEventName(definition)}(Object context, ASTNode node, IList<ParserMessage> messages);");
+        String visitorEvents = visitorEventsBuilder.ToString();
         String result =
             $$"""
             public interface IVisitResult

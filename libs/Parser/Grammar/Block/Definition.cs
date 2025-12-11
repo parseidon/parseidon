@@ -12,7 +12,7 @@ public class Definition : AbstractNamedElement
         DefinitionElement.Parent = this;
     }
 
-    private List<AbstractMarker> _customMarker;
+    private readonly List<AbstractMarker> _customMarker;
 
     public bool HasMarker<T>() where T : AbstractMarker
     {
@@ -35,6 +35,6 @@ public class Definition : AbstractNamedElement
     public AbstractDefinitionElement DefinitionElement { get; }
     public IReadOnlyDictionary<String, String> KeyValuePairs { get; }
     public Boolean DropDefinition { get => HasMarker<DropMarker>() || HasMarker<TreatInlineMarker>(); }
-    public override bool MatchesVariableText() => DropDefinition ? false : DefinitionElement.MatchesVariableText();
+    public override bool MatchesVariableText() => !DropDefinition && DefinitionElement.MatchesVariableText();
 
 }

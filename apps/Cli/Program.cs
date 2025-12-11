@@ -181,7 +181,7 @@ static OutputResult CreateParser(ParseResult parseResult, FileInfo outputFile, S
             }
 
             File.WriteAllText(outputFile.FullName, code);
-            AnsiConsole.MarkupLine($"[green] The parser '{outputFile.FullName}' is sucessfully created![/]");
+            AnsiConsole.MarkupLine($"[green] The parser '{outputFile.FullName}' is successfully created![/]");
         }
     }
     return new OutputResult(visitResult.Successful && outputResult.Successful, visitResult.Messages, outputResult.Messages);
@@ -198,7 +198,7 @@ static OutputResult CreateAST(ParseResult parseResult, FileInfo outputFile, Stri
         if (outputResult.Successful)
         {
             File.WriteAllText(outputFile.FullName, outputResult.Output);
-            AnsiConsole.MarkupLine($"[green] The AST-file '{outputFile.FullName}' is sucessfully created![/]");
+            AnsiConsole.MarkupLine($"[green] The AST-file '{outputFile.FullName}' is successfully created![/]");
         }
     }
     return new OutputResult(visitResult.Successful && outputResult.Successful, visitResult.Messages, outputResult.Messages);
@@ -215,7 +215,7 @@ static OutputResult CreateTextMateGrammar(ParseResult parseResult, FileInfo outp
         if (outputResult.Successful)
         {
             File.WriteAllText(outputFile.FullName, outputResult.Output);
-            AnsiConsole.MarkupLine($"[green] The TextMate grammar '{outputFile.FullName}' is sucessfully created![/]");
+            AnsiConsole.MarkupLine($"[green] The TextMate grammar '{outputFile.FullName}' is successfully created![/]");
         }
     }
     return new OutputResult(visitResult.Successful && outputResult.Successful, visitResult.Messages, outputResult.Messages);
@@ -248,7 +248,7 @@ static OutputResult CreateVSCodePackage(ParseResult parseResult, DirectoryInfo o
                     File.WriteAllText(Path.Combine(outputFolder.FullName, $"language-configuration.json"), languageResult.Output);
                     File.WriteAllText(Path.Combine(outputFolder.FullName, $"package.json"), vscodePackageResult.Output);
                     File.WriteAllText(Path.Combine(outputFolder.FullName, $"syntaxes/parseidon.tmLanguage.json"), textmateGrammarResult.Output);
-                    AnsiConsole.MarkupLine($"[green] The VS Code package in '{outputFolder.FullName}' is sucessfully created![/]");
+                    AnsiConsole.MarkupLine($"[green] The VS Code package in '{outputFolder.FullName}' is successfully created![/]");
                     successful = true;
                 }
             }
