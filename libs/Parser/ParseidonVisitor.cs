@@ -6,7 +6,7 @@ using Parseidon.Parser.Grammar.Terminals;
 
 namespace Parseidon.Parser;
 
-public class CreateCodeVisitor : INodeVisitor
+public class ParseidonVisitor : INodeVisitor
 {
     public interface IGetResults
     {

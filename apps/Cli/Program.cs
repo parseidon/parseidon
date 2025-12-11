@@ -148,12 +148,12 @@ static void PrintMessage(ParserMessage.MessageType messageType, String message)
 
 static IVisitResult CreateParser(ParseResult parseResult, FileInfo outputFile, String overrideOption, String parserNamespace, String parserClassname)
 {
-    IVisitor visitor = new CreateCodeVisitor();
+    IVisitor visitor = new ParseidonVisitor();
     IVisitResult visitResult = parseResult.Visit(visitor);
 
-    if (visitResult.Successful && visitResult is CreateCodeVisitor.IGetResults)
+    if (visitResult.Successful && visitResult is ParseidonVisitor.IGetResults)
     {
-        String code = (visitResult as CreateCodeVisitor.IGetResults)!.ParserCode ?? "";
+        String code = (visitResult as ParseidonVisitor.IGetResults)!.ParserCode ?? "";
         code =
             $"""
         //****************************************//
@@ -195,9 +195,9 @@ static IVisitResult CreateAST(ParseResult parseResult, FileInfo outputFile, Stri
 
 static IVisitResult CreateTextMateGrammar(ParseResult parseResult, FileInfo outputFile, String overrideOption)
 {
-    CreateCodeVisitor visitor = new CreateCodeVisitor();
+    ParseidonVisitor visitor = new ParseidonVisitor();
     IVisitResult visitResult = parseResult.Visit(visitor);
-    if (visitResult.Successful && visitResult is CreateCodeVisitor.IGetResults grammarResult)
+    if (visitResult.Successful && visitResult is ParseidonVisitor.IGetResults grammarResult)
     {
         File.WriteAllText(outputFile.FullName, grammarResult.GetTextMateGrammar(parseResult.MessageContext));
         AnsiConsole.MarkupLine($"[green] The TextMate grammar '{outputFile.FullName}' is sucessfully created![/]");
@@ -207,9 +207,9 @@ static IVisitResult CreateTextMateGrammar(ParseResult parseResult, FileInfo outp
 
 static IVisitResult CreateVSCodePackage(ParseResult parseResult, DirectoryInfo outputFolder, String overrideOption)
 {
-    CreateCodeVisitor visitor = new CreateCodeVisitor();
+    ParseidonVisitor visitor = new ParseidonVisitor();
     IVisitResult visitResult = parseResult.Visit(visitor);
-    if (visitResult.Successful && visitResult is CreateCodeVisitor.IGetResults grammarResult)
+    if (visitResult.Successful && visitResult is ParseidonVisitor.IGetResults grammarResult)
     {
         if (outputFolder.Exists)
             outputFolder.Delete(true);

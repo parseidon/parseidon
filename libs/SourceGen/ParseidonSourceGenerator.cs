@@ -97,7 +97,7 @@ public class ParseidonSourceGenerator : IIncrementalGenerator
                 }
 
                 // Generate code using the visitor
-                CreateCodeVisitor visitor = new Parser.CreateCodeVisitor();
+                ParseidonVisitor visitor = new Parser.ParseidonVisitor();
                 var visitResult = parseResult.Visit(visitor);
 
                 bool visitorReportedErrors = ReportMessages(context, content, file.Path, visitResult.Messages, VisitorErrorDescriptor, VisitorWarningDescriptor);
@@ -112,7 +112,7 @@ public class ParseidonSourceGenerator : IIncrementalGenerator
                     continue;
                 }
 
-                if (visitResult is CreateCodeVisitor.IGetResults codeResult)
+                if (visitResult is ParseidonVisitor.IGetResults codeResult)
                 {
                     // Add the generated source to the compilation
                     var sourceText = SourceText.From(codeResult.ParserCode ?? String.Empty, Encoding.UTF8);
