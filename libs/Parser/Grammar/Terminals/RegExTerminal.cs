@@ -19,6 +19,6 @@ public class RegExTerminal : AbstractFinalTerminal
 
     internal protected override RegExResult GetRegEx(Grammar grammar)
     {
-        return new RegExResult(RegEx, Array.Empty<String>());
+        return new RegExResult($"{RegEx.Trim()}{{{Quantifier}}}", Array.Empty<String>());
     }
 }

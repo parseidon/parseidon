@@ -29,20 +29,14 @@ public static class StringExtensions
         while (i < input.Length)
         {
             Boolean matched = false;
-
-            // Reihenfolge der Regeln bestimmt Priorität:
-            // Erste passende Regel gewinnt.
             foreach (var rule in rules)
             {
                 var search = rule.Search;
                 if (string.IsNullOrEmpty(search))
                     continue;
-
                 Int32 len = search.Length;
                 if (i + len > input.Length)
                     continue;
-
-                // Schneller Vergleich ohne Substring-Allocation
                 Boolean equal = true;
                 for (Int32 j = 0; j < len; j++)
                 {
@@ -52,19 +46,16 @@ public static class StringExtensions
                         break;
                     }
                 }
-
                 if (equal)
                 {
                     stringBuilder.Append(rule.Replace ?? String.Empty);
-                    i += len;        // Verbraucht alle Zeichen dieses Matches
+                    i += len;
                     matched = true;
-                    break;           // WICHTIG: nicht andere Regeln noch prüfen
+                    break;
                 }
             }
-
             if (!matched)
             {
-                // Kein Match: Originalzeichen übernehmen
                 stringBuilder.Append(input[i]);
                 i++;
             }
@@ -81,6 +72,25 @@ public static class StringExtensions
                 return true;
         }
         return false;
+    }
+
+    public static String Unescape(this String value)
+    {
+        var rules = new (String Search, String Replace)[]
+        {
+            ("\\'", "'"),
+            ("\\\"", "\""),
+            ("\\\\", "\\"),
+            ("\\0", "\0"),
+            ("\\a", "\a"),
+            ("\\b", "\b"),
+            ("\\f", "\f"),
+            ("\\n", "\n"),
+            ("\\r", "\r"),
+            ("\\t", "\t"),
+            ("\\v", "\v")
+        };
+        return value.ReplaceAll(rules);
     }
 
     public static String FormatLiteral(this String value, Boolean useQuotes)
