@@ -223,7 +223,7 @@ public class Grammar : AbstractNamedElement
 
                 {{Indent(GetGlobalClassesCode())}}
 
-                    public class {{GetOptionValue(Grammar.GrammarOptionClass)}}
+                    public sealed class {{GetOptionValue(Grammar.GrammarOptionClass)}}
                     {
                 {{Indent(Indent(GetParseCode()))}}
 
@@ -451,7 +451,7 @@ public class Grammar : AbstractNamedElement
 
         String result =
             $$"""
-            public class MessageContext
+            public sealed class MessageContext
             {
                 private String _text;
                 internal MessageContext(String text)
@@ -484,7 +484,7 @@ public class Grammar : AbstractNamedElement
                 }
             }
 
-            public class ParseResult
+            public sealed class ParseResult
             {
                 private class EmptyResult : IVisitResult
                 {
@@ -633,7 +633,7 @@ public class Grammar : AbstractNamedElement
     {
         String result =
             $$"""
-            private class ParserState
+            private sealed class ParserState
             {
                 public ParserState(String text, MessageContext messageContext)
                 {
@@ -927,7 +927,7 @@ public class Grammar : AbstractNamedElement
                 public UInt32 Column { get; }
             }
 
-            public class ASTNode
+            public sealed class ASTNode
             {
                 private List<ASTNode> _children { get; } = new List<ASTNode>();
                 private ASTNode? _parent = null;
@@ -999,7 +999,7 @@ public class Grammar : AbstractNamedElement
                 }
             }
 
-            public class ParserMessage
+            public sealed class ParserMessage
             {
                 public enum MessageType
                 {

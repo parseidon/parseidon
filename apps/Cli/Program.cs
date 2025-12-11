@@ -305,7 +305,7 @@ static Int32 ValidateFolderInput(FileInfo grammarFile, DirectoryInfo outputFolde
     return 0;
 }
 
-internal class OutputResult
+internal sealed class OutputResult
 {
     public OutputResult(Boolean successful, IReadOnlyList<ParserMessage> visitorMessages, IReadOnlyList<ParserMessage> createOutputMessages)
     {

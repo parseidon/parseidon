@@ -67,7 +67,7 @@ namespace Parseidon.Parser
         Error
     }
 
-    public class MessageContext
+    public sealed class MessageContext
     {
         private String _text;
         internal MessageContext(String text)
@@ -100,7 +100,7 @@ namespace Parseidon.Parser
         }
     }
 
-    public class ParseResult
+    public sealed class ParseResult
     {
         private class EmptyResult : IVisitResult
         {
@@ -222,7 +222,7 @@ namespace Parseidon.Parser
         public UInt32 Column { get; }
     }
 
-    public class ASTNode
+    public sealed class ASTNode
     {
         private List<ASTNode> _children { get; } = new List<ASTNode>();
         private ASTNode? _parent = null;
@@ -294,7 +294,7 @@ namespace Parseidon.Parser
         }
     }
 
-    public class ParserMessage
+    public sealed class ParserMessage
     {
         public enum MessageType
         {
@@ -316,7 +316,7 @@ namespace Parseidon.Parser
         public MessageType Type { get; }
     }
 
-    public class ParseidonParser
+    public sealed class ParseidonParser
     {
         public ParseResult Parse(String text)
         {
@@ -329,7 +329,7 @@ namespace Parseidon.Parser
             return new ParseResult(successful ? actualNode : null, state.MessageContext, state.Messages);
         }
 
-        private class ParserState
+        private sealed class ParserState
         {
             public ParserState(String text, MessageContext messageContext)
             {
