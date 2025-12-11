@@ -11,7 +11,7 @@ public class ParseidonVisitor : INodeVisitor
     public interface IGetResults
     {
         String ParserCode { get; }
-        String GetTextMateGrammar(MessageContext messageContext);
+        String TextMateGrammar { get; }
         String LanguageConfig { get; }
         String Package { get; }
     }
@@ -30,18 +30,20 @@ public class ParseidonVisitor : INodeVisitor
 
     private class CreateCodeVisitResult : IVisitResult, IGetResults
     {
-        public CreateCodeVisitResult(Boolean successful, IReadOnlyList<ParserMessage> messages, Grammar.Grammar grammar)
+        public CreateCodeVisitResult(Boolean successful, MessageContext messageContext, IReadOnlyList<ParserMessage> messages, Grammar.Grammar grammar)
         {
             Successful = successful;
+            MessageContext = messageContext;
             Messages = messages;
             _grammar = grammar;
         }
 
         private Grammar.Grammar _grammar;
+        private MessageContext MessageContext;
         public Boolean Successful { get; }
         public IReadOnlyList<ParserMessage> Messages { get; }
         public String ParserCode { get => _grammar.ParserCode; }
-        public String GetTextMateGrammar(MessageContext messageContext) => _grammar.ToTextMateGrammar(messageContext);
+        public String TextMateGrammar { get => _grammar.ToTextMateGrammar(MessageContext); }
         public String LanguageConfig { get => _grammar.LanguageConfig; }
         public String Package { get => _grammar.Package; }
     }
@@ -301,7 +303,7 @@ public class ParseidonVisitor : INodeVisitor
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
         if (typedContext.Grammar is null)
             throw new Exception("No grammar available!");
-        return new CreateCodeVisitResult(successful, messages, typedContext.Grammar);
+        return new CreateCodeVisitResult(successful, typedContext.MessageContext, messages, typedContext.Grammar);
     }
 
     public ProcessNodeResult ProcessNumberNode(object context, ASTNode node, IList<ParserMessage> messages)

@@ -198,7 +198,7 @@ static IVisitResult CreateTextMateGrammar(ParseResult parseResult, FileInfo outp
     IVisitResult visitResult = parseResult.Visit(visitor);
     if (visitResult.Successful && visitResult is ParseidonVisitor.IGetResults grammarResult)
     {
-        File.WriteAllText(outputFile.FullName, grammarResult.GetTextMateGrammar(parseResult.MessageContext));
+        File.WriteAllText(outputFile.FullName, grammarResult.TextMateGrammar);
         AnsiConsole.MarkupLine($"[green] The TextMate grammar '{outputFile.FullName}' is sucessfully created![/]");
     }
     return visitResult;
@@ -216,7 +216,7 @@ static IVisitResult CreateVSCodePackage(ParseResult parseResult, DirectoryInfo o
         (new DirectoryInfo(Path.Combine(outputFolder.FullName, "syntaxes"))).Create();
         File.WriteAllText(Path.Combine(outputFolder.FullName, $"language-configuration.json"), grammarResult.LanguageConfig);
         File.WriteAllText(Path.Combine(outputFolder.FullName, $"package.json"), grammarResult.Package);
-        File.WriteAllText(Path.Combine(outputFolder.FullName, $"syntaxes/parseidon.tmLanguage.json"), grammarResult.GetTextMateGrammar(parseResult.MessageContext));
+        File.WriteAllText(Path.Combine(outputFolder.FullName, $"syntaxes/parseidon.tmLanguage.json"), grammarResult.TextMateGrammar);
         AnsiConsole.MarkupLine($"[green] The VS Code package in '{outputFolder.FullName}' is sucessfully created![/]");
     }
     return visitResult;
