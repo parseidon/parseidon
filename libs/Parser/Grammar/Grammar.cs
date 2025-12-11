@@ -40,17 +40,27 @@ public class Grammar : AbstractNamedElement
 
     public CreateOutputResult ToTextMateGrammar(MessageContext messageContext)
     {
-        TMDefinition rootDefinition = GetTMRootDefinition();
-
-        TextMateGrammarDocument document = new TextMateGrammarDocument
+        List<ParserMessage> messages = new List<ParserMessage>();
+        TextMateGrammarDocument document = new TextMateGrammarDocument();
+        Boolean successful = false;
+        try
         {
-            DisplayName = GetOptionValue(Grammar.TextMateOptionDisplayName),
-            ScopeName = GetOptionValue(Grammar.TextMateOptionScopeName),
-            FileTypes = GetFileTypes(),
-            Patterns = new List<TMDefinition.TextMatePatternInclude>() { new TMDefinition.TextMatePatternInclude() { Include = $"#{rootDefinition.Name.ToLower()}" } },
-            Repository = GetTextMateRepository(this, messageContext)
-        };
+            TMDefinition rootDefinition = GetTMRootDefinition();
 
+            document = new TextMateGrammarDocument
+            {
+                DisplayName = GetOptionValue(Grammar.TextMateOptionDisplayName),
+                ScopeName = GetOptionValue(Grammar.TextMateOptionScopeName),
+                FileTypes = GetFileTypes(),
+                Patterns = new List<TMDefinition.TextMatePatternInclude>() { new TMDefinition.TextMatePatternInclude() { Include = $"#{rootDefinition.Name.ToLower()}" } },
+                Repository = GetTextMateRepository(this, messageContext)
+            };
+            successful = true;
+        }
+        catch (GrammarException e)
+        {
+            messages.Add(new ParserMessage(e.Message, ParserMessage.MessageType.Error, (e.Row, e.Column)));
+        }
         JsonSerializerOptions serializerOptions = new JsonSerializerOptions
         {
             WriteIndented = true,
@@ -58,77 +68,81 @@ public class Grammar : AbstractNamedElement
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
             Converters = { new KeyValuePairArrayConverter() }
         };
-
-        return new CreateOutputResult(true, JsonSerializer.Serialize(document, serializerOptions), new List<ParserMessage>());
+        return new CreateOutputResult(successful, JsonSerializer.Serialize(document, serializerOptions), messages);
     }
 
     public CreateOutputResult ToLanguageConfig(MessageContext messageContext)
     {
-        return new CreateOutputResult(true, ToLanguageConfig(), new List<ParserMessage>());
-    }
-
-    public String ToLanguageConfig()
-    {
-        String GetTextValueOfDefinition(Definition definition)
+        List<ParserMessage> messages = new List<ParserMessage>();
+        VSCodeLanguageConfDocument document = new VSCodeLanguageConfDocument();
+        Boolean successful = false;
+        try
         {
-            AbstractDefinitionElement definitionElement = definition.DefinitionElement;
-            while (definitionElement is not TextTerminal)
+            String GetTextValueOfDefinition(Definition definition)
             {
-                if (definitionElement is AbstractMarker marker)
-                    definitionElement = marker.Element ?? throw new Exception("Element required!");
-                else
-                    throw GetException("Quoted definitions can only include literals!");
-            }
-            return (definitionElement as TextTerminal)!.AsText().ReplaceAll(new (String Search, String Replace)[] { ("\\'", "'"), ("\\\"", "\""), ("\\\\", "\\") });
-        }
-        List<KeyValuePair<String, String>> brackets = new List<KeyValuePair<String, String>>();
-        List<KeyValuePair<String, String>> autoClosingPairs = new List<KeyValuePair<String, String>>();
-        List<KeyValuePair<String, String>> surroundingPairs = new List<KeyValuePair<String, String>>();
-        foreach (Definition definition in Definitions)
-        {
-            if (definition.KeyValuePairs.ContainsKey("quote"))
-            {
-                String quoteValue = GetTextValueOfDefinition(definition);
-                autoClosingPairs.Add(new KeyValuePair<String, String>(quoteValue, quoteValue));
-                surroundingPairs.Add(new KeyValuePair<String, String>(quoteValue, quoteValue));
-            }
-            if (definition.KeyValuePairs.ContainsKey("bracketopen"))
-            {
-                String bracketIdentifier = definition.KeyValuePairs["bracketopen"];
-                String? closeBracket = null;
-                foreach (Definition correspondingDefinition in Definitions)
+                AbstractDefinitionElement definitionElement = definition.DefinitionElement;
+                while (definitionElement is not TextTerminal)
                 {
-                    if ((correspondingDefinition != definition) && correspondingDefinition.KeyValuePairs.ContainsKey("bracketclose") && (correspondingDefinition.KeyValuePairs["bracketclose"] == bracketIdentifier))
+                    if (definitionElement is AbstractMarker marker)
+                        definitionElement = marker.Element ?? throw new Exception("Element required!");
+                    else
+                        throw GetException("Quoted definitions can only include literals!");
+                }
+                return (definitionElement as TextTerminal)!.AsText().ReplaceAll(new (String Search, String Replace)[] { ("\\'", "'"), ("\\\"", "\""), ("\\\\", "\\") });
+            }
+            List<KeyValuePair<String, String>> brackets = new List<KeyValuePair<String, String>>();
+            List<KeyValuePair<String, String>> autoClosingPairs = new List<KeyValuePair<String, String>>();
+            List<KeyValuePair<String, String>> surroundingPairs = new List<KeyValuePair<String, String>>();
+            foreach (Definition definition in Definitions)
+            {
+                if (definition.KeyValuePairs.ContainsKey("quote"))
+                {
+                    String quoteValue = GetTextValueOfDefinition(definition);
+                    autoClosingPairs.Add(new KeyValuePair<String, String>(quoteValue, quoteValue));
+                    surroundingPairs.Add(new KeyValuePair<String, String>(quoteValue, quoteValue));
+                }
+                if (definition.KeyValuePairs.ContainsKey("bracketopen"))
+                {
+                    String bracketIdentifier = definition.KeyValuePairs["bracketopen"];
+                    String? closeBracket = null;
+                    foreach (Definition correspondingDefinition in Definitions)
                     {
-                        closeBracket = GetTextValueOfDefinition(correspondingDefinition);
-                        break;
+                        if ((correspondingDefinition != definition) && correspondingDefinition.KeyValuePairs.ContainsKey("bracketclose") && (correspondingDefinition.KeyValuePairs["bracketclose"] == bracketIdentifier))
+                        {
+                            closeBracket = GetTextValueOfDefinition(correspondingDefinition);
+                            break;
+                        }
                     }
+                    if (!String.IsNullOrEmpty(closeBracket))
+                    {
+                        String openBracket = GetTextValueOfDefinition(definition);
+                        brackets.Add(new KeyValuePair<String, String>(openBracket, closeBracket!));
+                        autoClosingPairs.Add(new KeyValuePair<String, String>(openBracket, closeBracket!));
+                        surroundingPairs.Add(new KeyValuePair<String, String>(openBracket, closeBracket!));
+                    }
+                    else
+                        throw GetException($"A closing bracket for \"bracketopen: {bracketIdentifier}\" is required!");
                 }
-                if (!String.IsNullOrEmpty(closeBracket))
-                {
-                    String openBracket = GetTextValueOfDefinition(definition);
-                    brackets.Add(new KeyValuePair<String, String>(openBracket, closeBracket!));
-                    autoClosingPairs.Add(new KeyValuePair<String, String>(openBracket, closeBracket!));
-                    surroundingPairs.Add(new KeyValuePair<String, String>(openBracket, closeBracket!));
-                }
-                else
-                    throw GetException($"A closing bracket for \"bracketopen: {bracketIdentifier}\" is required!");
             }
-        }
-        String? lineComment = TryGetOptionValue(Grammar.TextMateOptionLineComment);
-        KeyValuePair<String, String>? blockComment = null;
-
-        VSCodeLanguageConfDocument document = new VSCodeLanguageConfDocument
-        {
-            Comments = new VSCodeLanguageConfComments
+            String? lineComment = TryGetOptionValue(Grammar.TextMateOptionLineComment);
+            KeyValuePair<String, String>? blockComment = null;
+            document = new VSCodeLanguageConfDocument
             {
-                LineComment = lineComment,
-                BlockComment = blockComment
-            },
-            Brackets = brackets,
-            AutoClosingPairs = autoClosingPairs,
-            SurroundingPairs = surroundingPairs
-        };
+                Comments = new VSCodeLanguageConfComments
+                {
+                    LineComment = lineComment,
+                    BlockComment = blockComment
+                },
+                Brackets = brackets,
+                AutoClosingPairs = autoClosingPairs,
+                SurroundingPairs = surroundingPairs
+            };
+            successful = true;
+        }
+        catch (GrammarException e)
+        {
+            messages.Add(new ParserMessage(e.Message, ParserMessage.MessageType.Error, (e.Row, e.Column)));
+        }
 
         JsonSerializerOptions serializerOptions = new JsonSerializerOptions
         {
@@ -137,48 +151,52 @@ public class Grammar : AbstractNamedElement
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
             Converters = { new KeyValuePairArrayConverter() }
         };
-
-        return JsonSerializer.Serialize(document, serializerOptions);
+        return new CreateOutputResult(successful, JsonSerializer.Serialize(document, serializerOptions), messages);
     }
 
     public CreateOutputResult ToVSCodePackage(MessageContext messageContext)
     {
-        return new CreateOutputResult(true, ToVSCodePackage(), new List<ParserMessage>());
-    }
-
-    public String ToVSCodePackage()
-    {
-        String languageDisplayName = GetOptionValue(Grammar.TextMateOptionDisplayName);
-        String languageName = (TryGetOptionValue("name") ?? languageDisplayName).ToLower().Replace(" ", "");
-
-        VSCodePackageDocument document = new VSCodePackageDocument
+        List<ParserMessage> messages = new List<ParserMessage>();
+        VSCodePackageDocument document = new VSCodePackageDocument();
+        Boolean successful = false;
+        try
         {
-            Name = languageName,
-            DisplayName = languageDisplayName,
-            Description = TryGetOptionValue("description"),
-            Version = GetOptionValue(Grammar.TextMateOptionVersion),
-            Contributes =
-                new VSCodePackageContributes
-                {
-                    Languages = ImmutableArray.Create<VSCodePackageLanguage>().Add(
-                        new VSCodePackageLanguage
-                        {
-                            Id = languageName,
-                            Aliases = ImmutableArray.Create<String>().Add(languageDisplayName).Add(languageName),
-                            Extensions = GetFileTypes()
-                        }
-                    ),
-                    Grammars = ImmutableArray.Create<VSCodePackageGrammar>().Add(
-                        new VSCodePackageGrammar
-                        {
-                            Language = languageName,
-                            ScopeName = TryGetOptionValue(Grammar.TextMateOptionScopeName) ?? $"source.{languageName}",
-                            Path = $"./syntaxes/{languageName}.tmLanguage.json"
-                        }
-                    )
-                }
-        };
+            String languageDisplayName = GetOptionValue(Grammar.TextMateOptionDisplayName);
+            String languageName = (TryGetOptionValue("name") ?? languageDisplayName).ToLower().Replace(" ", "");
 
+            document = new VSCodePackageDocument
+            {
+                Name = languageName,
+                DisplayName = languageDisplayName,
+                Description = TryGetOptionValue("description"),
+                Version = GetOptionValue(Grammar.TextMateOptionVersion),
+                Contributes =
+                    new VSCodePackageContributes
+                    {
+                        Languages = ImmutableArray.Create<VSCodePackageLanguage>().Add(
+                            new VSCodePackageLanguage
+                            {
+                                Id = languageName,
+                                Aliases = ImmutableArray.Create<String>().Add(languageDisplayName).Add(languageName),
+                                Extensions = GetFileTypes()
+                            }
+                        ),
+                        Grammars = ImmutableArray.Create<VSCodePackageGrammar>().Add(
+                            new VSCodePackageGrammar
+                            {
+                                Language = languageName,
+                                ScopeName = TryGetOptionValue(Grammar.TextMateOptionScopeName) ?? $"source.{languageName}",
+                                Path = $"./syntaxes/{languageName}.tmLanguage.json"
+                            }
+                        )
+                    }
+            };
+            successful = true;
+        }
+        catch (GrammarException e)
+        {
+            messages.Add(new ParserMessage(e.Message, ParserMessage.MessageType.Error, (e.Row, e.Column)));
+        }
         JsonSerializerOptions serializerOptions = new JsonSerializerOptions
         {
             WriteIndented = true,
@@ -186,7 +204,7 @@ public class Grammar : AbstractNamedElement
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
         };
 
-        return JsonSerializer.Serialize(document, serializerOptions);
+        return new CreateOutputResult(successful, JsonSerializer.Serialize(document, serializerOptions), messages);
     }
 
     public CreateOutputResult ToParserCode(MessageContext messageContext)
