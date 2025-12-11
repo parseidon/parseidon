@@ -1129,7 +1129,7 @@ public class Grammar : AbstractNamedElement
             Output = result;
             Messages = messages;
         }
-        Boolean Successful { get; }
+        public Boolean Successful { get; }
         public String Output { get; }
         public IReadOnlyList<ParserMessage> Messages { get; }
     }
