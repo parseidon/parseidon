@@ -59,12 +59,12 @@ public class Grammar : AbstractNamedElement
             Converters = { new KeyValuePairArrayConverter() }
         };
 
-        return new CreateStringResult(JsonSerializer.Serialize(document, serializerOptions), new List<ParserMessage>());
+        return new CreateStringResult(true, JsonSerializer.Serialize(document, serializerOptions), new List<ParserMessage>());
     }
 
     public CreateStringResult ToLanguageConfig(MessageContext messageContext)
     {
-        return new CreateStringResult(ToLanguageConfig(), new List<ParserMessage>());
+        return new CreateStringResult(true, ToLanguageConfig(), new List<ParserMessage>());
     }
 
     public String ToLanguageConfig()
@@ -143,7 +143,7 @@ public class Grammar : AbstractNamedElement
 
     public CreateStringResult ToVSCodePackage(MessageContext messageContext)
     {
-        return new CreateStringResult(ToVSCodePackage(), new List<ParserMessage>());
+        return new CreateStringResult(true, ToVSCodePackage(), new List<ParserMessage>());
     }
 
     public String ToVSCodePackage()
@@ -191,7 +191,7 @@ public class Grammar : AbstractNamedElement
 
     public CreateStringResult ToParserCode(MessageContext messageContext)
     {
-        return new CreateStringResult(ToParserCode(this), new List<ParserMessage>());
+        return new CreateStringResult(true, ToParserCode(this), new List<ParserMessage>());
     }
 
     public override String ToParserCode(Grammar grammar)
@@ -1130,11 +1130,13 @@ public class Grammar : AbstractNamedElement
 
     public sealed record CreateStringResult
     {
-        public CreateStringResult(String result, IReadOnlyList<ParserMessage> messages)
+        public CreateStringResult(Boolean successful, String result, IReadOnlyList<ParserMessage> messages)
         {
+            Successful = successful;
             Result = result;
             Messages = messages;
         }
+        Boolean Successful { get; }
         public String Result { get; }
         public IReadOnlyList<ParserMessage> Messages { get; }
     }
