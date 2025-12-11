@@ -33,6 +33,8 @@ public class Grammar : AbstractNamedElement
     internal const String TextMateOptionDisplayName = "displayname";
     internal const String TextMateOptionScopeName = "scopename";
     internal const String TextMateOptionFileType = "filetype";
+    internal const String TextMateOptionDescription = "description";
+    internal const String TextMateOptionLanguageName = "name";
     internal const String TextMateOptionVersion = "version";
     internal const String TextMateOptionLineComment = "linecomment";
     internal const String TextMatePropertyScope = "tmscope";
@@ -156,13 +158,13 @@ public class Grammar : AbstractNamedElement
         try
         {
             String languageDisplayName = GetOptionValue(Grammar.TextMateOptionDisplayName);
-            String languageName = (TryGetOptionValue("name") ?? languageDisplayName).ToLower().Replace(" ", "");
+            String languageName = (TryGetOptionValue(Grammar.TextMateOptionLanguageName) ?? languageDisplayName).ToLower().Replace(" ", "");
 
             document = new VSCodePackageDocument
             {
                 Name = languageName,
                 DisplayName = languageDisplayName,
-                Description = TryGetOptionValue("description"),
+                Description = TryGetOptionValue(Grammar.TextMateOptionDescription),
                 Version = GetOptionValue(Grammar.TextMateOptionVersion),
                 Contributes =
                     new VSCodePackageContributes
