@@ -6,6 +6,7 @@
 @scopename: source.parseidon;
 @filetype: pgram;
 @version: '1.0.0';
+@linecomment: '#';
 
 # Grammar
 Grammar                 = _(Option_)* (Definition / TMDefinition)+;
@@ -125,7 +126,7 @@ $$UnicodeChars          = '\\u' [0-9a-fA-F]{4};
 -_                      = (NewLine / WhiteSpace / Comment)*;
 ^WhiteSpace             = [ \t];
 ^NewLine                = '\r\n' / [\r\n];
-Comment                 = '#' [^\r\n]* {tmpattern: comment.line, tmscope: comment.line, linecomment};
+Comment                 = '#' [^\r\n]* {tmpattern: comment.line, tmscope: comment.line};
 
 # Shared characters
 :Equal                  = '=';
