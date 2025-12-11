@@ -26,10 +26,6 @@ public class Grammar : AbstractNamedElement
     public List<TMDefinition> TMDefinitions { get; }
     public List<ValuePair> Options { get; }
 
-    public String ParserCode { get => ToParserCode(this); }
-    public String LanguageConfig { get => ToLanguageConfig(); }
-    public String Package { get => ToPackage(); }
-
     internal const String GrammarOptionNamespace = "namespace";
     internal const String GrammarOptionClass = "class";
     internal const String GrammarOptionRoot = "root";
@@ -66,6 +62,7 @@ public class Grammar : AbstractNamedElement
         return JsonSerializer.Serialize(document, serializerOptions);
     }
 
+    public String LanguageConfig { get => ToLanguageConfig(); }
     public String ToLanguageConfig()
     {
         String GetTextValueOfDefinition(Definition definition)
@@ -140,7 +137,9 @@ public class Grammar : AbstractNamedElement
         return JsonSerializer.Serialize(document, serializerOptions);
     }
 
-    public String ToPackage()
+    public String Package { get => ToVSCodePackage(); }
+
+    public String ToVSCodePackage()
     {
         String languageDisplayName = GetOptionValue(Grammar.TextMateOptionDisplayName);
         String languageName = (TryGetOptionValue("name") ?? languageDisplayName).ToLower().Replace(" ", "");
@@ -183,153 +182,7 @@ public class Grammar : AbstractNamedElement
         return JsonSerializer.Serialize(document, serializerOptions);
     }
 
-    private IReadOnlyDictionary<String, TMDefinition.TextMateRepositoryEntry> GetTextMateRepository(Grammar grammar, MessageContext messageContext)
-    {
-        var result = new Dictionary<String, TMDefinition.TextMateRepositoryEntry>(StringComparer.OrdinalIgnoreCase);
-        List<TMDefinition> tmdefinitions = TMDefinitions.ToList();
-        foreach (var definition in Definitions)
-            if (definition.KeyValuePairs.ContainsKey(TextMatePropertyPattern))
-            {
-                foreach (TMDefinition tmdefinition in tmdefinitions)
-                    if (tmdefinition.Name.Equals(definition.Name, StringComparison.OrdinalIgnoreCase))
-                    {
-                        (UInt32 row, UInt32 column) = MessageContext!.CalculateLocation(definition.Node.Position);
-                        throw GetException($"TextMate definition '{definition.Name}' already exists!");
-                    }
-                String? scopeName = definition.KeyValuePairs[TextMatePropertyPattern];
-                scopeName = String.IsNullOrEmpty(scopeName) ? null : scopeName;
-                TMSequence sequence = new TMSequence(new List<AbstractDefinitionElement>() { definition.DefinitionElement }, messageContext, definition.Node);
-                tmdefinitions.Add(new TMDefinition(definition.Name, scopeName, sequence, null, null, messageContext, definition.Node));
-            }
-        foreach (TMDefinition tmdefinition in tmdefinitions)
-            result[tmdefinition.Name.ToLower()] = tmdefinition.GetRepositoryEntry(grammar);
-        return result;
-    }
-
-    private String[] GetFileTypes()
-    {
-        String rawValue = GetOptionValue(Grammar.TextMateOptionFileType);
-        String[] parts = rawValue.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(p => p.Trim()).Where(p => p.Length > 0).ToArray(); ;
-        return parts.Length == 0 ? new[] { rawValue.Trim() } : parts;
-    }
-
-    private sealed class TextMateGrammarDocument
-    {
-        [JsonPropertyName("displayName")]
-        public String DisplayName { get; set; } = String.Empty;
-
-        [JsonPropertyName("scopeName")]
-        public String ScopeName { get; set; } = String.Empty;
-
-        [JsonPropertyName("fileTypes")]
-        public IReadOnlyList<String> FileTypes { get; set; } = Array.Empty<String>();
-
-        [JsonPropertyName("patterns")]
-        public IReadOnlyList<TMDefinition.TextMatePatternInclude> Patterns { get; set; } = Array.Empty<TMDefinition.TextMatePatternInclude>();
-
-        [JsonPropertyName("repository")]
-        public IReadOnlyDictionary<String, TMDefinition.TextMateRepositoryEntry> Repository { get; set; } = new Dictionary<String, TMDefinition.TextMateRepositoryEntry>();
-    }
-
-    private sealed class VSCodeLanguageConfDocument
-    {
-        [JsonPropertyName("comments")]
-        public VSCodeLanguageConfComments Comments { get; set; } = new VSCodeLanguageConfComments();
-
-        [JsonPropertyName("brackets")]
-        public IList<KeyValuePair<String, String>> Brackets { get; set; } = Array.Empty<KeyValuePair<String, String>>();
-
-        [JsonPropertyName("autoClosingPairs")]
-        public IList<KeyValuePair<String, String>> AutoClosingPairs { get; set; } = Array.Empty<KeyValuePair<String, String>>();
-
-        [JsonPropertyName("surroundingPairs")]
-        public IList<KeyValuePair<String, String>> SurroundingPairs { get; set; } = Array.Empty<KeyValuePair<String, String>>();
-    }
-
-    private sealed class VSCodeLanguageConfComments
-    {
-        [JsonPropertyName("lineComment")]
-        public String? LineComment { get; set; }
-
-        [JsonPropertyName("blockComment")]
-        public KeyValuePair<String, String>? BlockComment { get; set; }
-    }
-
-    private sealed class KeyValuePairArrayConverter : JsonConverter<KeyValuePair<String, String>>
-    {
-        public override KeyValuePair<String, String> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Write(Utf8JsonWriter writer, KeyValuePair<String, String> value, JsonSerializerOptions options)
-        {
-            writer.WriteStartArray();
-            writer.WriteStringValue(value.Key);
-            writer.WriteStringValue(value.Value);
-            writer.WriteEndArray();
-        }
-    }
-
-    private sealed class VSCodePackageDocument
-    {
-        [JsonPropertyName("name")]
-        public String Name { get; set; } = String.Empty;
-
-        [JsonPropertyName("displayName")]
-        public String DisplayName { get; set; } = String.Empty;
-
-        [JsonPropertyName("description")]
-        public String? Description { get; set; } = String.Empty;
-
-        [JsonPropertyName("version")]
-        public String Version { get; set; } = String.Empty;
-
-        [JsonPropertyName("engines")]
-        public IReadOnlyDictionary<String, String> Engines { get; set; } = ImmutableDictionary.Create<String, String>().Add("vscode", "^1.106.1");
-
-        [JsonPropertyName("categories")]
-        public IReadOnlyList<String> Categories { get; set; } = ImmutableArray.Create<String>().Add("Programming Languages");
-
-        [JsonPropertyName("contributes")]
-        public VSCodePackageContributes Contributes { get; set; } = new VSCodePackageContributes();
-    }
-
-    private sealed class VSCodePackageContributes
-    {
-        [JsonPropertyName("languages")]
-        public IReadOnlyList<VSCodePackageLanguage> Languages { get; set; } = Array.Empty<VSCodePackageLanguage>();
-
-        [JsonPropertyName("grammars")]
-        public IReadOnlyList<VSCodePackageGrammar> Grammars { get; set; } = Array.Empty<VSCodePackageGrammar>();
-    }
-
-    private sealed class VSCodePackageLanguage
-    {
-        [JsonPropertyName("id")]
-        public String Id { get; set; } = String.Empty;
-
-        [JsonPropertyName("aliases")]
-        public IReadOnlyList<String> Aliases { get; set; } = Array.Empty<String>();
-
-        [JsonPropertyName("extensions")]
-        public IReadOnlyList<String> Extensions { get; set; } = Array.Empty<String>();
-
-        [JsonPropertyName("configuration")]
-        public String Configuration { get; set; } = "./language-configuration.json";
-    }
-
-    private sealed class VSCodePackageGrammar
-    {
-        [JsonPropertyName("language")]
-        public String Language { get; set; } = String.Empty;
-
-        [JsonPropertyName("scopeName")]
-        public String ScopeName { get; set; } = String.Empty;
-
-        [JsonPropertyName("path")]
-        public String Path { get; set; } = String.Empty;
-    }
+    public String ParserCode { get => ToParserCode(this); }
 
     public override String ToParserCode(Grammar grammar)
     {
@@ -358,6 +211,33 @@ public class Grammar : AbstractNamedElement
                 }
             }
             """.TrimLineEndWhitespace();
+    }
+
+    private IReadOnlyDictionary<String, TMDefinition.TextMateRepositoryEntry> GetTextMateRepository(Grammar grammar, MessageContext messageContext)
+    {
+        var result = new Dictionary<String, TMDefinition.TextMateRepositoryEntry>(StringComparer.OrdinalIgnoreCase);
+        List<TMDefinition> tmdefinitions = TMDefinitions.ToList();
+        foreach (var definition in Definitions)
+            if (definition.KeyValuePairs.ContainsKey(TextMatePropertyPattern))
+            {
+                foreach (TMDefinition tmdefinition in tmdefinitions)
+                    if (tmdefinition.Name.Equals(definition.Name, StringComparison.OrdinalIgnoreCase))
+                        throw GetException($"TextMate definition '{definition.Name}' already exists!");
+                String? scopeName = definition.KeyValuePairs[TextMatePropertyPattern];
+                scopeName = String.IsNullOrEmpty(scopeName) ? null : scopeName;
+                TMSequence sequence = new TMSequence(new List<AbstractDefinitionElement>() { definition.DefinitionElement }, messageContext, definition.Node);
+                tmdefinitions.Add(new TMDefinition(definition.Name, scopeName, sequence, null, null, messageContext, definition.Node));
+            }
+        foreach (TMDefinition tmdefinition in tmdefinitions)
+            result[tmdefinition.Name.ToLower()] = tmdefinition.GetRepositoryEntry(grammar);
+        return result;
+    }
+
+    private String[] GetFileTypes()
+    {
+        String rawValue = GetOptionValue(Grammar.TextMateOptionFileType);
+        String[] parts = rawValue.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(p => p.Trim()).Where(p => p.Length > 0).ToArray(); ;
+        return parts.Length == 0 ? new[] { rawValue.Trim() } : parts;
     }
 
     public override bool MatchesVariableText()
@@ -1120,4 +1000,121 @@ public class Grammar : AbstractNamedElement
         return result;
     }
 
+    private sealed class TextMateGrammarDocument
+    {
+        [JsonPropertyName("displayName")]
+        public String DisplayName { get; set; } = String.Empty;
+
+        [JsonPropertyName("scopeName")]
+        public String ScopeName { get; set; } = String.Empty;
+
+        [JsonPropertyName("fileTypes")]
+        public IReadOnlyList<String> FileTypes { get; set; } = Array.Empty<String>();
+
+        [JsonPropertyName("patterns")]
+        public IReadOnlyList<TMDefinition.TextMatePatternInclude> Patterns { get; set; } = Array.Empty<TMDefinition.TextMatePatternInclude>();
+
+        [JsonPropertyName("repository")]
+        public IReadOnlyDictionary<String, TMDefinition.TextMateRepositoryEntry> Repository { get; set; } = new Dictionary<String, TMDefinition.TextMateRepositoryEntry>();
+    }
+
+    private sealed class VSCodeLanguageConfDocument
+    {
+        [JsonPropertyName("comments")]
+        public VSCodeLanguageConfComments Comments { get; set; } = new VSCodeLanguageConfComments();
+
+        [JsonPropertyName("brackets")]
+        public IList<KeyValuePair<String, String>> Brackets { get; set; } = Array.Empty<KeyValuePair<String, String>>();
+
+        [JsonPropertyName("autoClosingPairs")]
+        public IList<KeyValuePair<String, String>> AutoClosingPairs { get; set; } = Array.Empty<KeyValuePair<String, String>>();
+
+        [JsonPropertyName("surroundingPairs")]
+        public IList<KeyValuePair<String, String>> SurroundingPairs { get; set; } = Array.Empty<KeyValuePair<String, String>>();
+    }
+
+    private sealed class VSCodeLanguageConfComments
+    {
+        [JsonPropertyName("lineComment")]
+        public String? LineComment { get; set; }
+
+        [JsonPropertyName("blockComment")]
+        public KeyValuePair<String, String>? BlockComment { get; set; }
+    }
+
+    private sealed class VSCodePackageDocument
+    {
+        [JsonPropertyName("name")]
+        public String Name { get; set; } = String.Empty;
+
+        [JsonPropertyName("displayName")]
+        public String DisplayName { get; set; } = String.Empty;
+
+        [JsonPropertyName("description")]
+        public String? Description { get; set; } = String.Empty;
+
+        [JsonPropertyName("version")]
+        public String Version { get; set; } = String.Empty;
+
+        [JsonPropertyName("engines")]
+        public IReadOnlyDictionary<String, String> Engines { get; set; } = ImmutableDictionary.Create<String, String>().Add("vscode", "^1.106.1");
+
+        [JsonPropertyName("categories")]
+        public IReadOnlyList<String> Categories { get; set; } = ImmutableArray.Create<String>().Add("Programming Languages");
+
+        [JsonPropertyName("contributes")]
+        public VSCodePackageContributes Contributes { get; set; } = new VSCodePackageContributes();
+    }
+
+    private sealed class VSCodePackageContributes
+    {
+        [JsonPropertyName("languages")]
+        public IReadOnlyList<VSCodePackageLanguage> Languages { get; set; } = Array.Empty<VSCodePackageLanguage>();
+
+        [JsonPropertyName("grammars")]
+        public IReadOnlyList<VSCodePackageGrammar> Grammars { get; set; } = Array.Empty<VSCodePackageGrammar>();
+    }
+
+    private sealed class VSCodePackageLanguage
+    {
+        [JsonPropertyName("id")]
+        public String Id { get; set; } = String.Empty;
+
+        [JsonPropertyName("aliases")]
+        public IReadOnlyList<String> Aliases { get; set; } = Array.Empty<String>();
+
+        [JsonPropertyName("extensions")]
+        public IReadOnlyList<String> Extensions { get; set; } = Array.Empty<String>();
+
+        [JsonPropertyName("configuration")]
+        public String Configuration { get; set; } = "./language-configuration.json";
+    }
+
+    private sealed class VSCodePackageGrammar
+    {
+        [JsonPropertyName("language")]
+        public String Language { get; set; } = String.Empty;
+
+        [JsonPropertyName("scopeName")]
+        public String ScopeName { get; set; } = String.Empty;
+
+        [JsonPropertyName("path")]
+        public String Path { get; set; } = String.Empty;
+    }
+
+    private sealed class KeyValuePairArrayConverter : JsonConverter<KeyValuePair<String, String>>
+    {
+        public override KeyValuePair<String, String> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Write(Utf8JsonWriter writer, KeyValuePair<String, String> value, JsonSerializerOptions options)
+        {
+            writer.WriteStartArray();
+            writer.WriteStringValue(value.Key);
+            writer.WriteStringValue(value.Value);
+            writer.WriteEndArray();
+        }
+    }
 }
