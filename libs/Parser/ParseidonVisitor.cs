@@ -10,10 +10,10 @@ public class ParseidonVisitor : INodeVisitor
 {
     public interface IGetResults
     {
-        String ParserCode { get; }
-        String TextMateGrammar { get; }
-        String LanguageConfig { get; }
-        String Package { get; }
+        Grammar.Grammar.CreateStringResult ParserCode { get; }
+        Grammar.Grammar.CreateStringResult TextMateGrammar { get; }
+        Grammar.Grammar.CreateStringResult LanguageConfig { get; }
+        Grammar.Grammar.CreateStringResult Package { get; }
     }
 
     private class CreateCodeVisitorContext
@@ -42,10 +42,14 @@ public class ParseidonVisitor : INodeVisitor
         private MessageContext MessageContext;
         public Boolean Successful { get; }
         public IReadOnlyList<ParserMessage> Messages { get; }
-        public String ParserCode { get => _grammar.ParserCode; }
-        public String TextMateGrammar { get => _grammar.ToTextMateGrammar(MessageContext); }
-        public String LanguageConfig { get => _grammar.LanguageConfig; }
-        public String Package { get => _grammar.Package; }
+
+        public Grammar.Grammar.CreateStringResult ParserCode => _grammar.ParserCode;
+
+        public Grammar.Grammar.CreateStringResult TextMateGrammar => _grammar.ToTextMateGrammar(MessageContext);
+
+        public Grammar.Grammar.CreateStringResult LanguageConfig => _grammar.LanguageConfig;
+
+        public Grammar.Grammar.CreateStringResult Package => _grammar.Package;
     }
 
     private T Pop<T>(CreateCodeVisitorContext context, Int32 position) where T : AbstractGrammarElement

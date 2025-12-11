@@ -115,7 +115,8 @@ public class ParseidonSourceGenerator : IIncrementalGenerator
                 if (visitResult is ParseidonVisitor.IGetResults codeResult)
                 {
                     // Add the generated source to the compilation
-                    var sourceText = SourceText.From(codeResult.ParserCode ?? String.Empty, Encoding.UTF8);
+                    var parserCodeResult = codeResult.ParserCode;
+                    var sourceText = SourceText.From(parserCodeResult.Result ?? String.Empty, Encoding.UTF8);
                     context.AddSource($"{fileName}.g.cs", sourceText);
                 }
                 else

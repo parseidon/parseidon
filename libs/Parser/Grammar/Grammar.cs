@@ -38,7 +38,7 @@ public class Grammar : AbstractNamedElement
     internal const String TextMatePropertyScope = "tmscope";
     internal const String TextMatePropertyPattern = "tmpattern";
 
-    public String ToTextMateGrammar(MessageContext messageContext)
+    public CreateStringResult ToTextMateGrammar(MessageContext messageContext)
     {
         TMDefinition rootDefinition = GetTMRootDefinition();
 
@@ -59,10 +59,14 @@ public class Grammar : AbstractNamedElement
             Converters = { new KeyValuePairArrayConverter() }
         };
 
-        return JsonSerializer.Serialize(document, serializerOptions);
+        return new CreateStringResult(JsonSerializer.Serialize(document, serializerOptions), new List<ParserMessage>());
     }
 
-    public String LanguageConfig { get => ToLanguageConfig(); }
+    public CreateStringResult LanguageConfig
+    {
+        get => new CreateStringResult(ToLanguageConfig(), new List<ParserMessage>());
+    }
+
     public String ToLanguageConfig()
     {
         String GetTextValueOfDefinition(Definition definition)
@@ -137,7 +141,10 @@ public class Grammar : AbstractNamedElement
         return JsonSerializer.Serialize(document, serializerOptions);
     }
 
-    public String Package { get => ToVSCodePackage(); }
+    public CreateStringResult Package
+    {
+        get => new CreateStringResult(ToVSCodePackage(), new List<ParserMessage>());
+    }
 
     public String ToVSCodePackage()
     {
@@ -182,7 +189,10 @@ public class Grammar : AbstractNamedElement
         return JsonSerializer.Serialize(document, serializerOptions);
     }
 
-    public String ParserCode { get => ToParserCode(this); }
+    public CreateStringResult ParserCode
+    {
+        get => new CreateStringResult(ToParserCode(this), new List<ParserMessage>());
+    }
 
     public override String ToParserCode(Grammar grammar)
     {
@@ -1116,5 +1126,16 @@ public class Grammar : AbstractNamedElement
             writer.WriteStringValue(value.Value);
             writer.WriteEndArray();
         }
+    }
+
+    public sealed record CreateStringResult
+    {
+        public CreateStringResult(String result, IReadOnlyList<ParserMessage> messages)
+        {
+            Result = result;
+            Messages = messages;
+        }
+        public String Result { get; }
+        public IReadOnlyList<ParserMessage> Messages { get; }
     }
 }
