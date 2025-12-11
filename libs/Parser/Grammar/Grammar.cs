@@ -62,9 +62,9 @@ public class Grammar : AbstractNamedElement
         return new CreateStringResult(JsonSerializer.Serialize(document, serializerOptions), new List<ParserMessage>());
     }
 
-    public CreateStringResult LanguageConfig
+    public CreateStringResult ToLanguageConfig(MessageContext messageContext)
     {
-        get => new CreateStringResult(ToLanguageConfig(), new List<ParserMessage>());
+        return new CreateStringResult(ToLanguageConfig(), new List<ParserMessage>());
     }
 
     public String ToLanguageConfig()
@@ -141,9 +141,9 @@ public class Grammar : AbstractNamedElement
         return JsonSerializer.Serialize(document, serializerOptions);
     }
 
-    public CreateStringResult Package
+    public CreateStringResult ToVSCodePackage(MessageContext messageContext)
     {
-        get => new CreateStringResult(ToVSCodePackage(), new List<ParserMessage>());
+        return new CreateStringResult(ToVSCodePackage(), new List<ParserMessage>());
     }
 
     public String ToVSCodePackage()
@@ -189,9 +189,9 @@ public class Grammar : AbstractNamedElement
         return JsonSerializer.Serialize(document, serializerOptions);
     }
 
-    public CreateStringResult ParserCode
+    public CreateStringResult ToParserCode(MessageContext messageContext)
     {
-        get => new CreateStringResult(ToParserCode(this), new List<ParserMessage>());
+        return new CreateStringResult(ToParserCode(this), new List<ParserMessage>());
     }
 
     public override String ToParserCode(Grammar grammar)
