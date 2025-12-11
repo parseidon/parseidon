@@ -366,7 +366,7 @@ public class ParseidonVisitor : INodeVisitor
         TMSequence? endSequence = TryPop<TMSequence>(typedContext, node.Position);
         TMIncludes? includes = TryPop<TMIncludes>(typedContext, node.Position);
         if ((endSequence is null) && (includes is null))
-            throw new GrammarException("There mus be a TextMate sequence or includes!", typedContext.MessageContext.CalculateLocation(node.Position));
+            throw new GrammarException("There must be a TextMate sequence or includes!", typedContext.MessageContext.CalculateLocation(node.Position));
         TMSequence? beginSequence = TryPop<TMSequence>(typedContext, node.Position);
         if (beginSequence is null)
         {
