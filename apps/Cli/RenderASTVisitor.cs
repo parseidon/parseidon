@@ -12,7 +12,7 @@ public class RenderASTVisitor : IVisitor
         Grammar.CreateOutputResult AST { get; }
     }
 
-    private class RenderASTVisitorContext
+    private sealed class RenderASTVisitorContext
     {
         public RenderASTVisitorContext(ParseResult parseResult)
         {

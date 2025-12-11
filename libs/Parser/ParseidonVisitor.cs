@@ -16,7 +16,7 @@ public class ParseidonVisitor : INodeVisitor
         Grammar.Grammar.CreateOutputResult VSCodePackage { get; }
     }
 
-    private class CreateCodeVisitorContext
+    private sealed class CreateCodeVisitorContext
     {
         public CreateCodeVisitorContext(MessageContext messageContext)
         {
@@ -433,4 +433,3 @@ public class ParseidonVisitor : INodeVisitor
         return ProcessNodeResult.Success;
     }
 }
-
