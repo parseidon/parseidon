@@ -30,7 +30,15 @@ public class Grammar : AbstractNamedElement
     public String LanguageConfig { get => ToLanguageConfig(); }
     public String Package { get => ToPackage(); }
 
+    internal const String GrammarOptionNamespace = "namespace";
+    internal const String GrammarOptionClass = "class";
+    internal const String GrammarOptionRoot = "root";
     internal const String GrammarPropertyErrorName = "errorname";
+    internal const String TextMateOptionDisplayName = "displayname";
+    internal const String TextMateOptionScopeName = "scopename";
+    internal const String TextMateOptionFileType = "filetype";
+    internal const String TextMateOptionVersion = "version";
+    internal const String TextMateOptionLineComment = "linecomment";
     internal const String TextMatePropertyScope = "tmscope";
     internal const String TextMatePropertyPattern = "tmpattern";
 
@@ -40,8 +48,8 @@ public class Grammar : AbstractNamedElement
 
         TextMateGrammarDocument document = new TextMateGrammarDocument
         {
-            DisplayName = GetOptionValue("displayname"),
-            ScopeName = GetOptionValue("scopename"),
+            DisplayName = GetOptionValue(Grammar.TextMateOptionDisplayName),
+            ScopeName = GetOptionValue(Grammar.TextMateOptionScopeName),
             FileTypes = GetFileTypes(),
             Patterns = new List<TMDefinition.TextMatePatternInclude>() { new TMDefinition.TextMatePatternInclude() { Include = $"#{rootDefinition.Name.ToLower()}" } },
             Repository = GetTextMateRepository(this, messageContext)
@@ -106,7 +114,7 @@ public class Grammar : AbstractNamedElement
                     throw new Exception($"A closing bracket for \"bracketopen: {bracketIdentifier}\" is required!");
             }
         }
-        String? lineComment = TryGetOptionValue("linecomment");
+        String? lineComment = TryGetOptionValue(Grammar.TextMateOptionLineComment);
         KeyValuePair<String, String>? blockComment = null;
 
         VSCodeLanguageConfDocument document = new VSCodeLanguageConfDocument
@@ -134,7 +142,7 @@ public class Grammar : AbstractNamedElement
 
     public String ToPackage()
     {
-        String languageDisplayName = GetOptionValue("displayname");
+        String languageDisplayName = GetOptionValue(Grammar.TextMateOptionDisplayName);
         String languageName = (TryGetOptionValue("name") ?? languageDisplayName).ToLower().Replace(" ", "");
 
         VSCodePackageDocument document = new VSCodePackageDocument
@@ -142,7 +150,7 @@ public class Grammar : AbstractNamedElement
             Name = languageName,
             DisplayName = languageDisplayName,
             Description = TryGetOptionValue("description"),
-            Version = GetOptionValue("version"),
+            Version = GetOptionValue(Grammar.TextMateOptionVersion),
             Contributes =
                 new VSCodePackageContributes
                 {
@@ -158,7 +166,7 @@ public class Grammar : AbstractNamedElement
                         new VSCodePackageGrammar
                         {
                             Language = languageName,
-                            ScopeName = TryGetOptionValue("scopename") ?? $"source.{languageName}",
+                            ScopeName = TryGetOptionValue(Grammar.TextMateOptionScopeName) ?? $"source.{languageName}",
                             Path = $"./syntaxes/{languageName}.tmLanguage.json"
                         }
                     )
@@ -200,7 +208,7 @@ public class Grammar : AbstractNamedElement
 
     private String[] GetFileTypes()
     {
-        String rawValue = GetOptionValue("filetype");
+        String rawValue = GetOptionValue(Grammar.TextMateOptionFileType);
         String[] parts = rawValue.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(p => p.Trim()).Where(p => p.Length > 0).ToArray(); ;
         return parts.Length == 0 ? new[] { rawValue.Trim() } : parts;
     }
@@ -332,7 +340,7 @@ public class Grammar : AbstractNamedElement
             using System.Text;
             using System.Text.RegularExpressions;
 
-            namespace {{GetOptionValue("namespace")}}
+            namespace {{GetOptionValue(Grammar.GrammarOptionNamespace)}}
             {
             {{Indent(GetIVisitorCode())}}
 
@@ -340,7 +348,7 @@ public class Grammar : AbstractNamedElement
 
             {{Indent(GetGlobalClassesCode())}}
 
-                public class {{GetOptionValue("class")}}
+                public class {{GetOptionValue(Grammar.GrammarOptionClass)}}
                 {
             {{Indent(Indent(GetParseCode()))}}
 
@@ -400,7 +408,7 @@ public class Grammar : AbstractNamedElement
 
     public Definition GetRootDefinition()
     {
-        String? rootName = GetOptionValue("root");
+        String? rootName = GetOptionValue(Grammar.GrammarOptionRoot);
         if (String.IsNullOrWhiteSpace(rootName))
             throw GetException("Grammar must have root option!");
         Definition? definition = FindDefinitionByName(rootName);
@@ -411,7 +419,7 @@ public class Grammar : AbstractNamedElement
 
     public TMDefinition GetTMRootDefinition()
     {
-        String? rootName = GetOptionValue("root");
+        String? rootName = GetOptionValue(Grammar.GrammarOptionRoot);
         if (String.IsNullOrWhiteSpace(rootName))
             throw GetException("Grammar must have root option!");
         TMDefinition? definition = FindTMDefinitionByName($"{rootName}");
