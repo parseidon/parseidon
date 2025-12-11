@@ -2,7 +2,7 @@ using Parseidon.Helper;
 
 namespace Parseidon.Parser.Grammar.Terminals;
 
-public abstract class AbstractValueTerminal : AbstractFinalTerminal
+public abstract class AbstractValueTerminal : AbstractDefinitionElement
 {
     public AbstractValueTerminal(MessageContext messageContext, ASTNode node) : base(messageContext, node) { }
 

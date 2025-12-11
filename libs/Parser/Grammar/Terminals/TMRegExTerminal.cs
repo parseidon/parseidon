@@ -1,6 +1,6 @@
 namespace Parseidon.Parser.Grammar.Terminals;
 
-public class TMRegExTerminal : AbstractFinalTerminal
+public class TMRegExTerminal : AbstractDefinitionElement
 {
     public TMRegExTerminal(String regEx, MessageContext messageContext, ASTNode node) : base(messageContext, node)
     {
