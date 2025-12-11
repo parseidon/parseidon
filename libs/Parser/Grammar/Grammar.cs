@@ -251,20 +251,20 @@ public class Grammar : AbstractNamedElement
     private IReadOnlyDictionary<String, TMDefinition.TextMateRepositoryEntry> GetTextMateRepository(Grammar grammar, MessageContext messageContext)
     {
         var result = new Dictionary<String, TMDefinition.TextMateRepositoryEntry>(StringComparer.OrdinalIgnoreCase);
-        List<TMDefinition> tmdefinitions = TMDefinitions.ToList();
+        List<TMDefinition> tmDefinitions = TMDefinitions.ToList();
         foreach (var definition in Definitions)
             if (definition.KeyValuePairs.ContainsKey(TextMatePropertyPattern))
             {
-                foreach (TMDefinition tmdefinition in tmdefinitions)
-                    if (tmdefinition.Name.Equals(definition.Name, StringComparison.OrdinalIgnoreCase))
+                foreach (TMDefinition tmDefinition in tmDefinitions)
+                    if (tmDefinition.Name.Equals(definition.Name, StringComparison.OrdinalIgnoreCase))
                         throw GetException($"TextMate definition '{definition.Name}' already exists!");
                 String? scopeName = definition.KeyValuePairs[TextMatePropertyPattern];
                 scopeName = String.IsNullOrEmpty(scopeName) ? null : scopeName;
                 TMSequence sequence = new TMSequence(new List<AbstractDefinitionElement>() { definition.DefinitionElement }, messageContext, definition.Node);
-                tmdefinitions.Add(new TMDefinition(definition.Name, scopeName, sequence, null, null, messageContext, definition.Node));
+                tmDefinitions.Add(new TMDefinition(definition.Name, scopeName, sequence, null, null, messageContext, definition.Node));
             }
-        foreach (TMDefinition tmdefinition in tmdefinitions)
-            result[tmdefinition.Name.ToLower()] = tmdefinition.GetRepositoryEntry(grammar);
+        foreach (TMDefinition tmDefinition in tmDefinitions)
+            result[tmDefinition.Name.ToLower()] = tmDefinition.GetRepositoryEntry(grammar);
         return result;
     }
 
