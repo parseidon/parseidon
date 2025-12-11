@@ -66,11 +66,7 @@ $Boolean                = (True / False);
 
 # Literal
 ^$Literal               = (SingleQuotedLiteral / DoubleQuotedLiteral);
-!Literal                = [ !SingleQuotedLiteral / !DoubleQuotedLiteral ];
-:SingleQuotedLiteral    = (-'\'' Char*  -'\'') {tmscope: string.quoted.single};
-!SingleQuotedLiteral    = string.quoted.single:<SingleQuotedLiteral>;
-:DoubleQuotedLiteral    = (-'"' Char* -'"') {tmscope: string.quoted.double};
-!DoubleQuotedLiteral    = string.quoted.double:<DoubleQuotedLiteral>;
+:SingleQuotedLiteral    = (-quote Char*  -quote) {tmpattern: string.quoted.single};
 Char                    = [^'\\] / '\\\'' / '\\\\' / EscapeChars / UnicodeChars;
 EscapeChars             = '\\' [\\0abfnrstv"'?];
 
@@ -81,7 +77,7 @@ $CharacterClass         = SquareBracketOpen Negation? ClassContent+ SquareBracke
 ClassContent            = CharRange / PredefinedClass / EscapedChar / SingleChar;
 :CharRange              = SingleChar '-' SingleChar;
 SingleChar              = [^\\\[\]\-] / UnicodeChars;
-EscapedChar             = '\\' [.\\\[\]\-\^];
+EscapedChar             = '\\' ('.' / '^' / '$' / '*' / '+' / '?' / '(' / ')' / '[' / ']' / '{' / '}' / '|' / '\\' / '-');
 PredefinedClass         = '\\d' / '\\D' / '\\w' / '\\W' / '\\s' / '\\S' / '\\t' / '\\r' / '\\n' / '\\v' / '\\f';
 :Quantifier             = CurlyBracketOpen Number CurlyBracketClose;
 
@@ -126,4 +122,5 @@ Comment                 = '#' [^\r\n]* {tmscope: comment.line};
 :AngleBracketClose      = '>';
 :Underscore             = '_';
 :ExclamationMark        = '!';
+:quote                  = '\'' {quote};
 
