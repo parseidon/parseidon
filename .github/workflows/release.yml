@@ -1,10 +1,14 @@
-name: Build and Publish NuGet Package
+name: Build and Publish Beta Packages
 
 on:
   workflow_dispatch:
   push:
     branches: ["main"]
     tags: ["v*"]
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   build_and_publish:
@@ -27,14 +31,13 @@ jobs:
       - name: Pack
         run: dotnet pack -c Release --no-build --output ./nupkgs
 
-      - name: Publish NuGet package
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: dotnet nuget push ./nupkgs/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
-        env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+      - name: Publish packages to GitHub Packages
+        run: |
+          dotnet nuget push ./nupkgs/*.nupkg --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --api-key "${{ secrets.GITHUB_TOKEN }}" --skip-duplicate
+          dotnet nuget push ./nupkgs/*.snupkg --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --api-key "${{ secrets.GITHUB_TOKEN }}" --skip-duplicate
 
-      - name: Publish symbol package
+      - name: Publish packages to NuGet.org
         if: startsWith(github.ref, 'refs/tags/v')
-        run: dotnet nuget push ./nupkgs/*.snupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
-        env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          dotnet nuget push ./nupkgs/*.nupkg --source "https://api.nuget.org/v3/index.json" --api-key "${{ secrets.NUGET_API_KEY }}" --skip-duplicate
+          dotnet nuget push ./nupkgs/*.snupkg --source "https://api.nuget.org/v3/index.json" --api-key "${{ secrets.NUGET_API_KEY }}" --skip-duplicate
