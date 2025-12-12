@@ -20,6 +20,7 @@ public class Grammar : AbstractNamedElement
         Options = options;
         CheckDuplicatedDefinitions(Definitions);
         Definitions.ForEach((element) => element.Parent = this);
+        CheckTreatInlineCycles();
     }
 
     public List<Definition> Definitions { get; }
@@ -513,6 +514,62 @@ public class Grammar : AbstractNamedElement
                 }
             }
         }
+    }
+
+    private void CheckTreatInlineCycles()
+    {
+        Dictionary<Definition, List<Definition>> references = new Dictionary<Definition, List<Definition>>();
+        foreach (Definition definition in Definitions)
+        {
+            List<Definition> refs = new List<Definition>();
+            definition.IterateElements(element =>
+            {
+                if (element is ReferenceElement referenceElement)
+                {
+                    Definition? referencedDefinition = FindDefinitionByName(referenceElement.ReferenceName);
+                    if (referencedDefinition is not null)
+                        refs.Add(referencedDefinition);
+                }
+                return true;
+            });
+            references[definition] = refs;
+        }
+
+        Dictionary<Definition, Int32> state = Definitions.ToDictionary(d => d, _ => 0);
+        Stack<Definition> stack = new Stack<Definition>();
+
+        void Visit(Definition definition)
+        {
+            if (state[definition] == 2)
+                return;
+            if (state[definition] == 1)
+                return;
+
+            state[definition] = 1;
+            stack.Push(definition);
+            foreach (Definition referenced in references[definition])
+            {
+                if (state[referenced] == 1)
+                {
+                    if (!referenced.HasMarker<TreatInlineMarker>())
+                        continue;
+
+                    List<Definition> path = stack.Reverse().ToList(); // root -> current
+                    List<Definition> cycle = path.SkipWhile(d => d != referenced).ToList();
+                    cycle.Add(referenced);
+
+                    (UInt32 row, UInt32 column) = referenced.MessageContext.CalculateLocation(referenced.Node.Position);
+                    throw GetException($"Circular reference involving TreatInline definition '{referenced.Name}' detected: {String.Join(" -> ", cycle.Select(d => d.Name))}");
+                }
+                else if (state[referenced] == 0)
+                    Visit(referenced);
+            }
+            stack.Pop();
+            state[definition] = 2;
+        }
+
+        foreach (Definition definition in Definitions)
+            Visit(definition);
     }
 
     private Boolean IterateUsedDefinitions(AbstractGrammarElement element, List<Definition> definitions)
