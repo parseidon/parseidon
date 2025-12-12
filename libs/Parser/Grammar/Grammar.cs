@@ -29,6 +29,9 @@ public class Grammar : AbstractNamedElement
     internal const String GrammarOptionNamespace = "namespace";
     internal const String GrammarOptionClass = "class";
     internal const String GrammarOptionRoot = "root";
+    internal const String GrammarPropertyQuote = "quote";
+    internal const String GrammarPropertyBracketOpen = "bracketopen";
+    internal const String GrammarPropertyBracketClose = "bracketclose";
     internal const String GrammarPropertyErrorName = "errorname";
     internal const String TextMateOptionDisplayName = "displayname";
     internal const String TextMateOptionScopeName = "scopename";
@@ -97,16 +100,16 @@ public class Grammar : AbstractNamedElement
             List<KeyValuePair<String, String>> surroundingPairs = new List<KeyValuePair<String, String>>();
             foreach (Definition definition in Definitions)
             {
-                if (definition.KeyValuePairs.ContainsKey("quote"))
+                if (definition.KeyValuePairs.ContainsKey(Grammar.GrammarPropertyQuote))
                 {
                     String quoteValue = GetTextValueOfDefinition(definition);
                     autoClosingPairs.Add(new KeyValuePair<String, String>(quoteValue, quoteValue));
                     surroundingPairs.Add(new KeyValuePair<String, String>(quoteValue, quoteValue));
                 }
-                if (definition.KeyValuePairs.TryGetValue("bracketopen", out String bracketIdentifier))
+                if (definition.KeyValuePairs.TryGetValue(Grammar.GrammarPropertyBracketOpen, out String bracketIdentifier))
                 {
                     Definition? correspondingDefinition = Definitions
-                        .Where(d => (d != definition) && d.KeyValuePairs.TryGetValue("bracketclose", out String closeBracketValue) && (closeBracketValue == bracketIdentifier))
+                        .Where(d => (d != definition) && d.KeyValuePairs.TryGetValue(Grammar.GrammarPropertyBracketClose, out String closeBracketValue) && (closeBracketValue == bracketIdentifier))
                         .FirstOrDefault();
                     String? closeBracket = correspondingDefinition != null ? GetTextValueOfDefinition(correspondingDefinition) : null;
                     if (!String.IsNullOrEmpty(closeBracket))
@@ -117,7 +120,7 @@ public class Grammar : AbstractNamedElement
                         surroundingPairs.Add(new KeyValuePair<String, String>(openBracket, closeBracket!));
                     }
                     else
-                        throw GetException($"A closing bracket for \"bracketopen: {bracketIdentifier}\" is required!");
+                        throw GetException($"A closing bracket for \"{Grammar.GrammarPropertyBracketOpen}: {bracketIdentifier}\" is required!");
                 }
             }
             String? lineComment = TryGetOptionValue(Grammar.TextMateOptionLineComment);
