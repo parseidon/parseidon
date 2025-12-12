@@ -13,7 +13,7 @@ public class ParseidonVisitor : INodeVisitor
         Grammar.Grammar.CreateOutputResult GetParserCode();
         Grammar.Grammar.CreateOutputResult GetTextMateGrammar();
         Grammar.Grammar.CreateOutputResult GetLanguageConfig();
-        Grammar.Grammar.CreateOutputResult GetVSCodePackage(String? versionOverride);
+        Grammar.Grammar.CreateOutputResult GetVSCodePackage(String? versionOverride, Func<String, String>? loadMergeJson, String? packageJsonOverridePath);
     }
 
     private sealed class CreateCodeVisitorContext
@@ -49,9 +49,7 @@ public class ParseidonVisitor : INodeVisitor
 
         public Grammar.Grammar.CreateOutputResult GetLanguageConfig() => _grammar.ToLanguageConfig(MessageContext);
 
-        public Grammar.Grammar.CreateOutputResult GetVSCodePackage() => _grammar.ToVSCodePackage(MessageContext, null);
-
-        public Grammar.Grammar.CreateOutputResult GetVSCodePackage(String? versionOverride) => _grammar.ToVSCodePackage(MessageContext, versionOverride);
+        public Grammar.Grammar.CreateOutputResult GetVSCodePackage(String? versionOverride, Func<String, String>? loadMergeJson, String? packageJsonOverridePath) => _grammar.ToVSCodePackage(MessageContext, versionOverride, loadMergeJson, packageJsonOverridePath);
     }
 
     private T Pop<T>(CreateCodeVisitorContext context, Int32 position) where T : AbstractGrammarElement

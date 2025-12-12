@@ -66,7 +66,18 @@ jobs:
           fi
           dotnet "$CLI_DLL" vscode ./common/parseidon.pgram ./Output/VSCodePackage -o override -v "${VERSION}"
 
+      - name: Prepare VS Code package assets
+        run: |
+          set -euo pipefail
+          mkdir -p ./Output/VSCodePackage
+          cp LICENSE ./Output/VSCodePackage/
+          if [ -d ./assets/vsce ]; then
+            cp -a ./assets/vsce/. ./Output/VSCodePackage/
+          fi
+
       - name: Package VS Code extension (.vsix)
+        env:
+          VERSION: ${{ env.VERSION }}
         run: |
           set -euo pipefail
           mkdir -p ./Output/artifacts
@@ -76,6 +87,8 @@ jobs:
 
       - name: Upload VS Code extension artifact
         uses: actions/upload-artifact@v4
+        env:
+          VERSION: ${{ env.VERSION }}
         with:
           name: parseidon-vscode-${{ env.VERSION }}
           path: Output/artifacts/parseidon-vscode-${{ env.VERSION }}.vsix

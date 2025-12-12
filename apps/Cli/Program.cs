@@ -46,6 +46,13 @@ var versionOption = new Option<String?>("--version", "-v")
 };
 vsCodeCommand.Add(versionOption);
 
+var packageJsonOverrideOption = new Option<FileInfo?>("--package-json-override", "-p")
+{
+    Description = "JSON file to merge into package.json; overrides on conflicts",
+    DefaultValueFactory = _ => null
+};
+vsCodeCommand.Add(packageJsonOverrideOption);
+
 var grammarFileArgument = new Argument<FileInfo>(name: "GRAMMAR-FILE")
 {
     Description = "The grammar file to be used"
@@ -115,10 +122,16 @@ vsCodeCommand.SetAction((parseResult) =>
         DirectoryInfo outputFolder = parseResult.GetValue(outputFolderArgument)!;
         String doOverride = parseResult.GetValue<String>(overrideOption)!;
         String? version = parseResult.GetValue<String?>(versionOption);
+        FileInfo? packageOverrideFile = parseResult.GetValue<FileInfo?>(packageJsonOverrideOption);
+        if (packageOverrideFile is not null && !packageOverrideFile.Exists)
+        {
+            PrintMessage(ParserMessage.MessageType.Error, $"The file '{packageOverrideFile.FullName}' could not be found!");
+            return 1;
+        }
         return RunParser(
             grammarFile,
             () => ValidateFolderInput(grammarFile, outputFolder, doOverride),
-            (result) => CreateVSCodePackage(result, outputFolder, doOverride, version)
+            (result) => CreateVSCodePackage(result, outputFolder, doOverride, grammarFile, version, packageOverrideFile)
         );
     }
 );
@@ -178,7 +191,6 @@ static OutputResult CreateParser(Parseidon.Parser.ParseResult parseResult, FileI
     IVisitResult visitResult = parseResult.Visit(visitor);
 
     Grammar.CreateOutputResult outputResult = Grammar.CreateOutputResult.Empty;
-
     if (visitResult.Successful && visitResult is ParseidonVisitor.IGetResults typedVisitResult)
     {
         outputResult = typedVisitResult.GetParserCode();
@@ -246,7 +258,7 @@ static OutputResult CreateTextMateGrammar(Parseidon.Parser.ParseResult parseResu
     return new OutputResult(visitResult.Successful && outputResult.Successful, visitResult.Messages, outputResult.Messages);
 }
 
-static OutputResult CreateVSCodePackage(Parseidon.Parser.ParseResult parseResult, DirectoryInfo outputFolder, String overrideOption, String? versionOverride = null)
+static OutputResult CreateVSCodePackage(Parseidon.Parser.ParseResult parseResult, DirectoryInfo outputFolder, String overrideOption, FileInfo grammarFile, String? versionOverride = null, FileInfo? packageJsonOverride = null)
 {
     ParseidonVisitor visitor = new ParseidonVisitor();
     IVisitResult visitResult = parseResult.Visit(visitor);
@@ -262,7 +274,26 @@ static OutputResult CreateVSCodePackage(Parseidon.Parser.ParseResult parseResult
             outputMessages = outputMessages.Concat(languageResult.Messages).ToList();
             if (languageResult.Successful)
             {
-                var vscodePackageResult = typedVisitResult.GetVSCodePackage(versionOverride);
+                String LoadMergeContent(String mergePath)
+                {
+                    FileInfo mergeFile;
+                    if (Path.IsPathRooted(mergePath))
+                    {
+                        mergeFile = new FileInfo(mergePath);
+                    }
+                    else
+                    {
+                        if (grammarFile.Directory == null)
+                            throw new InvalidOperationException($"Cannot resolve relative path '{mergePath}' because the grammar file's directory is null.");
+                        mergeFile = new FileInfo(Path.GetFullPath(Path.Combine(grammarFile.Directory.FullName, mergePath)));
+                    }
+                    mergeFile.Refresh();
+                    if (!mergeFile.Exists)
+                        throw new FileNotFoundException($"The file '{mergeFile.FullName}' could not be found!");
+                    return File.ReadAllText(mergeFile.FullName);
+                }
+
+                var vscodePackageResult = typedVisitResult.GetVSCodePackage(versionOverride, LoadMergeContent, packageJsonOverride?.FullName);
                 outputMessages = outputMessages.Concat(vscodePackageResult.Messages).ToList();
                 if (vscodePackageResult.Successful)
                 {

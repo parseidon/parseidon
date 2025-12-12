@@ -1,0 +1,25 @@
+{
+    "publisher": "Parseidon",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/parseidon/parseidon.git"
+    },
+    "bugs": {
+        "url": "https://github.com/parseidon/parseidon/issues"
+    },
+    "homepage": "https://github.com/parseidon/parseidon",
+    "author": "parseidon",
+    "engines": {
+        "vscode": "^1.106.1"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "keywords": [
+        "parseidon",
+        "grammar",
+        "dsl",
+        "syntax-highlighting"
+    ],
+    "icon": "images/logo.png"
+}
