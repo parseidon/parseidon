@@ -17,7 +17,7 @@ Option                  = '@' ValuePair_LineEnd;
 
 # Definition structure
 Definition              = DefinitionOptions Identifier_-Equal_Expression Properties?_LineEnd_;
-!Definition             = meta.definition.grammar:(<DefinitionOptions> entity.name.type:<Identifier> <_Equal> [ !Identifier / !Literal / !Properties / Regex ] <_LineEnd>);
+!Definition             = meta.definition.grammar:(<DefinitionOptions> entity.name.type:<Identifier> <_Equal> [ !Identifier / Literal / !Properties / Regex ] <_LineEnd>);
 :DefinitionOptions      = UseDefinitionNameAsError? (IsTerminal / Drop)? TreatInline?;
 Expression              = Sequence (Or_Sequence)*;
 Sequence                = Prefix+;
@@ -45,7 +45,7 @@ TMMatchSequence         = (TMMatch_)+;
 TMMatch                 = TMScopeName? -AngleBracketOpen_Expression_-AngleBracketClose 
                         / TMRegEx
                         / TMScopeName? -BracketOpen_TMMatchSequence_-BracketClose; 
-!TMMatchDefinition      = <TMScopeName? AngleBracketOpen> [ !Identifier / !Literal / !Properties / Regex ] <AngleBracketClose>;
+!TMMatchDefinition      = <TMScopeName? AngleBracketOpen> [ !Identifier / Literal / !Properties / Regex ] <AngleBracketClose>;
 !TMMatchExpression      = <TMScopeName? BracketOpen> [ !TMMatchDefinition / !TMMatchExpression / TMRegEx / !TMInclude ] <BracketClose>;
 $TMRegEx                = -'!\'' TMRegExChar+ -'\'' {tmpattern: string.regexp};
 TMRegExChar             = [^'\\]
@@ -82,10 +82,7 @@ $Boolean                = (True / False) {tmpattern: constant.language};
 :IdentCont              = [a-zA-Z0-9]*;
 
 # Literal
-^$Literal               = (SingleQuotedLiteral / DoubleQuotedLiteral);
-!Literal                = [ SingleQuotedLiteral / DoubleQuotedLiteral ];
-:SingleQuotedLiteral    = (-quote Char*  -quote) {tmpattern: string.quoted.single};
-:DoubleQuotedLiteral    = (-'"' Char* -'"') {tmpattern: string.quoted.double};
+^$Literal               = (-quote Char*  -quote) {tmpattern: string.quoted.single};
 Char                    = [^'\\] / '\\\'' / '\\\\' / EscapeChars / UnicodeChars;
 EscapeChars             = '\\' [\\0abfnrstv"'?];
 
