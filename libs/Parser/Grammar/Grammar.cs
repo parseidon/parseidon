@@ -38,7 +38,6 @@ public class Grammar : AbstractNamedElement
     internal const String TextMateOptionDisplayName = "displayname";
     internal const String TextMateOptionScopeName = "scopename";
     internal const String TextMateOptionFileType = "filetype";
-    internal const String TextMateOptionDescription = "description";
     internal const String TextMateOptionLanguageName = "name";
     internal const String TextMateOptionVersion = "version";
     internal const String TextMateOptionLineComment = "linecomment";
@@ -170,7 +169,6 @@ public class Grammar : AbstractNamedElement
             {
                 Name = languageName,
                 DisplayName = languageDisplayName,
-                Description = TryGetOptionValue(Grammar.TextMateOptionDescription),
                 Version = versionOverride ?? GetOptionValue(Grammar.TextMateOptionVersion),
                 Contributes =
                     new VSCodePackageContributes
@@ -481,7 +479,6 @@ public class Grammar : AbstractNamedElement
             TextMateOptionDisplayName,
             TextMateOptionScopeName,
             TextMateOptionFileType,
-            TextMateOptionDescription,
             TextMateOptionLanguageName,
             TextMateOptionVersion,
             TextMateOptionLineComment
@@ -1334,17 +1331,8 @@ public class Grammar : AbstractNamedElement
         [JsonPropertyName("displayName")]
         public String DisplayName { get; set; } = String.Empty;
 
-        [JsonPropertyName("description")]
-        public String? Description { get; set; } = String.Empty;
-
         [JsonPropertyName("version")]
         public String Version { get; set; } = String.Empty;
-
-        [JsonPropertyName("engines")]
-        public IReadOnlyDictionary<String, String> Engines { get; set; } = ImmutableDictionary.Create<String, String>().Add("vscode", "^1.106.1");
-
-        [JsonPropertyName("categories")]
-        public IReadOnlyList<String> Categories { get; set; } = ImmutableArray.Create<String>().Add("Programming Languages");
 
         [JsonPropertyName("contributes")]
         public VSCodePackageContributes Contributes { get; set; } = new VSCodePackageContributes();
