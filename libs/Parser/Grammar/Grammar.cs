@@ -3,7 +3,7 @@ using System.Text.Json;
 using Humanizer;
 using Parseidon.Helper;
 using Parseidon.Parser.Grammar.Terminals;
-using Parseidon.Parser.Grammar.Block;
+using Parseidon.Parser.Grammar.Blocks;
 using Parseidon.Parser.Grammar.Operators;
 using System.Text.Json.Serialization;
 using System.Text.Encodings.Web;
@@ -20,6 +20,7 @@ public class Grammar : AbstractNamedElement
         Options = options;
         CheckDuplicatedDefinitions(Definitions);
         Definitions.ForEach((element) => element.Parent = this);
+        CheckTreatInlineCycles();
     }
 
     public List<Definition> Definitions { get; }
@@ -29,10 +30,16 @@ public class Grammar : AbstractNamedElement
     internal const String GrammarOptionNamespace = "namespace";
     internal const String GrammarOptionClass = "class";
     internal const String GrammarOptionRoot = "root";
+    internal const String GrammarOptionNoInterface = "nointerface";
+    internal const String GrammarPropertyQuote = "quote";
+    internal const String GrammarPropertyBracketOpen = "bracketopen";
+    internal const String GrammarPropertyBracketClose = "bracketclose";
     internal const String GrammarPropertyErrorName = "errorname";
     internal const String TextMateOptionDisplayName = "displayname";
     internal const String TextMateOptionScopeName = "scopename";
     internal const String TextMateOptionFileType = "filetype";
+    internal const String TextMateOptionDescription = "description";
+    internal const String TextMateOptionLanguageName = "name";
     internal const String TextMateOptionVersion = "version";
     internal const String TextMateOptionLineComment = "linecomment";
     internal const String TextMatePropertyScope = "tmscope";
@@ -43,6 +50,7 @@ public class Grammar : AbstractNamedElement
         List<ParserMessage> messages = new List<ParserMessage>();
         TextMateGrammarDocument document = new TextMateGrammarDocument();
         Boolean successful = false;
+        AddUnknownIdentifierWarnings(messages);
         try
         {
             TMDefinition rootDefinition = GetTMRootDefinition();
@@ -53,7 +61,7 @@ public class Grammar : AbstractNamedElement
                 ScopeName = GetOptionValue(Grammar.TextMateOptionScopeName),
                 FileTypes = GetFileTypes(),
                 Patterns = new List<TMDefinition.TextMatePatternInclude>() { new TMDefinition.TextMatePatternInclude() { Include = $"#{rootDefinition.Name.ToLower()}" } },
-                Repository = GetTextMateRepository(this, messageContext)
+                Repository = GetTextMateRepository(this, messages)
             };
             successful = true;
         }
@@ -95,16 +103,16 @@ public class Grammar : AbstractNamedElement
             List<KeyValuePair<String, String>> surroundingPairs = new List<KeyValuePair<String, String>>();
             foreach (Definition definition in Definitions)
             {
-                if (definition.KeyValuePairs.ContainsKey("quote"))
+                if (definition.KeyValuePairs.ContainsKey(Grammar.GrammarPropertyQuote))
                 {
                     String quoteValue = GetTextValueOfDefinition(definition);
                     autoClosingPairs.Add(new KeyValuePair<String, String>(quoteValue, quoteValue));
                     surroundingPairs.Add(new KeyValuePair<String, String>(quoteValue, quoteValue));
                 }
-                if (definition.KeyValuePairs.TryGetValue("bracketopen", out String bracketIdentifier))
+                if (definition.KeyValuePairs.TryGetValue(Grammar.GrammarPropertyBracketOpen, out String bracketIdentifier))
                 {
                     Definition? correspondingDefinition = Definitions
-                        .Where(d => (d != definition) && d.KeyValuePairs.TryGetValue("bracketclose", out String closeBracketValue) && (closeBracketValue == bracketIdentifier))
+                        .Where(d => (d != definition) && d.KeyValuePairs.TryGetValue(Grammar.GrammarPropertyBracketClose, out String closeBracketValue) && (closeBracketValue == bracketIdentifier))
                         .FirstOrDefault();
                     String? closeBracket = correspondingDefinition != null ? GetTextValueOfDefinition(correspondingDefinition) : null;
                     if (!String.IsNullOrEmpty(closeBracket))
@@ -115,7 +123,7 @@ public class Grammar : AbstractNamedElement
                         surroundingPairs.Add(new KeyValuePair<String, String>(openBracket, closeBracket!));
                     }
                     else
-                        throw GetException($"A closing bracket for \"bracketopen: {bracketIdentifier}\" is required!");
+                        throw GetException($"A closing bracket for \"{Grammar.GrammarPropertyBracketOpen}: {bracketIdentifier}\" is required!");
                 }
             }
             String? lineComment = TryGetOptionValue(Grammar.TextMateOptionLineComment);
@@ -148,7 +156,7 @@ public class Grammar : AbstractNamedElement
         return new CreateOutputResult(successful, JsonSerializer.Serialize(document, serializerOptions), messages);
     }
 
-    public CreateOutputResult ToVSCodePackage(MessageContext messageContext)
+    public CreateOutputResult ToVSCodePackage(MessageContext messageContext, String? versionOverride = null)
     {
         List<ParserMessage> messages = new List<ParserMessage>();
         VSCodePackageDocument document = new VSCodePackageDocument();
@@ -156,14 +164,14 @@ public class Grammar : AbstractNamedElement
         try
         {
             String languageDisplayName = GetOptionValue(Grammar.TextMateOptionDisplayName);
-            String languageName = (TryGetOptionValue("name") ?? languageDisplayName).ToLower().Replace(" ", "");
+            String languageName = (TryGetOptionValue(Grammar.TextMateOptionLanguageName) ?? languageDisplayName).ToLower().Replace(" ", "");
 
             document = new VSCodePackageDocument
             {
                 Name = languageName,
                 DisplayName = languageDisplayName,
-                Description = TryGetOptionValue("description"),
-                Version = GetOptionValue(Grammar.TextMateOptionVersion),
+                Description = TryGetOptionValue(Grammar.TextMateOptionDescription),
+                Version = versionOverride ?? GetOptionValue(Grammar.TextMateOptionVersion),
                 Contributes =
                     new VSCodePackageContributes
                     {
@@ -208,6 +216,9 @@ public class Grammar : AbstractNamedElement
         Boolean successful = false;
         try
         {
+            AddUnknownIdentifierWarnings(messages);
+            AddUnusedDefinitionWarnings(messages);
+            Boolean generateNodeVisitor = ShouldGenerateNodeVisitor();
             result =
                 $$"""
                 #nullable enable
@@ -217,9 +228,9 @@ public class Grammar : AbstractNamedElement
 
                 namespace {{GetOptionValue(Grammar.GrammarOptionNamespace)}}
                 {
-                {{Indent(GetIVisitorCode())}}
+                {{Indent(GetIVisitorCode(generateNodeVisitor))}}
 
-                {{Indent(GetParseResultCode())}}
+                {{Indent(GetParseResultCode(generateNodeVisitor))}}
 
                 {{Indent(GetGlobalClassesCode())}}
 
@@ -242,21 +253,46 @@ public class Grammar : AbstractNamedElement
         return new CreateOutputResult(successful, result, messages);
     }
 
-    private IReadOnlyDictionary<String, TMDefinition.TextMateRepositoryEntry> GetTextMateRepository(Grammar grammar, MessageContext messageContext)
+    private IReadOnlyDictionary<String, TMDefinition.TextMateRepositoryEntry> GetTextMateRepository(Grammar grammar, IList<ParserMessage> messages)
     {
         var result = new Dictionary<String, TMDefinition.TextMateRepositoryEntry>(StringComparer.OrdinalIgnoreCase);
         List<TMDefinition> tmDefinitions = TMDefinitions.ToList();
+        String grammarSuffix = grammar.GetGrammarSuffix();
         foreach (var definition in Definitions.Where(d => d.KeyValuePairs.ContainsKey(TextMatePropertyPattern)))
         {
             foreach (TMDefinition tmDefinition in tmDefinitions.Where(td => td.Name.Equals(definition.Name, StringComparison.OrdinalIgnoreCase)))
                 throw GetException($"TextMate definition '{definition.Name}' already exists!");
             String? scopeName = definition.KeyValuePairs[TextMatePropertyPattern];
             scopeName = String.IsNullOrEmpty(scopeName) ? null : scopeName;
-            TMSequence sequence = new TMSequence(new List<AbstractDefinitionElement>() { definition.DefinitionElement }, messageContext, definition.Node);
-            tmDefinitions.Add(new TMDefinition(definition.Name, scopeName, sequence, null, null, messageContext, definition.Node));
+            TMSequence sequence = new TMSequence(new List<AbstractDefinitionElement>() { definition.DefinitionElement }, definition.MessageContext, definition.Node);
+            tmDefinitions.Add(new TMDefinition(definition.Name, scopeName, sequence, null, null, definition.MessageContext, definition.Node));
         }
         foreach (TMDefinition tmDefinition in tmDefinitions)
-            result[tmDefinition.Name.ToLower()] = tmDefinition.GetRepositoryEntry(grammar);
+            AddScopeOverrideWarnings(tmDefinition, grammarSuffix, messages);
+        HashSet<String> referencedDefinitionNames = new HashSet<String>(StringComparer.OrdinalIgnoreCase)
+        {
+            GetTMRootDefinition().Name
+        };
+        foreach (TMDefinition tmDefinition in tmDefinitions)
+        {
+            if (tmDefinition.Includes is null)
+                continue;
+            foreach (ReferenceElement include in tmDefinition.Includes.Includes)
+            {
+                if (!include.ReferenceName.Equals(tmDefinition.Name, StringComparison.OrdinalIgnoreCase))
+                    referencedDefinitionNames.Add(include.ReferenceName);
+            }
+        }
+        foreach (TMDefinition tmDefinition in tmDefinitions)
+        {
+            if (referencedDefinitionNames.Contains(tmDefinition.Name))
+                result[tmDefinition.Name.ToLower()] = tmDefinition.GetRepositoryEntry(grammar);
+            else
+            {
+                (UInt32 row, UInt32 column) = tmDefinition.MessageContext.CalculateLocation(tmDefinition.Node.Position);
+                messages.Add(new ParserMessage($"TextMate definition '{tmDefinition.Name}' is not referenced by any other rule.", ParserMessage.MessageType.Warning, (row, column)));
+            }
+        }
         return result;
     }
 
@@ -340,6 +376,208 @@ public class Grammar : AbstractNamedElement
             .Where(value => value.Name.Equals(key, StringComparison.OrdinalIgnoreCase))
             .Select(value => value.Value)
             .FirstOrDefault();
+    }
+
+    internal String GetGrammarSuffix()
+    {
+        String scopeName = GetOptionValue(Grammar.TextMateOptionScopeName);
+        // Extract the last part after the last dot (e.g., "parseidon" from "source.parseidon")
+        Int32 lastDotIndex = scopeName.LastIndexOf('.');
+        return lastDotIndex >= 0 ? scopeName.Substring(lastDotIndex + 1) : scopeName;
+    }
+
+    internal static String? AppendGrammarSuffix(String? scopeName, String grammarSuffix)
+    {
+        if (String.IsNullOrEmpty(scopeName))
+            return scopeName;
+        // Prüfen, ob der Scope-Name bereits mit dem Grammar-Suffix endet
+        if (scopeName!.EndsWith($".{grammarSuffix}", StringComparison.OrdinalIgnoreCase))
+            return scopeName;
+        return $"{scopeName}.{grammarSuffix}";
+    }
+
+    private void AddScopeOverrideWarnings(TMDefinition tmDefinition, String grammarSuffix, IList<ParserMessage> messages)
+    {
+        tmDefinition.IterateElements(element =>
+        {
+            if (element is TMSequence sequence && !String.IsNullOrWhiteSpace(sequence.ScopeName) && sequence.Elements.Count == 1)
+            {
+                String scopedSequenceName = AppendGrammarSuffix(sequence.ScopeName, grammarSuffix) ?? sequence.ScopeName!;
+                String? innerScope = TryGetElementScope(sequence.Elements.First(), grammarSuffix);
+                if (!String.IsNullOrWhiteSpace(innerScope) && !scopedSequenceName.Equals(innerScope, StringComparison.OrdinalIgnoreCase))
+                {
+                    (UInt32 row, UInt32 column) = tmDefinition.MessageContext.CalculateLocation(sequence.Elements.First().Node.Position);
+                    messages.Add(new ParserMessage($"TextMate scope '{scopedSequenceName}' overrides inner scope '{innerScope}' in rule '{tmDefinition.Name}'.", ParserMessage.MessageType.Warning, (row, column)));
+                }
+            }
+            return true;
+        });
+    }
+
+    private String? TryGetElementScope(AbstractDefinitionElement element, String grammarSuffix)
+    {
+        switch (element)
+        {
+            case TMSequence sequence when !String.IsNullOrWhiteSpace(sequence.ScopeName):
+                return AppendGrammarSuffix(sequence.ScopeName, grammarSuffix) ?? sequence.ScopeName;
+            case ReferenceElement referenceElement:
+                Definition? referencedDefinition = FindDefinitionByName(referenceElement.ReferenceName);
+                if (referencedDefinition is not null && referencedDefinition.KeyValuePairs.TryGetValue(TextMatePropertyScope, out String scopeName))
+                    return AppendGrammarSuffix(scopeName, grammarSuffix) ?? scopeName;
+                break;
+        }
+        return null;
+    }
+
+    private void AddUnusedDefinitionWarnings(IList<ParserMessage> messages)
+    {
+        String rootName = GetOptionValue(GrammarOptionRoot);
+        HashSet<String> referencedDefinitions = new HashSet<String>(StringComparer.OrdinalIgnoreCase)
+        {
+            rootName
+        };
+
+        IterateElements(element =>
+        {
+            if (element is ReferenceElement referenceElement)
+            {
+                Definition? parentDefinition = GetParentDefinition(referenceElement);
+                if ((parentDefinition is null) || !parentDefinition.Name.Equals(referenceElement.ReferenceName, StringComparison.OrdinalIgnoreCase))
+                    referencedDefinitions.Add(referenceElement.ReferenceName);
+            }
+            return true;
+        });
+
+        foreach (Definition definition in Definitions)
+        {
+            if (referencedDefinitions.Contains(definition.Name))
+                continue;
+
+            (UInt32 row, UInt32 column) = definition.MessageContext.CalculateLocation(definition.Node.Position);
+            messages.Add(new ParserMessage($"Definition '{definition.Name}' is not referenced by any other rule.", ParserMessage.MessageType.Warning, (row, column)));
+        }
+    }
+
+    private Definition? GetParentDefinition(AbstractGrammarElement element)
+    {
+        AbstractGrammarElement? parent = element.Parent;
+        while (parent is not null)
+        {
+            if (parent is Definition definition)
+                return definition;
+            parent = parent.Parent;
+        }
+        return null;
+    }
+
+    private void AddUnknownIdentifierWarnings(IList<ParserMessage> messages)
+    {
+        HashSet<String> knownOptions = new HashSet<String>(StringComparer.OrdinalIgnoreCase)
+        {
+            GrammarOptionNamespace,
+            GrammarOptionClass,
+            GrammarOptionRoot,
+            GrammarOptionNoInterface,
+            TextMateOptionDisplayName,
+            TextMateOptionScopeName,
+            TextMateOptionFileType,
+            TextMateOptionDescription,
+            TextMateOptionLanguageName,
+            TextMateOptionVersion,
+            TextMateOptionLineComment
+        };
+
+        HashSet<String> knownProperties = new HashSet<String>(StringComparer.OrdinalIgnoreCase)
+        {
+            TextMatePropertyScope,
+            TextMatePropertyPattern,
+            GrammarPropertyErrorName,
+            GrammarPropertyQuote,
+            GrammarPropertyBracketOpen,
+            GrammarPropertyBracketClose
+        };
+
+        foreach (ValuePair option in Options)
+        {
+            if (!knownOptions.Contains(option.Name))
+            {
+                (UInt32 row, UInt32 column) = option.MessageContext.CalculateLocation(option.Node.Position);
+                messages.Add(new ParserMessage($"Unknown option '{option.Name}'.", ParserMessage.MessageType.Warning, (row, column)));
+            }
+        }
+
+        foreach (Definition definition in Definitions)
+        {
+            foreach (ValuePair property in definition.ValuePairs)
+            {
+                if (!knownProperties.Contains(property.Name))
+                {
+                    (UInt32 row, UInt32 column) = property.MessageContext.CalculateLocation(property.Node.Position);
+                    messages.Add(new ParserMessage($"Unknown property '{property.Name}' in definition '{definition.Name}'.", ParserMessage.MessageType.Warning, (row, column)));
+                }
+            }
+        }
+    }
+
+    private Boolean ShouldGenerateNodeVisitor()
+    {
+        return !Options.Any(option => option.Name.Equals(GrammarOptionNoInterface, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void CheckTreatInlineCycles()
+    {
+        Dictionary<Definition, List<Definition>> references = new Dictionary<Definition, List<Definition>>();
+        foreach (Definition definition in Definitions)
+        {
+            List<Definition> refs = new List<Definition>();
+            definition.IterateElements(element =>
+            {
+                if (element is ReferenceElement referenceElement)
+                {
+                    Definition? referencedDefinition = FindDefinitionByName(referenceElement.ReferenceName);
+                    if (referencedDefinition is not null)
+                        refs.Add(referencedDefinition);
+                }
+                return true;
+            });
+            references[definition] = refs;
+        }
+
+        Dictionary<Definition, Int32> state = Definitions.ToDictionary(d => d, _ => 0);
+        Stack<Definition> stack = new Stack<Definition>();
+
+        void Visit(Definition definition)
+        {
+            if (state[definition] == 2)
+                return;
+            if (state[definition] == 1)
+                return;
+
+            state[definition] = 1;
+            stack.Push(definition);
+            foreach (Definition referenced in references[definition])
+            {
+                if (state[referenced] == 1)
+                {
+                    if (!referenced.HasMarker<TreatInlineMarker>())
+                        continue;
+
+                    List<Definition> path = stack.Reverse().ToList(); // root -> current
+                    List<Definition> cycle = path.SkipWhile(d => d != referenced).ToList();
+                    cycle.Add(referenced);
+
+                    (UInt32 row, UInt32 column) = referenced.MessageContext.CalculateLocation(referenced.Node.Position);
+                    throw GetException($"Circular reference involving TreatInline definition '{referenced.Name}' detected: {String.Join(" -> ", cycle.Select(d => d.Name))}");
+                }
+                else if (state[referenced] == 0)
+                    Visit(referenced);
+            }
+            stack.Pop();
+            state[definition] = 2;
+        }
+
+        foreach (Definition definition in Definitions)
+            Visit(definition);
     }
 
     private Boolean IterateUsedDefinitions(AbstractGrammarElement element, List<Definition> definitions)
@@ -440,14 +678,54 @@ public class Grammar : AbstractNamedElement
         return builder.ToString();
     }
 
-    protected String GetParseResultCode()
+    protected String GetParseResultCode(Boolean generateNodeVisitor)
     {
         String GetEventName(Definition definition) => $"Process{definition.Name.Humanize().Dehumanize()}Node";
-        List<Definition> usedDefinitions = GetRelevantGrammarDefinitions();
-        StringBuilder visitorCallsBuilder = new StringBuilder();
-        foreach (Definition definition in usedDefinitions)
-            visitorCallsBuilder.AppendLine($"case {GetElementIdOf(definition)}: return visitor.{GetEventName(definition)}(context, node, messages);");
-        String visitorCalls = visitorCallsBuilder.ToString();
+        String visitorCalls = String.Empty;
+        if (generateNodeVisitor)
+        {
+            List<Definition> usedDefinitions = GetRelevantGrammarDefinitions();
+            StringBuilder visitorCallsBuilder = new StringBuilder();
+            foreach (Definition definition in usedDefinitions)
+                visitorCallsBuilder.AppendLine($"case {GetElementIdOf(definition)}: return visitor.{GetEventName(definition)}(context, node, messages);");
+            visitorCalls = visitorCallsBuilder.ToString();
+        }
+
+        String nodeVisitorMethods = String.Empty;
+        if (generateNodeVisitor)
+        {
+            nodeVisitorMethods =
+                $$"""
+
+                private ProcessNodeResult DoVisit(Object context, INodeVisitor visitor, ASTNode node, IList<ParserMessage> messages)
+                {
+                    visitor.BeginVisit(context, node);
+                    try
+                    {
+                        if (node == null)
+                            return ProcessNodeResult.Error;
+                        Boolean result = true;
+                        foreach (ASTNode child in node.Children)
+                            result = result && (DoVisit(context, visitor, child, messages) == ProcessNodeResult.Success);
+                        result = result && (CallEvent(context, visitor, node.TokenId, node, messages) == ProcessNodeResult.Success);
+                        return result ? ProcessNodeResult.Success : ProcessNodeResult.Error;
+                    }
+                    finally
+                    {
+                        visitor.EndVisit(context, node);
+                    }
+                }
+
+                private ProcessNodeResult CallEvent(Object context, INodeVisitor visitor, Int32 tokenId, ASTNode node, IList<ParserMessage> messages)
+                {
+                    switch (tokenId)
+                    {
+                {{Indent(Indent(visitorCalls))}}
+                    }
+                    return ProcessNodeResult.Success;
+                }
+                """;
+        }
 
         String result =
             $$"""
@@ -519,8 +797,8 @@ public class Grammar : AbstractNamedElement
                         try
                         {
                             Object context = visitor.GetContext(this);
-                            if (visitor is INodeVisitor)
-                                DoVisit(context, (visitor as INodeVisitor)!, RootNode!, visitMessages);
+                            {{(generateNodeVisitor ? "if (visitor is INodeVisitor)" : "")}}
+                                {{(generateNodeVisitor ? "DoVisit(context, (visitor as INodeVisitor)!, RootNode!, visitMessages);" : "")}}
                             return visitor.GetResult(context, true, visitMessages);
                         }
                         catch (GrammarException ex)
@@ -530,34 +808,7 @@ public class Grammar : AbstractNamedElement
                     }
                     return new EmptyResult(false, visitMessages);
                 }
-
-                private ProcessNodeResult DoVisit(Object context, INodeVisitor visitor, ASTNode node, IList<ParserMessage> messages)
-                {
-                    visitor.BeginVisit(context, node);
-                    try
-                    {
-                        if (node == null)
-                            return ProcessNodeResult.Error;
-                        Boolean result = true;
-                        foreach (ASTNode child in node.Children)
-                            result = result && (DoVisit(context, visitor, child, messages) == ProcessNodeResult.Success);
-                        result = result && (CallEvent(context, visitor, node.TokenId, node, messages) == ProcessNodeResult.Success);
-                        return result ? ProcessNodeResult.Success : ProcessNodeResult.Error;
-                    }
-                    finally
-                    {
-                        visitor.EndVisit(context, node);
-                    }
-                }
-
-                private ProcessNodeResult CallEvent(Object context, INodeVisitor visitor, Int32 tokenId, ASTNode node, IList<ParserMessage> messages)
-                {
-                    switch (tokenId)
-                    {
-            {{Indent(Indent(Indent(visitorCalls)))}}
-                    }
-                    return ProcessNodeResult.Success;
-                }
+            {{Indent(nodeVisitorMethods)}}
             }
             """;
         return result;
@@ -590,7 +841,7 @@ public class Grammar : AbstractNamedElement
         return Indent(Indent(result));
     }
 
-    protected String GetIVisitorCode()
+    protected String GetIVisitorCode(Boolean generateNodeVisitor)
     {
         String GetEventName(Definition definition) => $"Process{definition.Name.Humanize().Dehumanize()}Node";
         List<Definition> usedDefinitions = GetRelevantGrammarDefinitions();
@@ -598,8 +849,9 @@ public class Grammar : AbstractNamedElement
         foreach (Definition definition in usedDefinitions)
             visitorEventsBuilder.AppendLine($"ProcessNodeResult {GetEventName(definition)}(Object context, ASTNode node, IList<ParserMessage> messages);");
         String visitorEvents = visitorEventsBuilder.ToString();
-        String result =
-            $$"""
+        StringBuilder builder = new StringBuilder();
+        builder.Append(
+            """
             public interface IVisitResult
             {
                 Boolean Successful { get; }
@@ -612,21 +864,29 @@ public class Grammar : AbstractNamedElement
                 IVisitResult GetResult(Object context, Boolean successful, IReadOnlyList<ParserMessage> messages);
             }
 
-            public interface INodeVisitor : IVisitor
-            {
-            {{Indent(visitorEvents)}}
-                void BeginVisit(Object context, ASTNode node);
-                void EndVisit(Object context, ASTNode node);
-            }
+            """
+        );
+        if (generateNodeVisitor)
+        {
+            builder.AppendLine(
+                $$"""
 
-            public enum ProcessNodeResult
-            {
-                Success,
-                Error
-            }
+                public interface INodeVisitor : IVisitor
+                {
+                {{Indent(visitorEvents)}}
+                    void BeginVisit(Object context, ASTNode node);
+                    void EndVisit(Object context, ASTNode node);
+                }
 
-            """;
-        return result;
+                public enum ProcessNodeResult
+                {
+                    Success,
+                    Error
+                }
+                """
+            );
+        }
+        return builder.ToString();
     }
 
     protected String GetBasicCode()

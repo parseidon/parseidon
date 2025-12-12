@@ -1,6 +1,6 @@
 using Parseidon.Helper;
 using Parseidon.Parser.Grammar;
-using Parseidon.Parser.Grammar.Block;
+using Parseidon.Parser.Grammar.Blocks;
 using Parseidon.Parser.Grammar.Operators;
 using Parseidon.Parser.Grammar.Terminals;
 
@@ -10,10 +10,10 @@ public class ParseidonVisitor : INodeVisitor
 {
     public interface IGetResults
     {
-        Grammar.Grammar.CreateOutputResult ParserCode { get; }
-        Grammar.Grammar.CreateOutputResult TextMateGrammar { get; }
-        Grammar.Grammar.CreateOutputResult LanguageConfig { get; }
-        Grammar.Grammar.CreateOutputResult VSCodePackage { get; }
+        Grammar.Grammar.CreateOutputResult GetParserCode();
+        Grammar.Grammar.CreateOutputResult GetTextMateGrammar();
+        Grammar.Grammar.CreateOutputResult GetLanguageConfig();
+        Grammar.Grammar.CreateOutputResult GetVSCodePackage(String? versionOverride);
     }
 
     private sealed class CreateCodeVisitorContext
@@ -43,13 +43,15 @@ public class ParseidonVisitor : INodeVisitor
         public Boolean Successful { get; }
         public IReadOnlyList<ParserMessage> Messages { get; }
 
-        public Grammar.Grammar.CreateOutputResult ParserCode => _grammar.ToParserCode(MessageContext);
+        public Grammar.Grammar.CreateOutputResult GetParserCode() => _grammar.ToParserCode(MessageContext);
 
-        public Grammar.Grammar.CreateOutputResult TextMateGrammar => _grammar.ToTextMateGrammar(MessageContext);
+        public Grammar.Grammar.CreateOutputResult GetTextMateGrammar() => _grammar.ToTextMateGrammar(MessageContext);
 
-        public Grammar.Grammar.CreateOutputResult LanguageConfig => _grammar.ToLanguageConfig(MessageContext);
+        public Grammar.Grammar.CreateOutputResult GetLanguageConfig() => _grammar.ToLanguageConfig(MessageContext);
 
-        public Grammar.Grammar.CreateOutputResult VSCodePackage => _grammar.ToVSCodePackage(MessageContext);
+        public Grammar.Grammar.CreateOutputResult GetVSCodePackage() => _grammar.ToVSCodePackage(MessageContext, null);
+
+        public Grammar.Grammar.CreateOutputResult GetVSCodePackage(String? versionOverride) => _grammar.ToVSCodePackage(MessageContext, versionOverride);
     }
 
     private T Pop<T>(CreateCodeVisitorContext context, Int32 position) where T : AbstractGrammarElement
@@ -121,8 +123,6 @@ public class ParseidonVisitor : INodeVisitor
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
         List<ValuePair> valuePairs = PopList<ValuePair>(typedContext);
-        Dictionary<String, String> keyValuePairs = new Dictionary<String, String>();
-        valuePairs.ForEach(pair => keyValuePairs.Add(pair.Name, pair.Value));
         AbstractDefinitionElement definition = Pop<AbstractDefinitionElement>(typedContext, node.Position);
         ReferenceElement name = Pop<ReferenceElement>(typedContext, node.Position);
         List<AbstractMarker> markers = new List<AbstractMarker>();
@@ -132,7 +132,7 @@ public class ParseidonVisitor : INodeVisitor
             marker.Element = definition;
             definition = marker;
         }
-        AbstractGrammarElement newDefinition = new Definition(name.ReferenceName, definition, keyValuePairs, typedContext.MessageContext, node, markers);
+        AbstractGrammarElement newDefinition = new Definition(name.ReferenceName, definition, valuePairs, typedContext.MessageContext, node, markers);
         Push(typedContext, newDefinition);
         return ProcessNodeResult.Success;
     }

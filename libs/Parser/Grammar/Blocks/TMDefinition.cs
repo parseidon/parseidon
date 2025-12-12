@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 using Parseidon.Parser.Grammar.Operators;
 using Parseidon.Parser.Grammar.Terminals;
 
-namespace Parseidon.Parser.Grammar.Block;
+namespace Parseidon.Parser.Grammar.Blocks;
 
 public class TMDefinition : AbstractNamedElement
 {
@@ -37,20 +37,22 @@ public class TMDefinition : AbstractNamedElement
 
     internal TextMateRepositoryEntry GetRepositoryEntry(Grammar grammar)
     {
+        String grammarSuffix = grammar.GetGrammarSuffix();
+
         Dictionary<String, TextMateCapture> GetCaptures(AbstractDefinitionElement.RegExResult regEx)
         {
             Dictionary<String, TextMateCapture> result = new Dictionary<string, TextMateCapture>();
             Int32 index = 1;
             foreach (var capture in regEx.Captures)
             {
-                result[index.ToString()] = new TextMateCapture() { Name = capture };
+                result[index.ToString()] = new TextMateCapture() { Name = Grammar.AppendGrammarSuffix(capture, grammarSuffix) ?? capture };
                 index++;
             }
             return result;
         }
 
         TextMateRepositoryEntry result = new TextMateRepositoryEntry();
-        result.Name = ScopeName;
+        result.Name = Grammar.AppendGrammarSuffix(ScopeName, grammarSuffix);
         if ((BeginSequence is null) && (EndSequence is null))
         {
             if ((Includes is not null) && (Includes.Includes.Count > 0))
@@ -83,16 +85,16 @@ public class TMDefinition : AbstractNamedElement
                     {
                         var definition = grammar.FindTMDefinitionByName(include.ReferenceName);
                         if (definition is null)
-                            throw GetException($"Can not find TextMate definition '{include.ReferenceName}'!");
+                            throw include.GetException($"Can not find TextMate definition '{include.ReferenceName}'!");
                         patterns.Add(new TextMatePatternInclude() { Include = $"#{definition.Name.ToLower()}" });
                     }
                     else if (include is ReferenceElement)
                     {
                         var definition = grammar.FindDefinitionByName(include.ReferenceName);
                         if (definition is null)
-                            throw GetException($"Can not find definition '{include.ReferenceName}'!");
+                            throw include.GetException($"Can not find definition '{include.ReferenceName}'!");
                         if (!definition.KeyValuePairs.ContainsKey(Grammar.TextMatePropertyPattern))
-                            throw GetException($"Definition '{definition.Name}' has no '{Grammar.TextMatePropertyPattern}' property!");
+                            throw include.GetException($"Definition '{definition.Name}' has no '{Grammar.TextMatePropertyPattern}' property!");
                         patterns.Add(new TextMatePatternInclude() { Include = $"#{definition.Name.ToLower()}" });
                     }
                 }

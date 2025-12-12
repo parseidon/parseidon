@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -16,45 +17,71 @@ public static class StringExtensions
 
     public static String ReplaceAll(this String input, (String Search, String Replace)[] rules)
     {
-        var stringBuilder = new System.Text.StringBuilder(input.Length);
+        if (input.Length == 0 || rules.Length == 0)
+            return input;
 
+        // Build a trie for all search strings so we can scan the input once and
+        // find the first matching rule (by original order) at each position.
+        var root = new TrieNode();
+        for (Int32 ruleIndex = 0; ruleIndex < rules.Length; ruleIndex++)
+        {
+            var search = rules[ruleIndex].Search;
+            if (String.IsNullOrEmpty(search))
+                continue;
+
+            var node = root;
+            foreach (Char c in search)
+            {
+                if (!node.Children.TryGetValue(c, out var next))
+                {
+                    next = new TrieNode();
+                    node.Children.Add(c, next);
+                }
+                node = next;
+            }
+
+            // Keep the earliest rule for identical search strings.
+            if (!node.RuleIndex.HasValue || ruleIndex < node.RuleIndex.Value)
+            {
+                node.RuleIndex = ruleIndex;
+                node.MatchLength = search.Length;
+            }
+        }
+
+        var builder = new StringBuilder(input.Length);
         Int32 i = 0;
         while (i < input.Length)
         {
-            Boolean matched = false;
-            foreach (var rule in rules)
+            var node = root;
+            Int32 bestRuleIndex = Int32.MaxValue;
+            Int32 bestLength = 0;
+
+            for (Int32 j = i; j < input.Length; j++)
             {
-                var search = rule.Search;
-                if (string.IsNullOrEmpty(search))
-                    continue;
-                Int32 len = search.Length;
-                if (i + len > input.Length)
-                    continue;
-                Boolean equal = true;
-                for (Int32 j = 0; j < len; j++)
-                {
-                    if (input[i + j] != search[j])
-                    {
-                        equal = false;
-                        break;
-                    }
-                }
-                if (equal)
-                {
-                    stringBuilder.Append(rule.Replace ?? String.Empty);
-                    i += len;
-                    matched = true;
+                var c = input[j];
+                if (!node.Children.TryGetValue(c, out node))
                     break;
+
+                if (node.RuleIndex.HasValue && node.RuleIndex.Value < bestRuleIndex)
+                {
+                    bestRuleIndex = node.RuleIndex.Value;
+                    bestLength = node.MatchLength;
                 }
             }
-            if (!matched)
+
+            if (bestLength > 0)
             {
-                stringBuilder.Append(input[i]);
+                builder.Append(rules[bestRuleIndex].Replace ?? String.Empty);
+                i += bestLength;
+            }
+            else
+            {
+                builder.Append(input[i]);
                 i++;
             }
         }
 
-        return stringBuilder.ToString();
+        return builder.ToString();
     }
 
     public static Boolean ContainsNewLine(this String input)
@@ -150,6 +177,13 @@ public static class StringExtensions
             default:
                 return false;
         }
+    }
+
+    private sealed class TrieNode
+    {
+        public Dictionary<Char, TrieNode> Children { get; } = new();
+        public Int32? RuleIndex { get; set; }
+        public Int32 MatchLength { get; set; }
     }
 
     private static Boolean TryReplaceChar(Char c, out String? replaceWith)
