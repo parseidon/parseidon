@@ -38,7 +38,7 @@ jobs:
           if [ -n "${MINVERBUILDMETADATA:-}" ]; then
             buildMetadataArgs+=(--build-metadata "$MINVERBUILDMETADATA")
           fi
-          VERSION=$(minver -t v --default-pre-release-phase beta "${buildMetadataArgs[@]:-}" --verbosity quiet)
+          VERSION=$(minver -t v --default-pre-release-phase beta "${buildMetadataArgs[@]:-}" --verbosity info)
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "Using version: $VERSION"
 
