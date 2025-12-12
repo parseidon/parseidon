@@ -276,9 +276,17 @@ static OutputResult CreateVSCodePackage(Parseidon.Parser.ParseResult parseResult
             {
                 String LoadMergeContent(String mergePath)
                 {
-                    FileInfo mergeFile = Path.IsPathRooted(mergePath)
-                        ? new FileInfo(mergePath)
-                        : new FileInfo(Path.GetFullPath(Path.Combine(grammarFile.Directory?.FullName ?? Directory.GetCurrentDirectory(), mergePath)));
+                    FileInfo mergeFile;
+                    if (Path.IsPathRooted(mergePath))
+                    {
+                        mergeFile = new FileInfo(mergePath);
+                    }
+                    else
+                    {
+                        if (grammarFile.Directory == null)
+                            throw new InvalidOperationException($"Cannot resolve relative path '{mergePath}' because the grammar file's directory is null.");
+                        mergeFile = new FileInfo(Path.GetFullPath(Path.Combine(grammarFile.Directory.FullName, mergePath)));
+                    }
                     mergeFile.Refresh();
                     if (!mergeFile.Exists)
                         throw new FileNotFoundException($"The file '{mergeFile.FullName}' could not be found!");
