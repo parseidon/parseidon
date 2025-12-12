@@ -1,13 +1,15 @@
+using System.Linq;
 using Parseidon.Parser.Grammar.Operators;
 
 namespace Parseidon.Parser.Grammar.Block;
 
 public class Definition : AbstractNamedElement
 {
-    public Definition(string name, AbstractDefinitionElement definitionElement, IReadOnlyDictionary<String, String> keyValuePairs, MessageContext messageContext, ASTNode node, List<AbstractMarker> customMarker) : base(name, messageContext, node)
+    public Definition(string name, AbstractDefinitionElement definitionElement, IReadOnlyList<ValuePair> valuePairs, MessageContext messageContext, ASTNode node, List<AbstractMarker> customMarker) : base(name, messageContext, node)
     {
         _customMarker = customMarker;
-        KeyValuePairs = keyValuePairs;
+        ValuePairs = valuePairs;
+        KeyValuePairs = valuePairs.ToDictionary(pair => pair.Name, pair => pair.Value, StringComparer.OrdinalIgnoreCase);
         DefinitionElement = definitionElement;
         DefinitionElement.Parent = this;
     }
@@ -33,6 +35,7 @@ public class Definition : AbstractNamedElement
     }
 
     public AbstractDefinitionElement DefinitionElement { get; }
+    public IReadOnlyList<ValuePair> ValuePairs { get; }
     public IReadOnlyDictionary<String, String> KeyValuePairs { get; }
     public Boolean DropDefinition { get => HasMarker<DropMarker>() || HasMarker<TreatInlineMarker>(); }
     public override bool MatchesVariableText() => !DropDefinition && DefinitionElement.MatchesVariableText();

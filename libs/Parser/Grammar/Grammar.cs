@@ -48,6 +48,7 @@ public class Grammar : AbstractNamedElement
         List<ParserMessage> messages = new List<ParserMessage>();
         TextMateGrammarDocument document = new TextMateGrammarDocument();
         Boolean successful = false;
+        AddUnknownIdentifierWarnings(messages);
         try
         {
             TMDefinition rootDefinition = GetTMRootDefinition();
@@ -213,6 +214,7 @@ public class Grammar : AbstractNamedElement
         Boolean successful = false;
         try
         {
+            AddUnknownIdentifierWarnings(messages);
             AddUnusedDefinitionWarnings(messages);
             result =
                 $$"""
@@ -463,6 +465,54 @@ public class Grammar : AbstractNamedElement
             parent = parent.Parent;
         }
         return null;
+    }
+
+    private void AddUnknownIdentifierWarnings(IList<ParserMessage> messages)
+    {
+        HashSet<String> knownOptions = new HashSet<String>(StringComparer.OrdinalIgnoreCase)
+        {
+            GrammarOptionNamespace,
+            GrammarOptionClass,
+            GrammarOptionRoot,
+            TextMateOptionDisplayName,
+            TextMateOptionScopeName,
+            TextMateOptionFileType,
+            TextMateOptionDescription,
+            TextMateOptionLanguageName,
+            TextMateOptionVersion,
+            TextMateOptionLineComment
+        };
+
+        HashSet<String> knownProperties = new HashSet<String>(StringComparer.OrdinalIgnoreCase)
+        {
+            TextMatePropertyScope,
+            TextMatePropertyPattern,
+            GrammarPropertyErrorName,
+            GrammarPropertyQuote,
+            GrammarPropertyBracketOpen,
+            GrammarPropertyBracketClose
+        };
+
+        foreach (ValuePair option in Options)
+        {
+            if (!knownOptions.Contains(option.Name))
+            {
+                (UInt32 row, UInt32 column) = option.MessageContext.CalculateLocation(option.Node.Position);
+                messages.Add(new ParserMessage($"Unknown option '{option.Name}'.", ParserMessage.MessageType.Warning, (row, column)));
+            }
+        }
+
+        foreach (Definition definition in Definitions)
+        {
+            foreach (ValuePair property in definition.ValuePairs)
+            {
+                if (!knownProperties.Contains(property.Name))
+                {
+                    (UInt32 row, UInt32 column) = property.MessageContext.CalculateLocation(property.Node.Position);
+                    messages.Add(new ParserMessage($"Unknown property '{property.Name}' in definition '{definition.Name}'.", ParserMessage.MessageType.Warning, (row, column)));
+                }
+            }
+        }
     }
 
     private Boolean IterateUsedDefinitions(AbstractGrammarElement element, List<Definition> definitions)

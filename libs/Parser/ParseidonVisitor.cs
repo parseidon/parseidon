@@ -123,8 +123,6 @@ public class ParseidonVisitor : INodeVisitor
     {
         var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
         List<ValuePair> valuePairs = PopList<ValuePair>(typedContext);
-        Dictionary<String, String> keyValuePairs = new Dictionary<String, String>();
-        valuePairs.ForEach(pair => keyValuePairs.Add(pair.Name, pair.Value));
         AbstractDefinitionElement definition = Pop<AbstractDefinitionElement>(typedContext, node.Position);
         ReferenceElement name = Pop<ReferenceElement>(typedContext, node.Position);
         List<AbstractMarker> markers = new List<AbstractMarker>();
@@ -134,7 +132,7 @@ public class ParseidonVisitor : INodeVisitor
             marker.Element = definition;
             definition = marker;
         }
-        AbstractGrammarElement newDefinition = new Definition(name.ReferenceName, definition, keyValuePairs, typedContext.MessageContext, node, markers);
+        AbstractGrammarElement newDefinition = new Definition(name.ReferenceName, definition, valuePairs, typedContext.MessageContext, node, markers);
         Push(typedContext, newDefinition);
         return ProcessNodeResult.Success;
     }
