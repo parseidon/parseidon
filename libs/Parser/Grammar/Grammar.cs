@@ -402,7 +402,7 @@ public class Grammar : AbstractNamedElement
         {
             if (element is TMSequence sequence && !String.IsNullOrWhiteSpace(sequence.ScopeName) && sequence.Elements.Count == 1)
             {
-                String scopedSequenceName = AppendGrammarSuffix(sequence.ScopeName, grammarSuffix) ?? sequence.ScopeName;
+                String scopedSequenceName = AppendGrammarSuffix(sequence.ScopeName, grammarSuffix) ?? sequence.ScopeName!;
                 String? innerScope = TryGetElementScope(sequence.Elements.First(), grammarSuffix);
                 if (!String.IsNullOrWhiteSpace(innerScope) && !scopedSequenceName.Equals(innerScope, StringComparison.OrdinalIgnoreCase))
                 {
