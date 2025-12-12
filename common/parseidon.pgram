@@ -56,7 +56,6 @@ TMRegExChar             = [^'\\]
                         / PredefinedClass
                         / UnicodeChars;
 $TMScopeName            = IdentStart TMScopeNameCont -Colon {errorname: 'TextMate scope name', tmscope: string.unquoted};
-!TMScopeName            = <TMScopeName> !'(?:<)';
 :TMScopeNameCont        = (('.' / '_' / '-')? [a-zA-Z0-9])*;
 
 # TextMate Identifier
