@@ -55,7 +55,7 @@ public class Grammar : AbstractNamedElement
                 ScopeName = GetOptionValue(Grammar.TextMateOptionScopeName),
                 FileTypes = GetFileTypes(),
                 Patterns = new List<TMDefinition.TextMatePatternInclude>() { new TMDefinition.TextMatePatternInclude() { Include = $"#{rootDefinition.Name.ToLower()}" } },
-                Repository = GetTextMateRepository(this, messageContext)
+                Repository = GetTextMateRepository(this, messages)
             };
             successful = true;
         }
@@ -244,7 +244,7 @@ public class Grammar : AbstractNamedElement
         return new CreateOutputResult(successful, result, messages);
     }
 
-    private IReadOnlyDictionary<String, TMDefinition.TextMateRepositoryEntry> GetTextMateRepository(Grammar grammar, MessageContext messageContext)
+    private IReadOnlyDictionary<String, TMDefinition.TextMateRepositoryEntry> GetTextMateRepository(Grammar grammar, IList<ParserMessage> messages)
     {
         var result = new Dictionary<String, TMDefinition.TextMateRepositoryEntry>(StringComparer.OrdinalIgnoreCase);
         List<TMDefinition> tmDefinitions = TMDefinitions.ToList();
@@ -254,11 +254,33 @@ public class Grammar : AbstractNamedElement
                 throw GetException($"TextMate definition '{definition.Name}' already exists!");
             String? scopeName = definition.KeyValuePairs[TextMatePropertyPattern];
             scopeName = String.IsNullOrEmpty(scopeName) ? null : scopeName;
-            TMSequence sequence = new TMSequence(new List<AbstractDefinitionElement>() { definition.DefinitionElement }, messageContext, definition.Node);
-            tmDefinitions.Add(new TMDefinition(definition.Name, scopeName, sequence, null, null, messageContext, definition.Node));
+            TMSequence sequence = new TMSequence(new List<AbstractDefinitionElement>() { definition.DefinitionElement }, definition.MessageContext, definition.Node);
+            tmDefinitions.Add(new TMDefinition(definition.Name, scopeName, sequence, null, null, definition.MessageContext, definition.Node));
+        }
+        HashSet<String> referencedDefinitionNames = new HashSet<String>(StringComparer.OrdinalIgnoreCase)
+        {
+            GetTMRootDefinition().Name
+        };
+        foreach (TMDefinition tmDefinition in tmDefinitions)
+        {
+            if (tmDefinition.Includes is null)
+                continue;
+            foreach (ReferenceElement include in tmDefinition.Includes.Includes)
+            {
+                if (!include.ReferenceName.Equals(tmDefinition.Name, StringComparison.OrdinalIgnoreCase))
+                    referencedDefinitionNames.Add(include.ReferenceName);
+            }
         }
         foreach (TMDefinition tmDefinition in tmDefinitions)
-            result[tmDefinition.Name.ToLower()] = tmDefinition.GetRepositoryEntry(grammar);
+        {
+            if (referencedDefinitionNames.Contains(tmDefinition.Name))
+                result[tmDefinition.Name.ToLower()] = tmDefinition.GetRepositoryEntry(grammar);
+            else
+            {
+                (UInt32 row, UInt32 column) = tmDefinition.MessageContext.CalculateLocation(tmDefinition.Node.Position);
+                messages.Add(new ParserMessage($"TextMate definition '{tmDefinition.Name}' is not referenced by any other rule.", ParserMessage.MessageType.Warning, (row, column)));
+            }
+        }
         return result;
     }
 
