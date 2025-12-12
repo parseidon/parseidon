@@ -28,6 +28,20 @@ jobs:
         with:
           dotnet-version: "9.0.x"
 
+      - name: Install MinVer CLI
+        run: dotnet tool install --global minver-cli --version 5.*
+
+      - name: Determine version with MinVer
+        run: |
+          set -euo pipefail
+          buildMetadataArgs=()
+          if [ -n "${MINVERBUILDMETADATA:-}" ]; then
+            buildMetadataArgs+=(--build-metadata "$MINVERBUILDMETADATA")
+          fi
+          VERSION=$(minver -t v --default-pre-release-phase beta "${buildMetadataArgs[@]:-}" --verbosity quiet)
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "Using version: $VERSION"
+
       - name: Restore dependencies
         run: dotnet restore
 
@@ -36,6 +50,36 @@ jobs:
 
       - name: Pack
         run: dotnet pack -c Release --no-build --output ./nupkgs
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Generate VS Code extension files
+        run: |
+          set -euo pipefail
+          CLI_DLL=$(find ./Output/bin/Parseidon.Cli/Release -name 'dotnet-parseidon.dll' -print -quit)
+          if [ -z "$CLI_DLL" ]; then
+            echo "CLI binary not found" >&2
+            exit 1
+          fi
+          dotnet "$CLI_DLL" vscode ./common/parseidon.pgram ./Output/VSCodePackage -o override -v "${VERSION}"
+
+      - name: Package VS Code extension (.vsix)
+        run: |
+          set -euo pipefail
+          mkdir -p ./Output/artifacts
+          pushd ./Output/VSCodePackage
+          npx --yes @vscode/vsce package --no-dependencies --out ../artifacts/parseidon-vscode-${VERSION}.vsix
+          popd
+
+      - name: Upload VS Code extension artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: parseidon-vscode-${{ env.VERSION }}
+          path: Output/artifacts/parseidon-vscode-${{ env.VERSION }}.vsix
+          if-no-files-found: error
 
       - name: Publish packages to GitHub Packages
         run: |
