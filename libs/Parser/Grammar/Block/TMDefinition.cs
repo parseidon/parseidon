@@ -38,7 +38,7 @@ public class TMDefinition : AbstractNamedElement
     internal TextMateRepositoryEntry GetRepositoryEntry(Grammar grammar)
     {
         String grammarSuffix = grammar.GetGrammarSuffix();
-        
+
         Dictionary<String, TextMateCapture> GetCaptures(AbstractDefinitionElement.RegExResult regEx)
         {
             Dictionary<String, TextMateCapture> result = new Dictionary<string, TextMateCapture>();
@@ -85,16 +85,16 @@ public class TMDefinition : AbstractNamedElement
                     {
                         var definition = grammar.FindTMDefinitionByName(include.ReferenceName);
                         if (definition is null)
-                            throw GetException($"Can not find TextMate definition '{include.ReferenceName}'!");
+                            throw include.GetException($"Can not find TextMate definition '{include.ReferenceName}'!");
                         patterns.Add(new TextMatePatternInclude() { Include = $"#{definition.Name.ToLower()}" });
                     }
                     else if (include is ReferenceElement)
                     {
                         var definition = grammar.FindDefinitionByName(include.ReferenceName);
                         if (definition is null)
-                            throw GetException($"Can not find definition '{include.ReferenceName}'!");
+                            throw include.GetException($"Can not find definition '{include.ReferenceName}'!");
                         if (!definition.KeyValuePairs.ContainsKey(Grammar.TextMatePropertyPattern))
-                            throw GetException($"Definition '{definition.Name}' has no '{Grammar.TextMatePropertyPattern}' property!");
+                            throw include.GetException($"Definition '{definition.Name}' has no '{Grammar.TextMatePropertyPattern}' property!");
                         patterns.Add(new TextMatePatternInclude() { Include = $"#{definition.Name.ToLower()}" });
                     }
                 }
