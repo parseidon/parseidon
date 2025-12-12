@@ -210,6 +210,7 @@ public class Grammar : AbstractNamedElement
         Boolean successful = false;
         try
         {
+            AddUnusedDefinitionWarnings(messages);
             result =
                 $$"""
                 #nullable enable
@@ -416,6 +417,47 @@ public class Grammar : AbstractNamedElement
                 if (referencedDefinition is not null && referencedDefinition.KeyValuePairs.TryGetValue(TextMatePropertyScope, out String scopeName))
                     return AppendGrammarSuffix(scopeName, grammarSuffix) ?? scopeName;
                 break;
+        }
+        return null;
+    }
+
+    private void AddUnusedDefinitionWarnings(IList<ParserMessage> messages)
+    {
+        String rootName = GetOptionValue(GrammarOptionRoot);
+        HashSet<String> referencedDefinitions = new HashSet<String>(StringComparer.OrdinalIgnoreCase)
+        {
+            rootName
+        };
+
+        IterateElements(element =>
+        {
+            if (element is ReferenceElement referenceElement)
+            {
+                Definition? parentDefinition = GetParentDefinition(referenceElement);
+                if ((parentDefinition is null) || !parentDefinition.Name.Equals(referenceElement.ReferenceName, StringComparison.OrdinalIgnoreCase))
+                    referencedDefinitions.Add(referenceElement.ReferenceName);
+            }
+            return true;
+        });
+
+        foreach (Definition definition in Definitions)
+        {
+            if (referencedDefinitions.Contains(definition.Name))
+                continue;
+
+            (UInt32 row, UInt32 column) = definition.MessageContext.CalculateLocation(definition.Node.Position);
+            messages.Add(new ParserMessage($"Definition '{definition.Name}' is not referenced by any other rule.", ParserMessage.MessageType.Warning, (row, column)));
+        }
+    }
+
+    private Definition? GetParentDefinition(AbstractGrammarElement element)
+    {
+        AbstractGrammarElement? parent = element.Parent;
+        while (parent is not null)
+        {
+            if (parent is Definition definition)
+                return definition;
+            parent = parent.Parent;
         }
         return null;
     }
