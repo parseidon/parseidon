@@ -9,7 +9,7 @@ public class Definition : AbstractNamedElement
     {
         _customMarker = customMarker;
         ValuePairs = valuePairs;
-        KeyValuePairs = valuePairs.ToDictionary(pair => pair.Name, pair => pair.Value, StringComparer.OrdinalIgnoreCase);
+        KeyValuePairs = valuePairs.ToDictionary(pair => pair.Name, pair => pair.Value);
         DefinitionElement = definitionElement;
         DefinitionElement.Parent = this;
     }

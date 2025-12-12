@@ -49,7 +49,7 @@ public class ParseidonVisitor : INodeVisitor
 
         public Grammar.Grammar.CreateOutputResult GetLanguageConfig() => _grammar.ToLanguageConfig(MessageContext);
 
-        public Grammar.Grammar.CreateOutputResult VSCodePackage() => _grammar.ToVSCodePackage(MessageContext, null);
+        public Grammar.Grammar.CreateOutputResult GetVSCodePackage() => _grammar.ToVSCodePackage(MessageContext, null);
 
         public Grammar.Grammar.CreateOutputResult GetVSCodePackage(String? versionOverride) => _grammar.ToVSCodePackage(MessageContext, versionOverride);
     }
