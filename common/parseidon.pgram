@@ -10,14 +10,14 @@
 
 # Grammar
 Grammar                 = _(Option_)* (Definition / TMDefinition)+;
-!Grammar                = !'^' [ Comment / !Option / !Definition / !TMDefinition ] !'$';
+!Grammar                = !'^' [ Comment, !Option, !Definition, !TMDefinition ] !'$';
 
 Option                  = '@' ValuePair_LineEnd;
 !Option                 = meta.option:(variable.other:(!'@' <Identifier>) <Colon> [ !Value ] <LineEnd>);
 
 # Definition structure
 Definition              = DefinitionOptions Identifier_-Equal_Expression Properties?_LineEnd_;
-!Definition             = meta.definition.grammar:(<DefinitionOptions> entity.name.type:<Identifier> <_Equal> [ !Identifier / Literal / !Properties / Regex ] <_LineEnd>);
+!Definition             = meta.definition.grammar:(<DefinitionOptions> entity.name.type:<Identifier> <_Equal> [ !Identifier, Literal, !Properties, Regex ] <_LineEnd>);
 :DefinitionOptions      = UseDefinitionNameAsError? (IsTerminal / Drop)? TreatInline?;
 Expression              = Sequence (Or_Sequence)*;
 Sequence                = Prefix+;
@@ -29,24 +29,24 @@ Suffix                  = Primary (Optional / ZeroOrMore / OneOrMore)?_;
                         / Regex
                         / AllChar;  
 :Properties             = -CurlyBracketOpen_ValuePair_(','_ValuePair_)* -CurlyBracketClose;
-!Properties             = meta.properties:(<CurlyBracketOpen> [ !Property / !BoolProperty ] <CurlyBracketClose>);
+!Properties             = meta.properties:(<CurlyBracketOpen> [ !Property, !BoolProperty ] <CurlyBracketClose>);
 !Property               = variable.other:<Identifier> !'\s*' <Colon> !'\s*' [ !Value ] <_> !'(,)|(?=})';
 !BoolProperty           = variable.other:<Identifier> <_> !'(?=})';
 
 # TextMate definition structure
 TMDefinition            = TMIdentifier_-Equal_(TMNamedExpression / TMExpression)_LineEnd_;
-!TMDefinition           = meta.definition.textmate:(<TMIdentifier> <_Equal> [ !TMMatchDefinition / !TMMatchExpression / TMRegEx / !TMInclude ] <_LineEnd>);
+!TMDefinition           = meta.definition.textmate:(<TMIdentifier> <_Equal> [ !TMMatchDefinition, !TMMatchExpression, TMRegEx, !TMInclude ] <_LineEnd>);
 :TMNamedExpression      = TMScopeName -BracketOpen_TMExpression_-BracketClose;
 :TMExpression           = (TMMatchSequence_(TMIncludes?_TMMatchSequence_)?) / TMIncludes;
-TMIncludes              = SquareBracketOpen_(TMInclude_(-Or_TMInclude_)*)? SquareBracketClose;
+TMIncludes              = SquareBracketOpen_(TMInclude_(-','_TMInclude_)*)? SquareBracketClose;
 :TMInclude              = TMIdentifier / Identifier;
-!TMInclude              = <SquareBracketOpen> [ !TMIdentifier / !Identifier] <SquareBracketClose>;
+!TMInclude              = <SquareBracketOpen> [ !TMIdentifier, !Identifier ] <SquareBracketClose>;
 TMMatchSequence         = (TMMatch_)+;
 TMMatch                 = TMScopeName? -AngleBracketOpen_Expression_-AngleBracketClose 
                         / TMRegEx
                         / TMScopeName? -BracketOpen_TMMatchSequence_-BracketClose; 
-!TMMatchDefinition      = <TMScopeName? AngleBracketOpen> [ !Identifier / Literal / !Properties / Regex ] <AngleBracketClose>;
-!TMMatchExpression      = <TMScopeName? BracketOpen> [ !TMMatchDefinition / !TMMatchExpression / TMRegEx / !TMInclude ] <BracketClose>;
+!TMMatchDefinition      = <TMScopeName? AngleBracketOpen> [ !Identifier, Literal, !Properties, Regex ] <AngleBracketClose>;
+!TMMatchExpression      = <TMScopeName? BracketOpen> [ !TMMatchDefinition, !TMMatchExpression, TMRegEx, !TMInclude ] <BracketClose>;
 $TMRegEx                = -'!\'' TMRegExChar+ -'\'' {tmpattern: string.regexp};
 TMRegExChar             = [^'\\]
                         / '\\\''
@@ -67,7 +67,7 @@ $TMScopeName            = IdentStart TMScopeNameCont -Colon {errorname: 'TextMat
 ValuePair               = Identifier_(-ValueAssign_Value_)?;
 :ValueAssign            = Colon;
 :Value                  = Literal / Number / Boolean / CSharpIdentifier;
-!Value                  = [ CSharpIdentifier / Boolean / Number / Literal ];
+!Value                  = [ CSharpIdentifier, Boolean, Number, Literal ];
 ^$Number                = ('0' / ([1-9] [0-9]*)) {tmpattern: constant.numeric};
 $Boolean                = (True / False) {tmpattern: constant.language};
 :True                   = 'true';
