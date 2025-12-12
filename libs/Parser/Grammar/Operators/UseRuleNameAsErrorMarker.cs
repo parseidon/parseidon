@@ -1,4 +1,4 @@
-using Parseidon.Parser.Grammar.Block;
+using Parseidon.Parser.Grammar.Blocks;
 
 namespace Parseidon.Parser.Grammar.Operators;
 

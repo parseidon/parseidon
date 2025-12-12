@@ -1,5 +1,5 @@
 using System.Diagnostics.Contracts;
-using Parseidon.Parser.Grammar.Block;
+using Parseidon.Parser.Grammar.Blocks;
 using Parseidon.Parser.Grammar.Operators;
 
 namespace Parseidon.Parser.Grammar.Terminals;
