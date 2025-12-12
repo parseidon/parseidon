@@ -154,6 +154,8 @@ public class Grammar : AbstractNamedElement
         if (versionNumbers.TrueForAll(v => v == 0))
             messages.Add(new ParserMessage($"The version '{rawVersion}' must contain at least one non-zero number.", ParserMessage.MessageType.Error, (0u, 0u)));
 
+        while (versionNumbers.Count > 3)
+            versionNumbers.Remove(2);
         return String.Join(".", versionNumbers);
     }
 
