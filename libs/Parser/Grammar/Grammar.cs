@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Humanizer;
 using Parseidon.Helper;
 using Parseidon.Parser.Grammar.Terminals;
@@ -41,6 +42,7 @@ public class Grammar : AbstractNamedElement
     internal const String TextMateOptionLanguageName = "name";
     internal const String TextMateOptionVersion = "version";
     internal const String TextMateOptionLineComment = "linecomment";
+    public const String VSCodeOptionPackageJsonMerge = "packagejsonmerge";
     internal const String TextMatePropertyScope = "tmscope";
     internal const String TextMatePropertyPattern = "tmpattern";
 
@@ -76,6 +78,31 @@ public class Grammar : AbstractNamedElement
             Converters = { new KeyValuePairArrayConverter() }
         };
         return new CreateOutputResult(successful, JsonSerializer.Serialize(document, serializerOptions), messages);
+    }
+
+    public static String MergePackageJson(String generatedPackageJson, String overrideJsonContent)
+    {
+        JsonNode baseNode = JsonNode.Parse(generatedPackageJson) ?? new JsonObject();
+        JsonNode overrideNode = JsonNode.Parse(overrideJsonContent) ?? new JsonObject();
+        JsonNode merged = MergeJsonNodes(baseNode, overrideNode);
+        return merged.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
+    }
+
+    private static JsonNode MergeJsonNodes(JsonNode baseNode, JsonNode overrideNode)
+    {
+        if (baseNode is JsonObject baseObj && overrideNode is JsonObject overrideObj)
+        {
+            foreach (var kvp in overrideObj)
+            {
+                if (kvp.Value is JsonObject overrideChild && baseObj[kvp.Key] is JsonObject baseChild)
+                    baseObj[kvp.Key] = MergeJsonNodes(baseChild, overrideChild);
+                else
+                    baseObj[kvp.Key] = kvp.Value?.DeepClone();
+            }
+            return baseObj;
+        }
+
+        return overrideNode.DeepClone();
     }
 
     public CreateOutputResult ToLanguageConfig(MessageContext messageContext)
@@ -155,11 +182,12 @@ public class Grammar : AbstractNamedElement
         return new CreateOutputResult(successful, JsonSerializer.Serialize(document, serializerOptions), messages);
     }
 
-    public CreateOutputResult ToVSCodePackage(MessageContext messageContext, String? versionOverride = null)
+    public CreateOutputResult ToVSCodePackage(MessageContext messageContext, String? versionOverride = null, Func<String, String>? loadMergeJson = null, String? packageJsonOverridePath = null)
     {
         List<ParserMessage> messages = new List<ParserMessage>();
         VSCodePackageDocument document = new VSCodePackageDocument();
         Boolean successful = false;
+        String packageJson = String.Empty;
         try
         {
             String languageDisplayName = GetOptionValue(Grammar.TextMateOptionDisplayName);
@@ -204,7 +232,29 @@ public class Grammar : AbstractNamedElement
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
         };
 
-        return new CreateOutputResult(successful, JsonSerializer.Serialize(document, serializerOptions), messages);
+        if (successful)
+        {
+            packageJson = JsonSerializer.Serialize(document, serializerOptions);
+            String? mergePath = packageJsonOverridePath ?? TryGetOptionValue(Grammar.VSCodeOptionPackageJsonMerge);
+            if (!String.IsNullOrWhiteSpace(mergePath))
+            {
+                try
+                {
+                    if (loadMergeJson is null)
+                        throw new InvalidOperationException("No merge callback provided.");
+
+                    String overrideContent = loadMergeJson.Invoke(mergePath!);
+                    packageJson = MergePackageJson(packageJson, overrideContent);
+                }
+                catch (Exception ex)
+                {
+                    successful = false;
+                    messages.Add(new ParserMessage($"Failed to merge package override '{mergePath}': {ex.Message}", ParserMessage.MessageType.Error, (0u, 0u)));
+                }
+            }
+        }
+
+        return new CreateOutputResult(successful, packageJson, messages);
     }
 
     public CreateOutputResult ToParserCode(MessageContext messageContext)
@@ -481,7 +531,8 @@ public class Grammar : AbstractNamedElement
             TextMateOptionFileType,
             TextMateOptionLanguageName,
             TextMateOptionVersion,
-            TextMateOptionLineComment
+            TextMateOptionLineComment,
+            VSCodeOptionPackageJsonMerge
         };
 
         HashSet<String> knownProperties = new HashSet<String>(StringComparer.OrdinalIgnoreCase)

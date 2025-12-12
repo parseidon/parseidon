@@ -3,8 +3,6 @@ using Spectre.Console;
 using System.CommandLine;
 using Parseidon.Cli;
 using Parseidon.Parser.Grammar;
-using System.Text.Json;
-using System.Text.Json.Nodes;
 
 var rootCommand = new RootCommand("Parser generator for .NET");
 
@@ -133,7 +131,7 @@ vsCodeCommand.SetAction((parseResult) =>
         return RunParser(
             grammarFile,
             () => ValidateFolderInput(grammarFile, outputFolder, doOverride),
-            (result) => CreateVSCodePackage(result, outputFolder, doOverride, version, packageOverrideFile)
+            (result) => CreateVSCodePackage(result, outputFolder, doOverride, grammarFile, version, packageOverrideFile)
         );
     }
 );
@@ -193,7 +191,6 @@ static OutputResult CreateParser(Parseidon.Parser.ParseResult parseResult, FileI
     IVisitResult visitResult = parseResult.Visit(visitor);
 
     Grammar.CreateOutputResult outputResult = Grammar.CreateOutputResult.Empty;
-
     if (visitResult.Successful && visitResult is ParseidonVisitor.IGetResults typedVisitResult)
     {
         outputResult = typedVisitResult.GetParserCode();
@@ -261,7 +258,7 @@ static OutputResult CreateTextMateGrammar(Parseidon.Parser.ParseResult parseResu
     return new OutputResult(visitResult.Successful && outputResult.Successful, visitResult.Messages, outputResult.Messages);
 }
 
-static OutputResult CreateVSCodePackage(Parseidon.Parser.ParseResult parseResult, DirectoryInfo outputFolder, String overrideOption, String? versionOverride = null, FileInfo? packageJsonOverride = null)
+static OutputResult CreateVSCodePackage(Parseidon.Parser.ParseResult parseResult, DirectoryInfo outputFolder, String overrideOption, FileInfo grammarFile, String? versionOverride = null, FileInfo? packageJsonOverride = null)
 {
     ParseidonVisitor visitor = new ParseidonVisitor();
     IVisitResult visitResult = parseResult.Visit(visitor);
@@ -277,84 +274,35 @@ static OutputResult CreateVSCodePackage(Parseidon.Parser.ParseResult parseResult
             outputMessages = outputMessages.Concat(languageResult.Messages).ToList();
             if (languageResult.Successful)
             {
-                var vscodePackageResult = typedVisitResult.GetVSCodePackage(versionOverride);
-                outputMessages = outputMessages.Concat(vscodePackageResult.Messages).ToList();
-                Boolean mergeSuccessful = true;
-                if (packageJsonOverride is not null)
+                String LoadMergeContent(String mergePath)
                 {
-                    try
-                    {
-                        packageJsonOverride.Refresh();
-                        if (!packageJsonOverride.Exists)
-                            throw new FileNotFoundException($"The file '{packageJsonOverride.FullName}' could not be found!");
-                    }
-                    catch (Exception ex)
-                    {
-                        mergeSuccessful = false;
-                        outputMessages.Add(new ParserMessage($"Failed to access package override '{packageJsonOverride.FullName}': {ex.Message}", ParserMessage.MessageType.Error, (0u, 0u)));
-                    }
+                    FileInfo mergeFile = Path.IsPathRooted(mergePath)
+                        ? new FileInfo(mergePath)
+                        : new FileInfo(Path.GetFullPath(Path.Combine(grammarFile.Directory?.FullName ?? Directory.GetCurrentDirectory(), mergePath)));
+                    mergeFile.Refresh();
+                    if (!mergeFile.Exists)
+                        throw new FileNotFoundException($"The file '{mergeFile.FullName}' could not be found!");
+                    return File.ReadAllText(mergeFile.FullName);
                 }
-                if (vscodePackageResult.Successful && mergeSuccessful)
+
+                var vscodePackageResult = typedVisitResult.GetVSCodePackage(versionOverride, LoadMergeContent, packageJsonOverride?.FullName);
+                outputMessages = outputMessages.Concat(vscodePackageResult.Messages).ToList();
+                if (vscodePackageResult.Successful)
                 {
-                    String packageJson = vscodePackageResult.Output;
-                    if (packageJsonOverride is not null)
-                    {
-                        try
-                        {
-                            packageJson = MergePackageJson(packageJson, packageJsonOverride);
-                        }
-                        catch (Exception ex)
-                        {
-                            mergeSuccessful = false;
-                            outputMessages.Add(new ParserMessage($"Failed to merge package override '{packageJsonOverride.FullName}': {ex.Message}", ParserMessage.MessageType.Error, (0u, 0u)));
-                        }
-                    }
-                    if (mergeSuccessful)
-                    {
-                        if (outputFolder.Exists)
-                            outputFolder.Delete(true);
-                        outputFolder.Create();
-                        new DirectoryInfo(Path.Combine(outputFolder.FullName, "syntaxes")).Create();
-                        File.WriteAllText(Path.Combine(outputFolder.FullName, $"language-configuration.json"), languageResult.Output);
-                        File.WriteAllText(Path.Combine(outputFolder.FullName, $"package.json"), packageJson);
-                        File.WriteAllText(Path.Combine(outputFolder.FullName, $"syntaxes/parseidon.tmLanguage.json"), textmateGrammarResult.Output);
-                        AnsiConsole.MarkupLine($"[green] The VS Code package in '{outputFolder.FullName}' is successfully created![/]");
-                        successful = true;
-                    }
+                    if (outputFolder.Exists)
+                        outputFolder.Delete(true);
+                    outputFolder.Create();
+                    new DirectoryInfo(Path.Combine(outputFolder.FullName, "syntaxes")).Create();
+                    File.WriteAllText(Path.Combine(outputFolder.FullName, $"language-configuration.json"), languageResult.Output);
+                    File.WriteAllText(Path.Combine(outputFolder.FullName, $"package.json"), vscodePackageResult.Output);
+                    File.WriteAllText(Path.Combine(outputFolder.FullName, $"syntaxes/parseidon.tmLanguage.json"), textmateGrammarResult.Output);
+                    AnsiConsole.MarkupLine($"[green] The VS Code package in '{outputFolder.FullName}' is successfully created![/]");
+                    successful = true;
                 }
             }
         }
     }
     return new OutputResult(successful, visitResult.Messages, outputMessages);
-}
-
-static String MergePackageJson(String generatedPackageJson, FileInfo overrideFile)
-{
-    JsonNode baseNode = JsonNode.Parse(generatedPackageJson) ?? new JsonObject();
-    JsonNode overrideNode = JsonNode.Parse(File.ReadAllText(overrideFile.FullName)) ?? new JsonObject();
-    JsonNode merged = MergeJsonNodes(baseNode, overrideNode);
-    return merged.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
-}
-
-static JsonNode MergeJsonNodes(JsonNode baseNode, JsonNode overrideNode)
-{
-    if (baseNode is JsonObject baseObj && overrideNode is JsonObject overrideObj)
-    {
-        foreach (var kvp in overrideObj)
-        {
-            if (kvp.Value is JsonObject overrideChild && baseObj[kvp.Key] is JsonObject baseChild)
-            {
-                baseObj[kvp.Key] = MergeJsonNodes(baseChild, overrideChild);
-            }
-            else
-            {
-                baseObj[kvp.Key] = kvp.Value?.DeepClone();
-            }
-        }
-        return baseObj;
-    }
-
-    return overrideNode.DeepClone();
 }
 
 static Int32 ValidateFileInput(FileInfo grammarFile, FileInfo outputFile, String overrideOption)
