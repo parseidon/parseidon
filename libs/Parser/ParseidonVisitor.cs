@@ -1,6 +1,6 @@
 using Parseidon.Helper;
 using Parseidon.Parser.Grammar;
-using Parseidon.Parser.Grammar.Block;
+using Parseidon.Parser.Grammar.Blocks;
 using Parseidon.Parser.Grammar.Operators;
 using Parseidon.Parser.Grammar.Terminals;
 

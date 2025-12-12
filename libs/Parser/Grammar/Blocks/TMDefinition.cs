@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 using Parseidon.Parser.Grammar.Operators;
 using Parseidon.Parser.Grammar.Terminals;
 
-namespace Parseidon.Parser.Grammar.Block;
+namespace Parseidon.Parser.Grammar.Blocks;
 
 public class TMDefinition : AbstractNamedElement
 {

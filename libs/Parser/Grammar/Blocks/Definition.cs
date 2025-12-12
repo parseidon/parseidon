@@ -1,7 +1,7 @@
 using System.Linq;
 using Parseidon.Parser.Grammar.Operators;
 
-namespace Parseidon.Parser.Grammar.Block;
+namespace Parseidon.Parser.Grammar.Blocks;
 
 public class Definition : AbstractNamedElement
 {

@@ -10,7 +10,7 @@
 
 # Grammar
 Grammar                 = _(Option_)* (Definition | TMDefinition)+;
-!Grammar                = <Caret> [ Comment, !Option, !Definition, !TMDefinition ] <Dollar>;
+!Grammar                = !'^' [ Comment, !Option, !Definition, !TMDefinition ] !'$';
 
 Option                  = AtSign ValuePair_LineEnd;
 !Option                 = meta.option:(variable.other:(<AtSign> <Identifier>) <Colon> [ !Value ] <LineEnd>);
