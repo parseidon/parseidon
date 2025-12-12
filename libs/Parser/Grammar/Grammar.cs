@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using Humanizer;
 using Parseidon.Helper;
 using Parseidon.Parser.Grammar.Terminals;
@@ -105,6 +106,57 @@ public class Grammar : AbstractNamedElement
         return overrideNode.DeepClone();
     }
 
+    private static String NormalizeMarketplaceVersion(String rawVersion, List<ParserMessage> messages)
+    {
+        if (String.IsNullOrWhiteSpace(rawVersion))
+        {
+            messages.Add(new ParserMessage("The version is missing and must contain up to four numeric parts.", ParserMessage.MessageType.Error, (0u, 0u)));
+            return rawVersion;
+        }
+
+        String versionWithoutMetadata = rawVersion.Split('+')[0];
+        String[] mainAndPrerelease = versionWithoutMetadata.Split(new[] { '-' }, 2, StringSplitOptions.RemoveEmptyEntries);
+        String mainPart = mainAndPrerelease.Length > 0 ? mainAndPrerelease[0].Trim() : String.Empty;
+        String? prereleasePart = mainAndPrerelease.Length > 1 ? mainAndPrerelease[1].Trim() : null;
+
+        String[] mainSegments = mainPart.Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
+        if (mainSegments.Length == 0 || mainSegments.Length > 4)
+        {
+            messages.Add(new ParserMessage($"The version '{rawVersion}' is not valid. Use one to four numeric parts separated by '.'.", ParserMessage.MessageType.Error, (0u, 0u)));
+            return rawVersion;
+        }
+
+        List<Int32> versionNumbers = new List<Int32>();
+        foreach (String segment in mainSegments)
+        {
+            if (!Int32.TryParse(segment, out Int32 numericValue) || numericValue < 0)
+            {
+                messages.Add(new ParserMessage($"The version '{rawVersion}' is not valid. Each part must be a non-negative number less than 2147483648.", ParserMessage.MessageType.Error, (0u, 0u)));
+                return rawVersion;
+            }
+            versionNumbers.Add(numericValue);
+        }
+
+        if (versionNumbers.Count < 4 && !String.IsNullOrWhiteSpace(prereleasePart))
+        {
+            MatchCollection prereleaseNumbers = Regex.Matches(prereleasePart, "\\d+");
+            if (prereleaseNumbers.Count > 0)
+            {
+                String lastNumeric = prereleaseNumbers[prereleaseNumbers.Count - 1].Value;
+                if (Int32.TryParse(lastNumeric, out Int32 prereleaseNumeric))
+                    versionNumbers.Add(prereleaseNumeric);
+            }
+        }
+
+        if (versionNumbers.Count > 4)
+            versionNumbers = versionNumbers.GetRange(0, 4);
+
+        if (versionNumbers.TrueForAll(v => v == 0))
+            messages.Add(new ParserMessage($"The version '{rawVersion}' must contain at least one non-zero number.", ParserMessage.MessageType.Error, (0u, 0u)));
+
+        return String.Join(".", versionNumbers);
+    }
+
     public CreateOutputResult ToLanguageConfig(MessageContext messageContext)
     {
         List<ParserMessage> messages = new List<ParserMessage>();
@@ -192,12 +244,13 @@ public class Grammar : AbstractNamedElement
         {
             String languageDisplayName = GetOptionValue(Grammar.TextMateOptionDisplayName);
             String languageName = (TryGetOptionValue(Grammar.TextMateOptionLanguageName) ?? languageDisplayName).ToLower().Replace(" ", "");
+            String normalizedVersion = NormalizeMarketplaceVersion(versionOverride ?? GetOptionValue(Grammar.TextMateOptionVersion), messages);
 
             document = new VSCodePackageDocument
             {
                 Name = languageName,
                 DisplayName = languageDisplayName,
-                Version = versionOverride ?? GetOptionValue(Grammar.TextMateOptionVersion),
+                Version = normalizedVersion,
                 Contributes =
                     new VSCodePackageContributes
                     {
@@ -219,7 +272,7 @@ public class Grammar : AbstractNamedElement
                         )
                     }
             };
-            successful = true;
+            successful = !messages.Exists(m => m.Type == ParserMessage.MessageType.Error);
         }
         catch (GrammarException e)
         {
