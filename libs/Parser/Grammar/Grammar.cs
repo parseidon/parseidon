@@ -30,6 +30,7 @@ public class Grammar : AbstractNamedElement
     internal const String GrammarOptionNamespace = "namespace";
     internal const String GrammarOptionClass = "class";
     internal const String GrammarOptionRoot = "root";
+    internal const String GrammarOptionNoInterface = "nointerface";
     internal const String GrammarPropertyQuote = "quote";
     internal const String GrammarPropertyBracketOpen = "bracketopen";
     internal const String GrammarPropertyBracketClose = "bracketclose";
@@ -217,6 +218,7 @@ public class Grammar : AbstractNamedElement
         {
             AddUnknownIdentifierWarnings(messages);
             AddUnusedDefinitionWarnings(messages);
+            Boolean generateNodeVisitor = ShouldGenerateNodeVisitor();
             result =
                 $$"""
                 #nullable enable
@@ -226,9 +228,9 @@ public class Grammar : AbstractNamedElement
 
                 namespace {{GetOptionValue(Grammar.GrammarOptionNamespace)}}
                 {
-                {{Indent(GetIVisitorCode())}}
+                {{Indent(GetIVisitorCode(generateNodeVisitor))}}
 
-                {{Indent(GetParseResultCode())}}
+                {{Indent(GetParseResultCode(generateNodeVisitor))}}
 
                 {{Indent(GetGlobalClassesCode())}}
 
@@ -475,6 +477,7 @@ public class Grammar : AbstractNamedElement
             GrammarOptionNamespace,
             GrammarOptionClass,
             GrammarOptionRoot,
+            GrammarOptionNoInterface,
             TextMateOptionDisplayName,
             TextMateOptionScopeName,
             TextMateOptionFileType,
@@ -514,6 +517,11 @@ public class Grammar : AbstractNamedElement
                 }
             }
         }
+    }
+
+    private Boolean ShouldGenerateNodeVisitor()
+    {
+        return !Options.Any(option => option.Name.Equals(GrammarOptionNoInterface, StringComparison.OrdinalIgnoreCase));
     }
 
     private void CheckTreatInlineCycles()
@@ -670,14 +678,54 @@ public class Grammar : AbstractNamedElement
         return builder.ToString();
     }
 
-    protected String GetParseResultCode()
+    protected String GetParseResultCode(Boolean generateNodeVisitor)
     {
         String GetEventName(Definition definition) => $"Process{definition.Name.Humanize().Dehumanize()}Node";
-        List<Definition> usedDefinitions = GetRelevantGrammarDefinitions();
-        StringBuilder visitorCallsBuilder = new StringBuilder();
-        foreach (Definition definition in usedDefinitions)
-            visitorCallsBuilder.AppendLine($"case {GetElementIdOf(definition)}: return visitor.{GetEventName(definition)}(context, node, messages);");
-        String visitorCalls = visitorCallsBuilder.ToString();
+        String visitorCalls = String.Empty;
+        if (generateNodeVisitor)
+        {
+            List<Definition> usedDefinitions = GetRelevantGrammarDefinitions();
+            StringBuilder visitorCallsBuilder = new StringBuilder();
+            foreach (Definition definition in usedDefinitions)
+                visitorCallsBuilder.AppendLine($"case {GetElementIdOf(definition)}: return visitor.{GetEventName(definition)}(context, node, messages);");
+            visitorCalls = visitorCallsBuilder.ToString();
+        }
+
+        String nodeVisitorMethods = String.Empty;
+        if (generateNodeVisitor)
+        {
+            nodeVisitorMethods =
+                $$"""
+
+                private ProcessNodeResult DoVisit(Object context, INodeVisitor visitor, ASTNode node, IList<ParserMessage> messages)
+                {
+                    visitor.BeginVisit(context, node);
+                    try
+                    {
+                        if (node == null)
+                            return ProcessNodeResult.Error;
+                        Boolean result = true;
+                        foreach (ASTNode child in node.Children)
+                            result = result && (DoVisit(context, visitor, child, messages) == ProcessNodeResult.Success);
+                        result = result && (CallEvent(context, visitor, node.TokenId, node, messages) == ProcessNodeResult.Success);
+                        return result ? ProcessNodeResult.Success : ProcessNodeResult.Error;
+                    }
+                    finally
+                    {
+                        visitor.EndVisit(context, node);
+                    }
+                }
+
+                private ProcessNodeResult CallEvent(Object context, INodeVisitor visitor, Int32 tokenId, ASTNode node, IList<ParserMessage> messages)
+                {
+                    switch (tokenId)
+                    {
+                {{Indent(Indent(visitorCalls))}}
+                    }
+                    return ProcessNodeResult.Success;
+                }
+                """;
+        }
 
         String result =
             $$"""
@@ -749,8 +797,8 @@ public class Grammar : AbstractNamedElement
                         try
                         {
                             Object context = visitor.GetContext(this);
-                            if (visitor is INodeVisitor)
-                                DoVisit(context, (visitor as INodeVisitor)!, RootNode!, visitMessages);
+                            {{(generateNodeVisitor ? "if (visitor is INodeVisitor)" : "")}}
+                                {{(generateNodeVisitor ? "DoVisit(context, (visitor as INodeVisitor)!, RootNode!, visitMessages);" : "")}}
                             return visitor.GetResult(context, true, visitMessages);
                         }
                         catch (GrammarException ex)
@@ -760,34 +808,7 @@ public class Grammar : AbstractNamedElement
                     }
                     return new EmptyResult(false, visitMessages);
                 }
-
-                private ProcessNodeResult DoVisit(Object context, INodeVisitor visitor, ASTNode node, IList<ParserMessage> messages)
-                {
-                    visitor.BeginVisit(context, node);
-                    try
-                    {
-                        if (node == null)
-                            return ProcessNodeResult.Error;
-                        Boolean result = true;
-                        foreach (ASTNode child in node.Children)
-                            result = result && (DoVisit(context, visitor, child, messages) == ProcessNodeResult.Success);
-                        result = result && (CallEvent(context, visitor, node.TokenId, node, messages) == ProcessNodeResult.Success);
-                        return result ? ProcessNodeResult.Success : ProcessNodeResult.Error;
-                    }
-                    finally
-                    {
-                        visitor.EndVisit(context, node);
-                    }
-                }
-
-                private ProcessNodeResult CallEvent(Object context, INodeVisitor visitor, Int32 tokenId, ASTNode node, IList<ParserMessage> messages)
-                {
-                    switch (tokenId)
-                    {
-            {{Indent(Indent(Indent(visitorCalls)))}}
-                    }
-                    return ProcessNodeResult.Success;
-                }
+            {{Indent(nodeVisitorMethods)}}
             }
             """;
         return result;
@@ -820,7 +841,7 @@ public class Grammar : AbstractNamedElement
         return Indent(Indent(result));
     }
 
-    protected String GetIVisitorCode()
+    protected String GetIVisitorCode(Boolean generateNodeVisitor)
     {
         String GetEventName(Definition definition) => $"Process{definition.Name.Humanize().Dehumanize()}Node";
         List<Definition> usedDefinitions = GetRelevantGrammarDefinitions();
@@ -828,8 +849,9 @@ public class Grammar : AbstractNamedElement
         foreach (Definition definition in usedDefinitions)
             visitorEventsBuilder.AppendLine($"ProcessNodeResult {GetEventName(definition)}(Object context, ASTNode node, IList<ParserMessage> messages);");
         String visitorEvents = visitorEventsBuilder.ToString();
-        String result =
-            $$"""
+        StringBuilder builder = new StringBuilder();
+        builder.Append(
+            """
             public interface IVisitResult
             {
                 Boolean Successful { get; }
@@ -842,21 +864,29 @@ public class Grammar : AbstractNamedElement
                 IVisitResult GetResult(Object context, Boolean successful, IReadOnlyList<ParserMessage> messages);
             }
 
-            public interface INodeVisitor : IVisitor
-            {
-            {{Indent(visitorEvents)}}
-                void BeginVisit(Object context, ASTNode node);
-                void EndVisit(Object context, ASTNode node);
-            }
+            """
+        );
+        if (generateNodeVisitor)
+        {
+            builder.AppendLine(
+                $$"""
 
-            public enum ProcessNodeResult
-            {
-                Success,
-                Error
-            }
+                public interface INodeVisitor : IVisitor
+                {
+                {{Indent(visitorEvents)}}
+                    void BeginVisit(Object context, ASTNode node);
+                    void EndVisit(Object context, ASTNode node);
+                }
 
-            """;
-        return result;
+                public enum ProcessNodeResult
+                {
+                    Success,
+                    Error
+                }
+                """
+            );
+        }
+        return builder.ToString();
     }
 
     protected String GetBasicCode()
