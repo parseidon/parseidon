@@ -248,6 +248,7 @@ public class Grammar : AbstractNamedElement
     {
         var result = new Dictionary<String, TMDefinition.TextMateRepositoryEntry>(StringComparer.OrdinalIgnoreCase);
         List<TMDefinition> tmDefinitions = TMDefinitions.ToList();
+        String grammarSuffix = grammar.GetGrammarSuffix();
         foreach (var definition in Definitions.Where(d => d.KeyValuePairs.ContainsKey(TextMatePropertyPattern)))
         {
             foreach (TMDefinition tmDefinition in tmDefinitions.Where(td => td.Name.Equals(definition.Name, StringComparison.OrdinalIgnoreCase)))
@@ -257,6 +258,8 @@ public class Grammar : AbstractNamedElement
             TMSequence sequence = new TMSequence(new List<AbstractDefinitionElement>() { definition.DefinitionElement }, definition.MessageContext, definition.Node);
             tmDefinitions.Add(new TMDefinition(definition.Name, scopeName, sequence, null, null, definition.MessageContext, definition.Node));
         }
+        foreach (TMDefinition tmDefinition in tmDefinitions)
+            AddScopeOverrideWarnings(tmDefinition, grammarSuffix, messages);
         HashSet<String> referencedDefinitionNames = new HashSet<String>(StringComparer.OrdinalIgnoreCase)
         {
             GetTMRootDefinition().Name
@@ -382,6 +385,39 @@ public class Grammar : AbstractNamedElement
         if (scopeName!.EndsWith($".{grammarSuffix}", StringComparison.OrdinalIgnoreCase))
             return scopeName;
         return $"{scopeName}.{grammarSuffix}";
+    }
+
+    private void AddScopeOverrideWarnings(TMDefinition tmDefinition, String grammarSuffix, IList<ParserMessage> messages)
+    {
+        tmDefinition.IterateElements(element =>
+        {
+            if (element is TMSequence sequence && !String.IsNullOrWhiteSpace(sequence.ScopeName) && sequence.Elements.Count == 1)
+            {
+                String scopedSequenceName = AppendGrammarSuffix(sequence.ScopeName, grammarSuffix) ?? sequence.ScopeName;
+                String? innerScope = TryGetElementScope(sequence.Elements.First(), grammarSuffix);
+                if (!String.IsNullOrWhiteSpace(innerScope) && !scopedSequenceName.Equals(innerScope, StringComparison.OrdinalIgnoreCase))
+                {
+                    (UInt32 row, UInt32 column) = tmDefinition.MessageContext.CalculateLocation(sequence.Elements.First().Node.Position);
+                    messages.Add(new ParserMessage($"TextMate scope '{scopedSequenceName}' overrides inner scope '{innerScope}' in rule '{tmDefinition.Name}'.", ParserMessage.MessageType.Warning, (row, column)));
+                }
+            }
+            return true;
+        });
+    }
+
+    private String? TryGetElementScope(AbstractDefinitionElement element, String grammarSuffix)
+    {
+        switch (element)
+        {
+            case TMSequence sequence when !String.IsNullOrWhiteSpace(sequence.ScopeName):
+                return AppendGrammarSuffix(sequence.ScopeName, grammarSuffix) ?? sequence.ScopeName;
+            case ReferenceElement referenceElement:
+                Definition? referencedDefinition = FindDefinitionByName(referenceElement.ReferenceName);
+                if (referencedDefinition is not null && referencedDefinition.KeyValuePairs.TryGetValue(TextMatePropertyScope, out String scopeName))
+                    return AppendGrammarSuffix(scopeName, grammarSuffix) ?? scopeName;
+                break;
+        }
+        return null;
     }
 
     private Boolean IterateUsedDefinitions(AbstractGrammarElement element, List<Definition> definitions)
