@@ -21,3 +21,4 @@ artifacts
 .vscode
 .vscode-test
 coverage
+package-merge.json
