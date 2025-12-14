@@ -17,6 +17,7 @@ Parseidon provides an easy tool to generate parsers for custom languages in C#. 
 - Emit VS Code language packs or TextMate grammars from the same source.
 - The parser can be included just by adding the grammar file to your project (via Roslyn source generator).
 - CLI to create the parser or the VS Code package on demand.
+- VS Code extension available for Parseidon grammar files (`.pgram`) with syntax highlighting; build or generate it via the CLI (see [docs/textmate_vscode.md](docs/textmate_vscode.md)).
 
 ## Easy to use
 
