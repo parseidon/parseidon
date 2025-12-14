@@ -1,8 +1,9 @@
 <div align="center">
-    <img src="assets/logo.svg" alt="marten logo" width="25%">
+  <img src="assets/logo-light.svg#gh-light-mode-only" alt="marten logo" width="70%">
+  <img src="assets/logo-dark.svg#gh-dark-mode-only"  alt="marten logo" width="70%">
 </div>
 
-# parseidon
+<br>
 
 ![License](https://img.shields.io/github/license/parseidon/parseidon)
 [![NuGet](https://img.shields.io/nuget/v/Parseidon.Parser.svg)](https://www.nuget.org/packages/Parseidon.Parser)
