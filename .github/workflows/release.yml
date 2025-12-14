@@ -34,15 +34,13 @@ jobs:
       - name: Determine version with MinVer
         # Explicit working directory avoids MinVer resolving an empty path on tagged builds
         working-directory: ${{ github.workspace }}
-        env:
-          MINVERWORKINGDIRECTORY: ${{ github.workspace }}
         run: |
           set -euo pipefail
           buildMetadataArgs=()
           if [ -n "${MINVERBUILDMETADATA:-}" ]; then
             buildMetadataArgs+=(--build-metadata "$MINVERBUILDMETADATA")
           fi
-          VERSION=$(minver -t v --default-pre-release-phase beta "${buildMetadataArgs[@]:-}" --verbosity info)
+          VERSION=$(minver -t v --default-pre-release-phase beta "${buildMetadataArgs[@]:-}" --verbosity info .)
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "Using version: $VERSION"
 
