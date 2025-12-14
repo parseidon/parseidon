@@ -37,12 +37,12 @@ jobs:
         run: |
           set -euo pipefail
           echo "MinVer working dir: $PWD"
-          buildMetadataArgs=()
+          args=(-t v --default-pre-release-phase beta --verbosity info)
           if [ -n "${MINVERBUILDMETADATA:-}" ]; then
-            buildMetadataArgs+=(--build-metadata "$MINVERBUILDMETADATA")
+            args+=(--build-metadata "$MINVERBUILDMETADATA")
           fi
-          # MinVer expects the path as the first positional argument
-          VERSION=$(minver "$PWD" -t v --default-pre-release-phase beta --verbosity info "${buildMetadataArgs[@]:-}")
+          args+=("$PWD")
+          VERSION=$(minver "${args[@]}")
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "Using version: $VERSION"
 
