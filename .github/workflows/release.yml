@@ -36,11 +36,12 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           set -euo pipefail
+          echo "MinVer working dir: $PWD"
           buildMetadataArgs=()
           if [ -n "${MINVERBUILDMETADATA:-}" ]; then
             buildMetadataArgs+=(--build-metadata "$MINVERBUILDMETADATA")
           fi
-          VERSION=$(minver -t v --default-pre-release-phase beta "${buildMetadataArgs[@]:-}" --verbosity info .)
+          VERSION=$(minver -t v --default-pre-release-phase beta --verbosity info "${buildMetadataArgs[@]:-}" "$PWD")
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "Using version: $VERSION"
 
