@@ -104,3 +104,4 @@ dotnet tool install -g dotnet-parseidon --add-source ./Output/bin/Parseidon.Cli/
 - [TextMate / VS Code generation](docs/textmate_vscode.md)
 - [CLI reference](docs/cli.md)
 - [Source generator usage](docs/sourcegen.md)
+- [NuGet packages](docs/nuget-packages.md)
