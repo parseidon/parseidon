@@ -1,8 +1,12 @@
 <div align="center">
-    <img src="assets/logo.svg" alt="marten logo" width="25%">
+  <img src="assets/logo-light.svg#gh-light-mode-only" alt="marten logo" width="70%">
+  <img src="assets/logo-dark.svg#gh-dark-mode-only"  alt="marten logo" width="70%">
 </div>
 
-# parseidon
+<br>
+
+![License](https://img.shields.io/github/license/parseidon/parseidon)
+[![NuGet](https://img.shields.io/nuget/v/Parseidon.Parser.svg)](https://www.nuget.org/packages/Parseidon.Parser)
 
 Parseidon provides an easy tool to generate parsers for custom languages in C#. Additionally, it can create a VS Code extension with the syntax highlighter for the language.
 
