@@ -9,6 +9,7 @@
 
     <PackageId>Parseidon.Parser</PackageId>
     <PackageDescription>Parser generator library for creating parsers for Domain Specific Languages (DSLs) in .NET.</PackageDescription>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,6 +20,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Helper\Parseidon.Helper.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="" />
   </ItemGroup>
 
 </Project>

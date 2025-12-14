@@ -13,6 +13,7 @@
 
     <PackageId>dotnet-parseidon</PackageId>
     <PackageDescription>Command-line tool for the Parseidon parser generator.</PackageDescription>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,6 +23,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\libs\Parser\Parseidon.Parser.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="" />
   </ItemGroup>
 
 </Project>

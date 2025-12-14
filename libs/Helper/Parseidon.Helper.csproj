@@ -9,6 +9,11 @@
 
     <PackageId>Parseidon.Helper</PackageId>
     <PackageDescription>Helper packages used for parseidon parser.</PackageDescription>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="" />
+  </ItemGroup>
 
 </Project>
