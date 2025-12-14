@@ -41,7 +41,8 @@ jobs:
           if [ -n "${MINVERBUILDMETADATA:-}" ]; then
             buildMetadataArgs+=(--build-metadata "$MINVERBUILDMETADATA")
           fi
-          VERSION=$(minver -t v --default-pre-release-phase beta --verbosity info "${buildMetadataArgs[@]:-}" "$PWD")
+          # MinVer expects the path as the first positional argument
+          VERSION=$(minver "$PWD" -t v --default-pre-release-phase beta --verbosity info "${buildMetadataArgs[@]:-}")
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "Using version: $VERSION"
 
