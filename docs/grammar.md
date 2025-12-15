@@ -15,8 +15,29 @@ An `Expression` supports:
 - Sequences and alternatives: `A B | C`.
 - Parentheses group expressions: `(A B | C)`.
 - Quantifiers: `?` (optional), `*` (zero or more), `+` (one or more).
+- Negation: `^<expression>` succeeds only if the expression does **not** match at the current position; it still consumes one character.
 - Definition references, string literals (`'if'`), regex character classes (`[a-z]`, `[0-9]+`), or any character (`.`).
 - Regex literals use character classes; escapes follow standard regex escaping in character classes.
+
+### Negation (`^`)
+
+Use `^` in front of any expression (literal, group, alternation, or definition reference). The operand is tried at the current position; if it matches, parsing fails. If it does **not** match, one character is consumed and parsing continues. This is different from the definition-level `^Rule` marker that only changes error reporting.
+
+```parseidon
+# Forbid identifiers starting with digits
+Identifier = ^Digit [a-zA-Z0-9_]*;
+Digit      = [0-9];
+
+# Block specific keywords as a prefix
+Value = ^('not' | 'none') IdentifierRest;
+
+# Disallow a referenced rule at the current position
+Text = ^Forbidden AnyRest;
+Forbidden = 'DROP';
+AnyRest = .+;
+```
+
+The parsed character is included as a child node; combine it with `-` if you do not need it in the AST.
 
 ### Examples
 

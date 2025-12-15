@@ -22,7 +22,7 @@ Definition              = DefinitionOptions Identifier_-Equal_Expression Propert
 :DefinitionOptions      = UseDefinitionNameAsError? (IsTerminal | Drop)? TreatInline?;
 Expression              = Sequence (Or_Sequence)*;
 Sequence                = Prefix+;
-Prefix                  = Drop? Suffix;
+Prefix                  = (Drop | Not)? Suffix;
 Suffix                  = Primary (Optional | ZeroOrMore | OneOrMore)?_;
 :Primary                = TreatInline? Identifier
                         | Literal
@@ -61,7 +61,7 @@ $TMScopeName            = IdentStart TMScopeNameCont -Colon {errorname: 'TextMat
 
 # TextMate Identifier
 ^$TMIdentifier          = TMIdentifierPrefix Identifier {errorname: 'TextMate identifier', tmscope: keyword.other}; 
-!TMIdentifier           = <TMIdentifier>; # !'(?!:)';
+!TMIdentifier           = <TMIdentifier>;
 -:TMIdentifierPrefix    = ExclamationMark;
 
 # Values
@@ -87,7 +87,7 @@ $Boolean                = (True | False) {tmpattern: constant.language};
 
 # Literal
 ^$Literal               = (-quote Char*  -quote) {tmpattern: string.quoted.single};
-Char                    = [^'\\] | '\\\'' | '\\\\' | EscapeChars | UnicodeChars;
+Char                    = ^('\'' | '\\') | '\\\'' | '\\\\' | EscapeChars | UnicodeChars;
 EscapeChars             = '\\' [\\0abfnrstv"'?];
 
 # Regular Expression
@@ -106,6 +106,7 @@ AllChar                 = Dot;
 
 # Operator
 Or                      = Pipe;
+Not                     = Caret;
 
 # Quantifier
 Optional                = Question;

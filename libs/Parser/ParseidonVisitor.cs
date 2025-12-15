@@ -430,4 +430,11 @@ public class ParseidonVisitor : INodeVisitor
         Push(typedContext, new TMScopeName(node.Text, typedContext.MessageContext, node));
         return ProcessNodeResult.Success;
     }
+
+    public ProcessNodeResult ProcessNotNode(object context, ASTNode node, IList<ParserMessage> messages)
+    {
+        var typedContext = context as CreateCodeVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
+        Push(typedContext, new NotOperator(null, typedContext.MessageContext, node));
+        return ProcessNodeResult.Success;
+    }
 }

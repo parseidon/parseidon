@@ -1161,6 +1161,17 @@ public class Grammar : AbstractNamedElement
                 return rightCheck(parentNode, errorName);
             }
 
+            private Boolean CheckNot(ASTNode parentNode, ParserState state, String? errorName, Func<ASTNode, String?, Boolean> check)
+            {
+                Int32 oldPosition = state.Position;
+                ASTNode tempNode = new ASTNode(-1, "", state.Text.Substring(state.Position, 1), state.Position);
+                if (check(tempNode, errorName))
+                    return false;
+                parentNode.AddChild(tempNode);
+                state.Position = oldPosition + 1;
+                return true;
+            }
+
             private Boolean Drop(ASTNode parentNode, ParserState state, String? errorName, Func<ASTNode, String?, Boolean> check)
             {
                 ASTNode tempNode = new ASTNode(-1, "", "", state.Position);
