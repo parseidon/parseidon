@@ -83,6 +83,18 @@ Group  = -LParen Expr -RParen;
 - `*` allows zero or more repetitions; here it makes `Expr` parse chains like `a + b - c`.
 - Dropping parens keeps the AST focused on values and operators.
 
+Need to block certain prefixes? Use the negation operator `^` in front of any expression (literal, group, alternation, or rule reference). The operand is tested at the current position; if it matches, parsing fails. If it does **not** match, `^` still consumes one character so parsing can continue.
+
+```parseidon
+# Disallow identifiers that start with a digit
+Identifier = ^Digit IdentifierRest;
+Digit      = [0-9];
+IdentifierRest = [a-zA-Z0-9_]*;
+
+# Skip one character unless a keyword is ahead
+Value = ^('not' | 'none') IdentifierRest;
+```
+
 ## 5) Aim for a clean, reusable AST
 
 Good ASTs are shallow where possible and keep only meaningful nodes:
