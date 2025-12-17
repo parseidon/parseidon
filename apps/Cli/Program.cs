@@ -489,7 +489,7 @@ static String RenderAstWithReflection(Object rootNode)
 {
     StringBuilder stringBuilder = new StringBuilder();
 
-    static void PrintNode(Object node, bool[] crossings, StringBuilder stringBuilder)
+    static void PrintNode(Object node, Int32 indents, StringBuilder stringBuilder)
     {
         Type nodeType = node.GetType();
         String name = nodeType.GetProperty("Name")?.GetValue(node)?.ToString() ?? "?";
@@ -498,27 +498,22 @@ static String RenderAstWithReflection(Object rootNode)
         String text = nodeType.GetProperty("Text")?.GetValue(node)?.ToString() ?? String.Empty;
         IEnumerable<Object> children = nodeType.GetProperty("Children")?.GetValue(node) as IEnumerable<Object> ?? Enumerable.Empty<Object>();
 
-        for (int i = 0; i < crossings.Length - 1; i++)
-            stringBuilder.Append(crossings[i] ? "  " : "  ");
-        if (crossings.Length > 0)
+        for (int i = 0; i < indents - 1; i++)
+            stringBuilder.Append("  ");
+        if (indents > 0)
             stringBuilder.Append("- ");
 
-        stringBuilder.Append($"{name}[{tokenId}] ({position}): ");
+        stringBuilder.Append($"{name}[{tokenId}] (pos = {position}): ");
         if (!String.IsNullOrEmpty(text))
             stringBuilder.Append(text.FormatLiteral(true));
         stringBuilder.AppendLine();
 
         Object[] childArray = children.ToArray();
         for (int i = 0; i < childArray.Length; i++)
-        {
-            bool[] childCrossings = new bool[crossings.Length + 1];
-            Array.Copy(crossings, childCrossings, crossings.Length);
-            childCrossings[childCrossings.Length - 1] = (i < childArray.Length - 1);
-            PrintNode(childArray[i], childCrossings, stringBuilder);
-        }
+            PrintNode(childArray[i], indents + 1, stringBuilder);
     }
 
-    PrintNode(rootNode, Array.Empty<bool>(), stringBuilder);
+    PrintNode(rootNode, 0, stringBuilder);
     return stringBuilder.ToString();
 }
 
