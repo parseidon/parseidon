@@ -10,7 +10,7 @@ public class ParseidonVisitor : INodeVisitor
 {
     public interface IGetResults
     {
-        Grammar.Grammar.CreateOutputResult GetParserCode();
+        Grammar.Grammar.CreateOutputResult GetParserCode(String? namespaceOverride = null, String? classOverride = null);
         Grammar.Grammar.CreateOutputResult GetTextMateGrammar();
         Grammar.Grammar.CreateOutputResult GetLanguageConfig();
         Grammar.Grammar.CreateOutputResult GetVSCodePackage(String? versionOverride, Func<String, String>? loadMergeJson, String? packageJsonOverridePath);
@@ -43,7 +43,7 @@ public class ParseidonVisitor : INodeVisitor
         public Boolean Successful { get; }
         public IReadOnlyList<ParserMessage> Messages { get; }
 
-        public Grammar.Grammar.CreateOutputResult GetParserCode() => _grammar.ToParserCode(MessageContext);
+        public Grammar.Grammar.CreateOutputResult GetParserCode(String? namespaceOverride = null, String? classOverride = null) => _grammar.ToParserCode(MessageContext, namespaceOverride, classOverride);
 
         public Grammar.Grammar.CreateOutputResult GetTextMateGrammar() => _grammar.ToTextMateGrammar(MessageContext);
 

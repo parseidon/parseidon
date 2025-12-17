@@ -21,6 +21,20 @@ var parseCommand = new Command("parser")
 };
 rootCommand.Add(parseCommand);
 
+var parserNamespaceOption = new Option<String?>("--namespace", "-n")
+{
+    Description = "Override the namespace for the generated parser",
+    DefaultValueFactory = _ => null
+};
+parseCommand.Add(parserNamespaceOption);
+
+var parserClassNameOption = new Option<String?>("--class-name", "-c")
+{
+    Description = "Override the class name for the generated parser",
+    DefaultValueFactory = _ => null
+};
+parseCommand.Add(parserClassNameOption);
+
 var astCommand = new Command("ast")
 {
     Description = "Create the AST (Abstract Syntax Tree) for the grammar as a YAML file"
@@ -82,10 +96,12 @@ parseCommand.SetAction((parseResult) =>
         FileInfo grammarFile = parseResult.GetValue(grammarFileArgument)!;
         FileInfo outputFile = parseResult.GetValue(outputFileArgument)!;
         String doOverride = parseResult.GetValue<String>(overrideOption)!;
+        String? namespaceOverride = parseResult.GetValue<String?>(parserNamespaceOption);
+        String? classNameOverride = parseResult.GetValue<String?>(parserClassNameOption);
         return RunParser(
             grammarFile,
             () => ValidateFileInput(grammarFile, outputFile, doOverride),
-            (result) => CreateParser(result, outputFile, doOverride)
+            (result) => CreateParser(result, outputFile, doOverride, namespaceOverride, classNameOverride)
         );
     }
 );
@@ -185,7 +201,7 @@ static void PrintMessage(ParserMessage.MessageType messageType, String message)
     AnsiConsole.MarkupLine($"[{color}]{messageTypeText}: {Markup.Escape(message)}[/]");
 }
 
-static OutputResult CreateParser(Parseidon.Parser.ParseResult parseResult, FileInfo outputFile, String overrideOption)
+static OutputResult CreateParser(Parseidon.Parser.ParseResult parseResult, FileInfo outputFile, String overrideOption, String? namespaceOverride, String? classNameOverride)
 {
     IVisitor visitor = new ParseidonVisitor();
     IVisitResult visitResult = parseResult.Visit(visitor);
@@ -193,7 +209,7 @@ static OutputResult CreateParser(Parseidon.Parser.ParseResult parseResult, FileI
     Grammar.CreateOutputResult outputResult = Grammar.CreateOutputResult.Empty;
     if (visitResult.Successful && visitResult is ParseidonVisitor.IGetResults typedVisitResult)
     {
-        outputResult = typedVisitResult.GetParserCode();
+        outputResult = typedVisitResult.GetParserCode(namespaceOverride, classNameOverride);
         if (outputResult.Successful)
         {
             var code =

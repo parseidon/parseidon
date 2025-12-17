@@ -13,11 +13,13 @@ Parseidon ships as a dotnet tool `dotnet-parseidon`. All commands read a `.pgram
 Create a C# parser class.
 
 ```bash
-dotnet parseidon parser GRAMMAR-FILE OUTPUT-FILE [-o override]
+dotnet parseidon parser GRAMMAR-FILE OUTPUT-FILE [-o override] [--namespace My.Parser.Namespace] [--class-name MyParser]
 ```
 
 - Output: C# source file with parser, visitor interfaces, and support types. A banner at the top indicates generation time.
 - Typical use: `dotnet parseidon parser sample.pgram SampleParser.cs`.
+- `--namespace|-n` overrides the generated namespace without changing the grammar file.
+- `--class-name|-c` overrides the generated parser class name.
 
 ### `vscode`
 
