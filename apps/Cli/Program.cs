@@ -475,8 +475,8 @@ static IEnumerable<ParserMessage> ConvertRuntimeMessages(IEnumerable<Object> run
     {
         Type messageType = message.GetType();
         String text = messageType.GetProperty("Message")?.GetValue(message)?.ToString() ?? "";
-        UInt32 row = (UInt32)(messageType.GetProperty("Row")?.GetValue(message) as UInt32? ?? 0u);
-        UInt32 column = (UInt32)(messageType.GetProperty("Column")?.GetValue(message) as UInt32? ?? 0u);
+        UInt32 row = messageType.GetProperty("Row")?.GetValue(message) as UInt32? ?? 0u;
+        UInt32 column = messageType.GetProperty("Column")?.GetValue(message) as UInt32? ?? 0u;
         Object? typeValue = messageType.GetProperty("Type")?.GetValue(message);
         ParserMessage.MessageType mappedType = ParserMessage.MessageType.Warning;
         if (typeValue?.ToString()?.Equals("Error", StringComparison.OrdinalIgnoreCase) ?? false)
