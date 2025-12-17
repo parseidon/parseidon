@@ -13,11 +13,13 @@ Parseidon ships as a dotnet tool `dotnet-parseidon`. All commands read a `.pgram
 Create a C# parser class.
 
 ```bash
-dotnet parseidon parser GRAMMAR-FILE OUTPUT-FILE [-o override]
+dotnet parseidon parser GRAMMAR-FILE OUTPUT-FILE [-o override] [--namespace My.Parser.Namespace] [--class-name MyParser]
 ```
 
 - Output: C# source file with parser, visitor interfaces, and support types. A banner at the top indicates generation time.
 - Typical use: `dotnet parseidon parser sample.pgram SampleParser.cs`.
+- `--namespace|-n` overrides the generated namespace without changing the grammar file.
+- `--class-name|-c` overrides the generated parser class name.
 
 ### `vscode`
 
@@ -46,11 +48,14 @@ dotnet parseidon textmate GRAMMAR-FILE OUTPUT-FILE
 
 ### `ast`
 
-Emit the parsed Abstract Syntax Tree as YAML for inspection/debugging.
+Emit an Abstract Syntax Tree for a code file by compiling a parser from the grammar at runtime.
 
 ```bash
-dotnet parseidon ast GRAMMAR-FILE OUTPUT-FILE
+dotnet parseidon ast GRAMMAR-FILE CODE-FILE OUTPUT-FILE
 ```
+
+- Steps: parse the grammar, generate a parser without the `INodeVisitor` interface, compile it in-memory, parse the code file, then write the AST dump.
+- Output is a YAML-like dump of the parsed code's AST.
 
 ## Examples
 

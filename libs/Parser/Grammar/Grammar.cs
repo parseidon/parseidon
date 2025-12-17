@@ -312,7 +312,7 @@ public class Grammar : AbstractNamedElement
         return new CreateOutputResult(successful, packageJson, messages);
     }
 
-    public CreateOutputResult ToParserCode(MessageContext messageContext)
+    public CreateOutputResult ToParserCode(MessageContext messageContext, String? namespaceOverride = null, String? classOverride = null, Boolean? generateNodeVisitorOverride = null)
     {
         List<ParserMessage> messages = new List<ParserMessage>();
         String result = String.Empty;
@@ -321,15 +321,20 @@ public class Grammar : AbstractNamedElement
         {
             AddUnknownIdentifierWarnings(messages);
             AddUnusedDefinitionWarnings(messages);
-            Boolean generateNodeVisitor = ShouldGenerateNodeVisitor();
+            Boolean generateNodeVisitor = generateNodeVisitorOverride ?? ShouldGenerateNodeVisitor();
+            String parserNamespace = String.IsNullOrWhiteSpace(namespaceOverride) ? GetOptionValue(Grammar.GrammarOptionNamespace) : namespaceOverride!;
+            String parserClass = String.IsNullOrWhiteSpace(classOverride) ? GetOptionValue(Grammar.GrammarOptionClass) : classOverride!;
             result =
                 $$"""
                 #nullable enable
 
+                using System;
+                using System.Collections.Generic;
+                using System.Linq;
                 using System.Text;
                 using System.Text.RegularExpressions;
 
-                namespace {{GetOptionValue(Grammar.GrammarOptionNamespace)}}
+                namespace {{parserNamespace}}
                 {
                 {{Indent(GetIVisitorCode(generateNodeVisitor))}}
 
@@ -337,7 +342,7 @@ public class Grammar : AbstractNamedElement
 
                 {{Indent(GetGlobalClassesCode())}}
 
-                    public sealed class {{GetOptionValue(Grammar.GrammarOptionClass)}}
+                    public sealed class {{parserClass}}
                     {
                 {{Indent(Indent(GetParseCode()))}}
 

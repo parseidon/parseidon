@@ -10,10 +10,10 @@ dotnet tool install -g dotnet-parseidon
 
 ## Commands
 
-- `parser`: generate a C# parser file.
+- `parser`: generate a C# parser file. Options: `--namespace|-n` overrides the generated namespace, `--class-name|-c` overrides the generated parser class name.
 - `vscode`: emit a VS Code package (`package.json`, `language-configuration.json`, `syntaxes/*.tmLanguage.json`).
 - `textmate`: write a standalone TextMate grammar JSON.
-- `ast`: dump the parsed AST as YAML for inspection.
+- `ast`: generate an AST by first compiling a parser from the grammar file and then parsing a code file. Usage: `dotnet parseidon ast GRAMMAR-FILE CODE-FILE OUTPUT-FILE`.
 
 Common option: `--override|-o {ask|abort|backup|override}` controls how existing outputs are handled.
 
