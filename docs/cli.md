@@ -48,11 +48,14 @@ dotnet parseidon textmate GRAMMAR-FILE OUTPUT-FILE
 
 ### `ast`
 
-Emit the parsed Abstract Syntax Tree as YAML for inspection/debugging.
+Emit an Abstract Syntax Tree for a code file by compiling a parser from the grammar at runtime.
 
 ```bash
-dotnet parseidon ast GRAMMAR-FILE OUTPUT-FILE
+dotnet parseidon ast GRAMMAR-FILE CODE-FILE OUTPUT-FILE
 ```
+
+- Steps: parse the grammar, generate a parser without the `INodeVisitor` interface, compile it in-memory, parse the code file, then write the AST dump.
+- Output is a YAML-like dump of the parsed code's AST.
 
 ## Examples
 

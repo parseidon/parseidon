@@ -47,6 +47,7 @@
             "args": [
                 "ast",
                 "${workspaceFolder}/common/parseidon.pgram",
+                "${workspaceFolder}/common/parseidon.pgram",
                 "${workspaceFolder}/Output/ast.yaml",
                 "-o",
                 "override"
