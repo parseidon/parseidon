@@ -2,7 +2,7 @@ namespace Parseidon.Parser.Grammar.Operators;
 
 public abstract class AbstractTwoChildOperator : AbstractDefinitionElement
 {
-    protected AbstractTwoChildOperator(AbstractDefinitionElement? left, AbstractDefinitionElement? right, MessageContext messageContext, ASTNode node) : base(messageContext, node)
+    protected AbstractTwoChildOperator(AbstractDefinitionElement? left, AbstractDefinitionElement? right, Func<Int32, (UInt32, UInt32)> calcLocation, ASTNode node) : base(calcLocation, node)
     {
         if ((left == null) || (right == null))
             throw GetException("Missing child element!");

@@ -3,7 +3,7 @@ namespace Parseidon.Parser.Grammar.Operators;
 public abstract class AbstractOneChildOperator : AbstractDefinitionElement
 {
     private AbstractDefinitionElement? _element;
-    protected AbstractOneChildOperator(AbstractDefinitionElement? element, MessageContext messageContext, ASTNode node) : base(messageContext, node)
+    protected AbstractOneChildOperator(AbstractDefinitionElement? element, Func<Int32, (UInt32, UInt32)> calcLocation, ASTNode node) : base(calcLocation, node)
     {
         Element = element;
     }

@@ -4,7 +4,7 @@ namespace Parseidon.Parser.Grammar.Terminals;
 
 public class TextTerminal : AbstractValueTerminal
 {
-    public TextTerminal(String text, MessageContext messageContext, ASTNode node) : base(messageContext, node)
+    public TextTerminal(String text, Func<Int32, (UInt32, UInt32)> calcLocation, ASTNode node) : base(calcLocation, node)
     {
         Text = text;
     }

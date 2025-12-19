@@ -2,7 +2,7 @@ namespace Parseidon.Parser.Grammar.Operators;
 
 public class IsTerminalMarker : AbstractMarker
 {
-    public IsTerminalMarker(Boolean doNetEscape, AbstractDefinitionElement? element, MessageContext messageContext, ASTNode node) : base(element, messageContext, node)
+    public IsTerminalMarker(Boolean doNetEscape, AbstractDefinitionElement? element, Func<Int32, (UInt32, UInt32)> calcLocation, ASTNode node) : base(element, calcLocation, node)
     {
         DoNotEscape = doNetEscape;
     }

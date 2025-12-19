@@ -4,7 +4,7 @@ namespace Parseidon.Parser.Grammar.Terminals;
 
 public abstract class AbstractValueTerminal : AbstractDefinitionElement
 {
-    public AbstractValueTerminal(MessageContext messageContext, ASTNode node) : base(messageContext, node) { }
+    public AbstractValueTerminal(Func<Int32, (UInt32, UInt32)> calcLocation, ASTNode node) : base(calcLocation, node) { }
 
     public override bool MatchesVariableText() => false;
 

@@ -7,7 +7,7 @@ namespace Parseidon.Parser.Grammar.Terminals;
 
 public class ReferenceElement : AbstractValueTerminal
 {
-    public ReferenceElement(String referenceName, MessageContext messageContext, ASTNode node) : base(messageContext, node)
+    public ReferenceElement(String referenceName, Func<Int32, (UInt32, UInt32)> calcLocation, ASTNode node) : base(calcLocation, node)
     {
         ReferenceName = referenceName;
     }

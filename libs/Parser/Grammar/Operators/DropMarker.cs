@@ -2,7 +2,7 @@ namespace Parseidon.Parser.Grammar.Operators;
 
 public class DropMarker : AbstractMarker
 {
-    public DropMarker(AbstractDefinitionElement? element, MessageContext messageContext, ASTNode node) : base(element, messageContext, node) { }
+    public DropMarker(AbstractDefinitionElement? element, Func<Int32, (UInt32, UInt32)> calcLocation, ASTNode node) : base(element, calcLocation, node) { }
 
     public override String ToParserCode(Grammar grammar)
     {

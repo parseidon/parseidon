@@ -2,7 +2,7 @@ namespace Parseidon.Parser.Grammar.Terminals;
 
 public class NumberTerminal : AbstractValueTerminal
 {
-    public NumberTerminal(Int32 number, MessageContext messageContext, ASTNode node) : base(messageContext, node)
+    public NumberTerminal(Int32 number, Func<Int32, (UInt32, UInt32)> calcLocation, ASTNode node) : base(calcLocation, node)
     {
         Number = number;
     }

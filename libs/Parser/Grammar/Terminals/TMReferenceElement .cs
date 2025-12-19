@@ -7,5 +7,5 @@ namespace Parseidon.Parser.Grammar.Terminals;
 
 public class TMReferenceElement : ReferenceElement
 {
-    public TMReferenceElement(String referenceName, MessageContext messageContext, ASTNode node) : base(referenceName, messageContext, node) { }
+    public TMReferenceElement(String referenceName, Func<Int32, (UInt32, UInt32)> calcLocation, ASTNode node) : base(referenceName, calcLocation, node) { }
 }

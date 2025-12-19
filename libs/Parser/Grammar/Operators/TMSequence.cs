@@ -4,7 +4,7 @@ public class TMSequence : AbstractDefinitionElement
 {
     private List<AbstractDefinitionElement> _elements = new List<AbstractDefinitionElement>();
 
-    public TMSequence(List<AbstractDefinitionElement> elements, MessageContext messageContext, ASTNode node) : base(messageContext, node)
+    public TMSequence(List<AbstractDefinitionElement> elements, Func<Int32, (UInt32, UInt32)> calcLocation, ASTNode node) : base(calcLocation, node)
     {
         Elements = elements;
         foreach (var element in Elements)

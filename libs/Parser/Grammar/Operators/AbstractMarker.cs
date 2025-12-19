@@ -5,7 +5,7 @@ namespace Parseidon.Parser.Grammar.Operators;
 
 public abstract class AbstractMarker : AbstractOneChildOperator
 {
-    public AbstractMarker(AbstractDefinitionElement? element, MessageContext messageContext, ASTNode node) : base(element, messageContext, node) { }
+    public AbstractMarker(AbstractDefinitionElement? element, Func<Int32, (UInt32, UInt32)> calcLocation, ASTNode node) : base(element, calcLocation, node) { }
 
     protected Definition GetDefinition()
     {

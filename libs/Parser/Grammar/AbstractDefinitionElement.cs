@@ -2,7 +2,7 @@ namespace Parseidon.Parser.Grammar;
 
 public class AbstractDefinitionElement : AbstractGrammarElement
 {
-    public AbstractDefinitionElement(MessageContext messageContext, ASTNode node) : base(messageContext, node) { }
+    public AbstractDefinitionElement(Func<Int32, (UInt32, UInt32)> calcLocation, ASTNode node) : base(calcLocation, node) { }
 
     internal protected virtual RegExResult GetRegEx(Grammar grammar)
     {

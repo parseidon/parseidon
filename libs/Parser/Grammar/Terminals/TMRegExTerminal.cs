@@ -2,7 +2,7 @@ namespace Parseidon.Parser.Grammar.Terminals;
 
 public class TMRegExTerminal : AbstractDefinitionElement
 {
-    public TMRegExTerminal(String regEx, MessageContext messageContext, ASTNode node) : base(messageContext, node)
+    public TMRegExTerminal(String regEx, Func<Int32, (UInt32, UInt32)> calcLocation, ASTNode node) : base(calcLocation, node)
     {
         RegEx = regEx;
         if (RegEx.Length == 0)

@@ -6,7 +6,7 @@ namespace Parseidon.Parser.Grammar.Blocks;
 
 public class TMDefinition : AbstractNamedElement
 {
-    public TMDefinition(String name, String? scopeName, TMSequence? beginSequence, TMIncludes? includes, TMSequence? endSequence, MessageContext messageContext, ASTNode node) : base(name, messageContext, node)
+    public TMDefinition(String name, String? scopeName, TMSequence? beginSequence, TMIncludes? includes, TMSequence? endSequence, Func<Int32, (UInt32, UInt32)> calcLocation, ASTNode node) : base(name, calcLocation, node)
     {
         ScopeName = scopeName;
         BeginSequence = beginSequence;

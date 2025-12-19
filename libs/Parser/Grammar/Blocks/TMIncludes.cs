@@ -4,7 +4,7 @@ namespace Parseidon.Parser.Grammar.Blocks;
 
 public class TMIncludes : AbstractDefinitionElement
 {
-    public TMIncludes(List<ReferenceElement> includes, MessageContext messageContext, ASTNode node) : base(messageContext, node)
+    public TMIncludes(List<ReferenceElement> includes, Func<Int32, (UInt32, UInt32)> calcLocation, ASTNode node) : base(calcLocation, node)
     {
         Includes = includes;
         foreach (var include in Includes)

@@ -15,7 +15,7 @@ namespace Parseidon.Parser.Grammar;
 
 public class Grammar : AbstractNamedElement
 {
-    public Grammar(List<Definition> definitions, List<TMDefinition> tmDefinitions, List<ValuePair> options, MessageContext messageContext, ASTNode node) : base("", messageContext, node)
+    public Grammar(List<Definition> definitions, List<TMDefinition> tmDefinitions, List<ValuePair> options, Func<Int32, (UInt32, UInt32)> calcLocation, ASTNode node) : base("", calcLocation, node)
     {
         Definitions = definitions;
         TMDefinitions = tmDefinitions;
@@ -47,7 +47,7 @@ public class Grammar : AbstractNamedElement
     internal const String TextMatePropertyScope = "tmscope";
     internal const String TextMatePropertyPattern = "tmpattern";
 
-    public CreateOutputResult ToTextMateGrammar(MessageContext messageContext)
+    public CreateOutputResult ToTextMateGrammar()
     {
         List<ParserMessage> messages = new List<ParserMessage>();
         TextMateGrammarDocument document = new TextMateGrammarDocument();
@@ -159,7 +159,7 @@ public class Grammar : AbstractNamedElement
         return String.Join(".", versionNumbers);
     }
 
-    public CreateOutputResult ToLanguageConfig(MessageContext messageContext)
+    public CreateOutputResult ToLanguageConfig()
     {
         List<ParserMessage> messages = new List<ParserMessage>();
         VSCodeLanguageConfDocument document = new VSCodeLanguageConfDocument();
@@ -236,7 +236,7 @@ public class Grammar : AbstractNamedElement
         return new CreateOutputResult(successful, JsonSerializer.Serialize(document, serializerOptions), messages);
     }
 
-    public CreateOutputResult ToVSCodePackage(MessageContext messageContext, String? versionOverride = null, Func<String, String>? loadMergeJson = null, String? packageJsonOverridePath = null)
+    public CreateOutputResult ToVSCodePackage(String? versionOverride = null, Func<String, String>? loadMergeJson = null, String? packageJsonOverridePath = null)
     {
         List<ParserMessage> messages = new List<ParserMessage>();
         VSCodePackageDocument document = new VSCodePackageDocument();
@@ -312,7 +312,7 @@ public class Grammar : AbstractNamedElement
         return new CreateOutputResult(successful, packageJson, messages);
     }
 
-    public CreateOutputResult ToParserCode(MessageContext messageContext, String? namespaceOverride = null, String? classOverride = null, Boolean? generateNodeVisitorOverride = null)
+    public CreateOutputResult ToParserCode(String? namespaceOverride = null, String? classOverride = null, Boolean? generateNodeVisitorOverride = null)
     {
         List<ParserMessage> messages = new List<ParserMessage>();
         String result = String.Empty;
@@ -372,8 +372,8 @@ public class Grammar : AbstractNamedElement
                 throw GetException($"TextMate definition '{definition.Name}' already exists!");
             String? scopeName = definition.KeyValuePairs[TextMatePropertyPattern];
             scopeName = String.IsNullOrEmpty(scopeName) ? null : scopeName;
-            TMSequence sequence = new TMSequence(new List<AbstractDefinitionElement>() { definition.DefinitionElement }, definition.MessageContext, definition.Node);
-            tmDefinitions.Add(new TMDefinition(definition.Name, scopeName, sequence, null, null, definition.MessageContext, definition.Node));
+            TMSequence sequence = new TMSequence(new List<AbstractDefinitionElement>() { definition.DefinitionElement }, definition.CalcLocation, definition.Node);
+            tmDefinitions.Add(new TMDefinition(definition.Name, scopeName, sequence, null, null, definition.CalcLocation, definition.Node));
         }
         foreach (TMDefinition tmDefinition in tmDefinitions)
             AddScopeOverrideWarnings(tmDefinition, grammarSuffix, messages);
@@ -397,7 +397,7 @@ public class Grammar : AbstractNamedElement
                 result[tmDefinition.Name.ToLower()] = tmDefinition.GetRepositoryEntry(grammar);
             else
             {
-                (UInt32 row, UInt32 column) = tmDefinition.MessageContext.CalculateLocation(tmDefinition.Node.Position);
+                (UInt32 row, UInt32 column) = tmDefinition.CalcLocation(tmDefinition.Node.Position);
                 messages.Add(new ParserMessage($"TextMate definition '{tmDefinition.Name}' is not referenced by any other rule.", ParserMessage.MessageType.Warning, (row, column)));
             }
         }
@@ -514,7 +514,7 @@ public class Grammar : AbstractNamedElement
                 String? innerScope = TryGetElementScope(sequence.Elements.First(), grammarSuffix);
                 if (!String.IsNullOrWhiteSpace(innerScope) && !scopedSequenceName.Equals(innerScope, StringComparison.OrdinalIgnoreCase))
                 {
-                    (UInt32 row, UInt32 column) = tmDefinition.MessageContext.CalculateLocation(sequence.Elements.First().Node.Position);
+                    (UInt32 row, UInt32 column) = tmDefinition.CalcLocation(sequence.Elements.First().Node.Position);
                     messages.Add(new ParserMessage($"TextMate scope '{scopedSequenceName}' overrides inner scope '{innerScope}' in rule '{tmDefinition.Name}'.", ParserMessage.MessageType.Warning, (row, column)));
                 }
             }
@@ -561,7 +561,7 @@ public class Grammar : AbstractNamedElement
             if (referencedDefinitions.Contains(definition.Name))
                 continue;
 
-            (UInt32 row, UInt32 column) = definition.MessageContext.CalculateLocation(definition.Node.Position);
+            (UInt32 row, UInt32 column) = definition.CalcLocation(definition.Node.Position);
             messages.Add(new ParserMessage($"Definition '{definition.Name}' is not referenced by any other rule.", ParserMessage.MessageType.Warning, (row, column)));
         }
     }
@@ -609,7 +609,7 @@ public class Grammar : AbstractNamedElement
         {
             if (!knownOptions.Contains(option.Name))
             {
-                (UInt32 row, UInt32 column) = option.MessageContext.CalculateLocation(option.Node.Position);
+                (UInt32 row, UInt32 column) = option.CalcLocation(option.Node.Position);
                 messages.Add(new ParserMessage($"Unknown option '{option.Name}'.", ParserMessage.MessageType.Warning, (row, column)));
             }
         }
@@ -620,7 +620,7 @@ public class Grammar : AbstractNamedElement
             {
                 if (!knownProperties.Contains(property.Name))
                 {
-                    (UInt32 row, UInt32 column) = property.MessageContext.CalculateLocation(property.Node.Position);
+                    (UInt32 row, UInt32 column) = property.CalcLocation(property.Node.Position);
                     messages.Add(new ParserMessage($"Unknown property '{property.Name}' in definition '{definition.Name}'.", ParserMessage.MessageType.Warning, (row, column)));
                 }
             }
@@ -674,7 +674,7 @@ public class Grammar : AbstractNamedElement
                     List<Definition> cycle = path.SkipWhile(d => d != referenced).ToList();
                     cycle.Add(referenced);
 
-                    (UInt32 row, UInt32 column) = referenced.MessageContext.CalculateLocation(referenced.Node.Position);
+                    (UInt32 row, UInt32 column) = referenced.CalcLocation(referenced.Node.Position);
                     throw GetException($"Circular reference involving TreatInline definition '{referenced.Name}' detected: {String.Join(" -> ", cycle.Select(d => d.Name))}");
                 }
                 else if (state[referenced] == 0)
@@ -837,39 +837,6 @@ public class Grammar : AbstractNamedElement
 
         String result =
             $$"""
-            public sealed class MessageContext
-            {
-                private String _text;
-                internal MessageContext(String text)
-                {
-                    _text = text;
-                }
-
-                public (UInt32 Row, UInt32 Column) CalculateLocation(Int32 position)
-                {
-                    Int32 row = 1;
-                    Int32 column = 1;
-                    Int32 limit = position;
-                    if (limit > _text.Length)
-                        limit = _text.Length;
-
-                    for (Int32 index = 0; index < limit; index++)
-                    {
-                        if (_text[index] == '\n')
-                        {
-                            row++;
-                            column = 1;
-                        }
-                        else
-                        {
-                            column++;
-                        }
-                    }
-
-                    return ((UInt32)row, (UInt32)column);
-                }
-            }
-
             public sealed class ParseResult
             {
                 private class EmptyResult : IVisitResult
@@ -883,17 +850,17 @@ public class Grammar : AbstractNamedElement
                     public IReadOnlyList<ParserMessage> Messages { get; }
                 }
 
-                public ParseResult(ASTNode? rootNode, MessageContext messageContext, IReadOnlyList<ParserMessage> messages)
+                public ParseResult(ASTNode? rootNode, String inputText, IReadOnlyList<ParserMessage> messages)
                 {
                     RootNode = rootNode;
-                    MessageContext = messageContext;
                     Messages = new List<ParserMessage>(messages);
+                    InputText = inputText;
                 }
 
                 public Boolean Successful { get => RootNode is not null; }
                 public ASTNode? RootNode { get; }
                 public IReadOnlyList<ParserMessage> Messages { get; }
-                public MessageContext MessageContext { get; }
+                public String InputText { get; }
 
                 public IVisitResult Visit<TContext>(IVisitor<TContext> visitor) where TContext : class
                 {
@@ -929,13 +896,13 @@ public class Grammar : AbstractNamedElement
             $$"""
             public ParseResult Parse(String text)
             {
-                ParserState state = new ParserState(text, new MessageContext(text));
+                ParserState state = new ParserState(text);
                 ASTNode actualNode = new ASTNode(-1, "ROOT", "", 0);
                 String? errorName = null;
                 Boolean successful = {{rootDefinition.GetReferenceCode(this)}} && state.Position >= text.Length - 1;
                 if (successful)
                     state.NoError(state.Position);
-                return new ParseResult(successful ? actualNode : null, state.MessageContext, state.Messages);
+                return new ParseResult(successful ? actualNode : null, text, state.Messages);
             }
             """;
         return result;
@@ -1003,10 +970,9 @@ public class Grammar : AbstractNamedElement
             $$"""
             private sealed class ParserState
             {
-                public ParserState(String text, MessageContext messageContext)
+                public ParserState(String text)
                 {
                     Text = text;
-                    MessageContext = messageContext;
                 }
 
                 private readonly List<String> _terminalNames = new List<String>();
@@ -1018,7 +984,6 @@ public class Grammar : AbstractNamedElement
                 internal String Text { get; }
                 internal Int32 Position { get; set; } = 0;
                 internal Boolean Eof => !(Position < Text.Length);
-                internal MessageContext MessageContext { get; }
                 internal IReadOnlyList<ParserMessage> Messages
                 {
                     get
@@ -1028,9 +993,9 @@ public class Grammar : AbstractNamedElement
                         {
                             String actual = _lastErrorPosition < Text.Length
                                 ? $"found {DescribeLiteral(Text.Substring(_lastParserPosition, _lastErrorPosition - _lastParserPosition + 1))}"
-                                : "found end of input";                        
+                                : "found end of input";
                             String errorMessage = $"Expected {String.Join(" or ", _errorExpectations)}, {actual}!";
-                            tempMessages.Add(new ParserMessage(errorMessage, ParserMessage.MessageType.Error, MessageContext.CalculateLocation(_lastParserPosition)));
+                            tempMessages.Add(new ParserMessage(errorMessage, ParserMessage.MessageType.Error, CalcLocation(_lastParserPosition)));
                         }
                         return tempMessages;
                     }
@@ -1054,6 +1019,28 @@ public class Grammar : AbstractNamedElement
                 {
                     if (parserPosition >= _lastParserPosition)
                         _errorExpectations.Clear();
+                }
+
+                private (UInt32, UInt32) CalcLocation(Int32 position)
+                {
+                    Int32 row = 1;
+                    Int32 column = 1;
+                    Int32 limit = position;
+                    if (limit > Text.Length)
+                        limit = Text.Length;
+                    for (Int32 index = 0; index < limit; index++)
+                    {
+                        if (Text[index] == '\n')
+                        {
+                            row++;
+                            column = 1;
+                        }
+                        else
+                        {
+                            column++;
+                        }
+                    }
+                    return ((UInt32)row, (UInt32)column);
                 }
             }
 

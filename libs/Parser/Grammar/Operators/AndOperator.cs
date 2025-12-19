@@ -2,7 +2,7 @@ namespace Parseidon.Parser.Grammar.Operators;
 
 public class AndOperator : AbstractTwoChildOperator
 {
-    public AndOperator(AbstractDefinitionElement? left, AbstractDefinitionElement? right, MessageContext messageContext, ASTNode node) : base(left, right, messageContext, node) { }
+    public AndOperator(AbstractDefinitionElement? left, AbstractDefinitionElement? right, Func<Int32, (UInt32, UInt32)> calcLocation, ASTNode node) : base(left, right, calcLocation, node) { }
 
     public override String ToParserCode(Grammar grammar)
     {

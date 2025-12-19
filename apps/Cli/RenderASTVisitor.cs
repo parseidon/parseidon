@@ -12,9 +12,9 @@ public class RenderASTVisitor : IVisitor<RenderASTVisitor.RenderASTVisitorContex
         Grammar.CreateOutputResult AST { get; }
     }
 
-    public sealed class RenderASTVisitorContext
+    public sealed class RenderASTVisitorContext : BaseVisitorContext
     {
-        public RenderASTVisitorContext(ParseResult parseResult)
+        public RenderASTVisitorContext(ParseResult parseResult) : base(parseResult.InputText)
         {
             ParseResult = parseResult;
         }
@@ -67,5 +67,10 @@ public class RenderASTVisitor : IVisitor<RenderASTVisitor.RenderASTVisitorContex
             PrintNode(context.ParseResult.RootNode!, new bool[] { }, stringBuilder);
         Grammar.CreateOutputResult outputResult = new Grammar.CreateOutputResult(true, stringBuilder.ToString(), new List<ParserMessage>());
         return new RenderASTVisitorResult(successful, messages, outputResult);
+    }
+
+    public (UInt32 Row, UInt32 Column) CalcLocatiopn(RenderASTVisitorContext context, Int32 position)
+    {
+        return context.CalcLocation(position);
     }
 }

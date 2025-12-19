@@ -2,7 +2,7 @@ namespace Parseidon.Parser.Grammar.Operators;
 
 public class ZeroOrMoreOperator : AbstractOneChildOperator
 {
-    public ZeroOrMoreOperator(AbstractDefinitionElement? terminal, MessageContext messageContext, ASTNode node) : base(terminal, messageContext, node) { }
+    public ZeroOrMoreOperator(AbstractDefinitionElement? terminal, Func<Int32, (UInt32, UInt32)> calcLocation, ASTNode node) : base(terminal, calcLocation, node) { }
 
     public override String ToParserCode(Grammar grammar)
     {

@@ -5,7 +5,7 @@ namespace Parseidon.Parser.Grammar.Blocks;
 
 public class Definition : AbstractNamedElement
 {
-    public Definition(string name, AbstractDefinitionElement definitionElement, IReadOnlyList<ValuePair> valuePairs, MessageContext messageContext, ASTNode node, List<AbstractMarker> customMarker) : base(name, messageContext, node)
+    public Definition(string name, AbstractDefinitionElement definitionElement, IReadOnlyList<ValuePair> valuePairs, Func<Int32, (UInt32, UInt32)> calcLocation, ASTNode node, List<AbstractMarker> customMarker) : base(name, calcLocation, node)
     {
         _customMarker = customMarker;
         ValuePairs = valuePairs;

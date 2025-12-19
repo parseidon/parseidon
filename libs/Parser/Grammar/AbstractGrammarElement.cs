@@ -4,21 +4,20 @@ namespace Parseidon.Parser.Grammar;
 
 public abstract class AbstractGrammarElement
 {
-    public AbstractGrammarElement(MessageContext messageContext, ASTNode node)
+    public AbstractGrammarElement(Func<Int32, (UInt32, UInt32)> calcLocation, ASTNode node)
     {
-        if (messageContext is null) throw new ArgumentNullException(nameof(messageContext));
         if (node is null) throw new ArgumentNullException(nameof(node));
-        MessageContext = messageContext;
+        CalcLocation = calcLocation;
         Node = node;
     }
 
-    public MessageContext MessageContext { get; }
     public ASTNode Node { get; }
     public AbstractGrammarElement? Parent { get; set; }
+    public Func<Int32, (UInt32, UInt32)> CalcLocation { get; }
 
     public GrammarException GetException(String message)
     {
-        (UInt32 row, UInt32 column) = MessageContext!.CalculateLocation(Node!.Position);
+        (UInt32 row, UInt32 column) = CalcLocation(Node!.Position);
         return new GrammarException(message, row, column);
     }
 

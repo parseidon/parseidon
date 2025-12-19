@@ -2,7 +2,7 @@ namespace Parseidon.Parser.Grammar.Terminals;
 
 public class RegExTerminal : AbstractDefinitionElement
 {
-    public RegExTerminal(String regEx, Int32 quantifier, MessageContext messageContext, ASTNode node) : base(messageContext, node)
+    public RegExTerminal(String regEx, Int32 quantifier, Func<Int32, (UInt32, UInt32)> calcLocation, ASTNode node) : base(calcLocation, node)
     {
         RegEx = regEx;
         Quantifier = quantifier;

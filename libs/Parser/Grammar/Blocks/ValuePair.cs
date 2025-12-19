@@ -2,7 +2,7 @@ namespace Parseidon.Parser.Grammar.Blocks;
 
 public class ValuePair : AbstractNamedElement
 {
-    public ValuePair(String name, String value, MessageContext messageContext, ASTNode node) : base(name, messageContext, node)
+    public ValuePair(String name, String value, Func<Int32, (UInt32, UInt32)> calcLocation, ASTNode node) : base(name, calcLocation, node)
     {
         Value = value;
     }
