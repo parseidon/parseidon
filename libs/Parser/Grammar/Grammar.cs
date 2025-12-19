@@ -807,20 +807,31 @@ public class Grammar : AbstractNamedElement
 
                 private ProcessNodeResult DoVisit<TContext>(TContext context, INodeVisitor<TContext> visitor, ASTNode node, IList<ParserMessage> messages) where TContext : class
                 {
-                    visitor.BeginVisit(context, node);
                     try
                     {
-                        if (node == null)
-                            return ProcessNodeResult.Error;
-                        Boolean result = true;
-                        foreach (ASTNode child in node.Children)
-                            result = result && (DoVisit(context, visitor, child, messages) == ProcessNodeResult.Success);
-                        result = result && (CallEvent(context, visitor, node.TokenId, node, messages) == ProcessNodeResult.Success);
-                        return result ? ProcessNodeResult.Success : ProcessNodeResult.Error;
+                        visitor.BeginVisit(context, node);
+                        try
+                        {
+                            if (node == null)
+                                return ProcessNodeResult.Error;
+                            Boolean result = true;
+                            foreach (ASTNode child in node.Children)
+                                result = result && (DoVisit(context, visitor, child, messages) == ProcessNodeResult.Success);
+                            result = result && (CallEvent(context, visitor, node.TokenId, node, messages) == ProcessNodeResult.Success);
+                            return result ? ProcessNodeResult.Success : ProcessNodeResult.Error;
+                        }
+                        finally
+                        {
+                            visitor.EndVisit(context, node);
+                        }
                     }
-                    finally
+                    catch (GrammarException)
                     {
-                        visitor.EndVisit(context, node);
+                        throw;
+                    }
+                    catch (Exception e)
+                    {
+                        throw new GrammarException(e.Message, visitor.CalcLocation(context, node.Position));
                     }
                 }
 
@@ -937,6 +948,7 @@ public class Grammar : AbstractNamedElement
             {
                 TContext GetContext(ParseResult parseResult);
                 IVisitResult GetResult(TContext context, Boolean successful, IReadOnlyList<ParserMessage> messages);
+                (UInt32 Row, UInt32 Column) CalcLocation(TContext context, Int32 position);
             }
 
             """
