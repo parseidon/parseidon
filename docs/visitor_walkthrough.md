@@ -5,7 +5,7 @@ This guide shows how to process the AST produced by your generated parser using 
 ## What the generated code provides
 
 - A parser class (your `@class`) with a `Parse(string)` method that returns `ParseResult`.
-- An `INodeVisitor` interface with one `Process<Rule>Name` method per grammar rule, plus `BeginVisit`/`EndVisit` hooks.
+- An `INodeVisitor<Context>` interface with one `Process<Rule>Name` method per grammar rule, plus `BeginVisit`/`EndVisit` hooks.
 - `ParserMessage` objects that collect warnings/errors during parsing or visiting.
 
 ## Minimal flow
@@ -34,23 +34,23 @@ class EvalContext
 Implement the generated interface. For rules you do not care about, return `ProcessNodeResult.Success`.
 
 ```csharp
-class EvalVisitor : INodeVisitor
+class EvalVisitor : INodeVisitor<EvalContext>
 {
-    public object GetContext(ParseResult parseResult) => new EvalContext();
+    public EvalContext GetContext(ParseResult parseResult) => new EvalContext();
 
-    public IVisitResult GetResult(object context, bool successful, IReadOnlyList<ParserMessage> messages)
+    public IVisitResult GetResult(EvalContext context, bool successful, IReadOnlyList<ParserMessage> messages)
     {
         var ctx = (EvalContext)context;
         return new SimpleVisitResult(successful, messages, ctx.Values.Peek());
     }
 
-    public void BeginVisit(object context, ASTNode node) { }
-    public void EndVisit(object context, ASTNode node) { }
+    public void BeginVisit(EvalContext context, ASTNode node) { }
+    public void EndVisit(EvalContext context, ASTNode node) { }
 
-    public ProcessNodeResult ProcessExprNode(object context, ASTNode node, IList<ParserMessage> messages) => ProcessNodeResult.Success;
-    public ProcessNodeResult ProcessTermNode(object context, ASTNode node, IList<ParserMessage> messages) => ProcessNodeResult.Success;
+    public ProcessNodeResult ProcessExprNode(EvalContext context, ASTNode node, IList<ParserMessage> messages) => ProcessNodeResult.Success;
+    public ProcessNodeResult ProcessTermNode(EvalContext context, ASTNode node, IList<ParserMessage> messages) => ProcessNodeResult.Success;
 
-    public ProcessNodeResult ProcessNumberNode(object context, ASTNode node, IList<ParserMessage> messages)
+    public ProcessNodeResult ProcessNumberNode(EvalContext context, ASTNode node, IList<ParserMessage> messages)
     {
         var ctx = (EvalContext)context;
         if (int.TryParse(node.GetText(), out var value))

@@ -805,7 +805,7 @@ public class Grammar : AbstractNamedElement
             nodeVisitorMethods =
                 $$"""
 
-                private ProcessNodeResult DoVisit(Object context, INodeVisitor visitor, ASTNode node, IList<ParserMessage> messages)
+                private ProcessNodeResult DoVisit<TContext>(TContext context, INodeVisitor<TContext> visitor, ASTNode node, IList<ParserMessage> messages) where TContext : class
                 {
                     visitor.BeginVisit(context, node);
                     try
@@ -824,7 +824,7 @@ public class Grammar : AbstractNamedElement
                     }
                 }
 
-                private ProcessNodeResult CallEvent(Object context, INodeVisitor visitor, Int32 tokenId, ASTNode node, IList<ParserMessage> messages)
+                private ProcessNodeResult CallEvent<TContext>(TContext context, INodeVisitor<TContext> visitor, Int32 tokenId, ASTNode node, IList<ParserMessage> messages) where TContext : class
                 {
                     switch (tokenId)
                     {
@@ -895,7 +895,7 @@ public class Grammar : AbstractNamedElement
                 public IReadOnlyList<ParserMessage> Messages { get; }
                 public MessageContext MessageContext { get; }
 
-                public IVisitResult Visit(IVisitor visitor)
+                public IVisitResult Visit<TContext>(IVisitor<TContext> visitor) where TContext : class
                 {
                     if (visitor is null)
                         throw new ArgumentNullException(nameof(visitor));
@@ -904,9 +904,9 @@ public class Grammar : AbstractNamedElement
                     {
                         try
                         {
-                            Object context = visitor.GetContext(this);
-                            {{(generateNodeVisitor ? "if (visitor is INodeVisitor)" : "")}}
-                                {{(generateNodeVisitor ? "DoVisit(context, (visitor as INodeVisitor)!, RootNode!, visitMessages);" : "")}}
+                            TContext context = visitor.GetContext(this);
+                            {{(generateNodeVisitor ? "if (visitor is INodeVisitor<TContext>)" : "")}}
+                                {{(generateNodeVisitor ? "DoVisit(context, (visitor as INodeVisitor<TContext>)!, RootNode!, visitMessages);" : "")}}
                             return visitor.GetResult(context, true, visitMessages);
                         }
                         catch (GrammarException ex)
@@ -955,7 +955,7 @@ public class Grammar : AbstractNamedElement
         List<Definition> usedDefinitions = GetRelevantGrammarDefinitions();
         StringBuilder visitorEventsBuilder = new StringBuilder();
         foreach (Definition definition in usedDefinitions)
-            visitorEventsBuilder.AppendLine($"ProcessNodeResult {GetEventName(definition)}(Object context, ASTNode node, IList<ParserMessage> messages);");
+            visitorEventsBuilder.AppendLine($"ProcessNodeResult {GetEventName(definition)}(TContext context, ASTNode node, IList<ParserMessage> messages);");
         String visitorEvents = visitorEventsBuilder.ToString();
         StringBuilder builder = new StringBuilder();
         builder.Append(
@@ -966,10 +966,10 @@ public class Grammar : AbstractNamedElement
                 IReadOnlyList<ParserMessage> Messages { get; }
             }
 
-            public interface IVisitor
+            public interface IVisitor<TContext> where TContext : class
             {
-                Object GetContext(ParseResult parseResult);
-                IVisitResult GetResult(Object context, Boolean successful, IReadOnlyList<ParserMessage> messages);
+                TContext GetContext(ParseResult parseResult);
+                IVisitResult GetResult(TContext context, Boolean successful, IReadOnlyList<ParserMessage> messages);
             }
 
             """
@@ -979,11 +979,11 @@ public class Grammar : AbstractNamedElement
             builder.AppendLine(
                 $$"""
 
-                public interface INodeVisitor : IVisitor
+                public interface INodeVisitor<TContext> : IVisitor<TContext> where TContext : class
                 {
                 {{Indent(visitorEvents)}}
-                    void BeginVisit(Object context, ASTNode node);
-                    void EndVisit(Object context, ASTNode node);
+                    void BeginVisit(TContext context, ASTNode node);
+                    void EndVisit(TContext context, ASTNode node);
                 }
 
                 public enum ProcessNodeResult

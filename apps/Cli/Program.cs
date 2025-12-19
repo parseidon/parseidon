@@ -231,7 +231,7 @@ static void PrintMessage(ParserMessage.MessageType messageType, String message)
 
 static OutputResult CreateParser(Parseidon.Parser.ParseResult parseResult, FileInfo outputFile, String overrideOption, String? namespaceOverride, String? classNameOverride)
 {
-    IVisitor visitor = new ParseidonVisitor();
+    var visitor = new ParseidonVisitor();
     IVisitResult visitResult = parseResult.Visit(visitor);
 
     Grammar.CreateOutputResult outputResult = Grammar.CreateOutputResult.Empty;

@@ -5,14 +5,14 @@ using Parseidon.Parser.Grammar;
 
 namespace Parseidon.Cli;
 
-public class RenderASTVisitor : IVisitor
+public class RenderASTVisitor : IVisitor<RenderASTVisitor.RenderASTVisitorContext>
 {
     public interface IGetAST
     {
         Grammar.CreateOutputResult AST { get; }
     }
 
-    private sealed class RenderASTVisitorContext
+    public sealed class RenderASTVisitorContext
     {
         public RenderASTVisitorContext(ParseResult parseResult)
         {
@@ -36,12 +36,12 @@ public class RenderASTVisitor : IVisitor
         public Grammar.CreateOutputResult AST { get; }
     }
 
-    public Object GetContext(ParseResult parseResult)
+    public RenderASTVisitorContext GetContext(ParseResult parseResult)
     {
         return new RenderASTVisitorContext(parseResult);
     }
 
-    public IVisitResult GetResult(object context, bool successful, IReadOnlyList<ParserMessage> messages)
+    public IVisitResult GetResult(RenderASTVisitorContext context, bool successful, IReadOnlyList<ParserMessage> messages)
     {
         static void PrintNode(ASTNode node, bool[] crossings, StringBuilder stringBuilder)
         {
@@ -62,10 +62,9 @@ public class RenderASTVisitor : IVisitor
             }
         }
 
-        var typedContext = context as RenderASTVisitorContext ?? throw new InvalidCastException("CreateCodeVisitorContext expected!");
         StringBuilder stringBuilder = new StringBuilder();
-        if (typedContext.ParseResult is not null)
-            PrintNode(typedContext.ParseResult.RootNode!, new bool[] { }, stringBuilder);
+        if (context.ParseResult is not null)
+            PrintNode(context.ParseResult.RootNode!, new bool[] { }, stringBuilder);
         Grammar.CreateOutputResult outputResult = new Grammar.CreateOutputResult(true, stringBuilder.ToString(), new List<ParserMessage>());
         return new RenderASTVisitorResult(successful, messages, outputResult);
     }
