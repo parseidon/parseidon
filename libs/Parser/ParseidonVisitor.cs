@@ -16,54 +16,15 @@ public class ParseidonVisitor : INodeVisitor<ParseidonVisitor.CreateCodeVisitorC
         Grammar.Grammar.CreateOutputResult GetVSCodePackage(String? versionOverride, Func<String, String>? loadMergeJson, String? packageJsonOverridePath);
     }
 
-    public sealed class CreateCodeVisitorContext
+    public class CreateCodeVisitorContext : StackVisitorContext<AbstractGrammarElement>
     {
-        public CreateCodeVisitorContext(MessageContext messageContext)
+        public CreateCodeVisitorContext(MessageContext messageContext) : base((String message, Int32 position) => new GrammarException(message, messageContext.CalculateLocation(position)))
         {
             MessageContext = messageContext;
         }
 
-        private ScopedStack<AbstractGrammarElement> Stack { get; } = new ScopedStack<AbstractGrammarElement>();
+        internal MessageContext MessageContext { get; }
         internal Grammar.Grammar? Grammar { get; set; }
-        internal MessageContext MessageContext { get; set; }
-
-        internal T Pop<T>(Int32 position) where T : AbstractGrammarElement
-        {
-            try
-            {
-                return Stack.Pop<T>();
-            }
-            catch (Exception e)
-            {
-                (UInt32 row, UInt32 column) = MessageContext.CalculateLocation(position);
-                throw new GrammarException(e.Message, row, column);
-            }
-        }
-
-        internal T? TryPop<T>(Int32 position) where T : AbstractGrammarElement
-        {
-            return Stack.TryPop<T>();
-        }
-
-        internal List<T> PopList<T>() where T : AbstractGrammarElement
-        {
-            return Stack.PopList<T>();
-        }
-
-        internal void Push(AbstractGrammarElement element)
-        {
-            Stack.Push(element);
-        }
-
-        internal void EnterScope()
-        {
-            Stack.EnterScope();
-        }
-
-        internal void ExitScope()
-        {
-            Stack.ExitScope();
-        }
     }
 
     private class CreateCodeVisitResult : IVisitResult, IGetResults
