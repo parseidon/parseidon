@@ -368,7 +368,7 @@ public class ParseidonVisitor : INodeVisitor<ParseidonVisitor.CreateCodeVisitorC
         return ProcessNodeResult.Success;
     }
 
-    public (UInt32 Row, UInt32 Column) CalcLocatiopn(CreateCodeVisitorContext context, Int32 position)
+    public (UInt32 Row, UInt32 Column) CalcLocation(CreateCodeVisitorContext context, Int32 position)
     {
         return context.CalcLocation(position);
     }

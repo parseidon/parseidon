@@ -69,7 +69,7 @@ public class RenderASTVisitor : IVisitor<RenderASTVisitor.RenderASTVisitorContex
         return new RenderASTVisitorResult(successful, messages, outputResult);
     }
 
-    public (UInt32 Row, UInt32 Column) CalcLocatiopn(RenderASTVisitorContext context, Int32 position)
+    public (UInt32 Row, UInt32 Column) CalcLocation(RenderASTVisitorContext context, Int32 position)
     {
         return context.CalcLocation(position);
     }
