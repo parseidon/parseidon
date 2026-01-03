@@ -449,8 +449,12 @@ public class Grammar : AbstractNamedElement
 
     public Int32 GetElementIdOf(AbstractNamedElement element)
     {
-        if ((element is Definition) && (Definitions.IndexOf((Definition)element) >= 0))
-            return Definitions.IndexOf((Definition)element);
+        if (element is Definition definitionElement)
+        {
+            var index = Definitions.IndexOf(definitionElement);
+            if (index >= 0)
+                return index;
+        }
         throw GetException($"Can not find identifier '{element.Name}'!");
     }
 
