@@ -29,6 +29,8 @@ public class Grammar : AbstractNamedElement
     public List<TMDefinition> TMDefinitions { get; }
     public List<ValuePair> Options { get; }
 
+    private List<Definition> _relevantDefinitions = new();
+
     internal const String GrammarOptionNamespace = "namespace";
     internal const String GrammarOptionClass = "class";
     internal const String GrammarOptionRoot = "root";
@@ -314,6 +316,7 @@ public class Grammar : AbstractNamedElement
 
     public CreateOutputResult ToParserCode(String? namespaceOverride = null, String? classOverride = null, Boolean? generateNodeVisitorOverride = null)
     {
+        _relevantDefinitions = GetRelevantGrammarDefinitions();
         List<ParserMessage> messages = new List<ParserMessage>();
         String result = String.Empty;
         Boolean successful = false;
@@ -796,9 +799,8 @@ public class Grammar : AbstractNamedElement
         String visitorCalls = String.Empty;
         if (generateNodeVisitor)
         {
-            List<Definition> usedDefinitions = GetRelevantGrammarDefinitions();
             StringBuilder visitorCallsBuilder = new StringBuilder();
-            foreach (Definition definition in usedDefinitions)
+            foreach (Definition definition in _relevantDefinitions)
                 visitorCallsBuilder.AppendLine($"case {GetElementIdOf(definition)}: return visitor.{GetEventName(definition)}(context, node, messages);");
             visitorCalls = visitorCallsBuilder.ToString();
         }
@@ -934,9 +936,8 @@ public class Grammar : AbstractNamedElement
     protected String GetIVisitorCode(Boolean generateNodeVisitor)
     {
         String GetEventName(Definition definition) => $"Process{definition.Name.Humanize().Dehumanize()}Node";
-        List<Definition> usedDefinitions = GetRelevantGrammarDefinitions();
         StringBuilder visitorEventsBuilder = new StringBuilder();
-        foreach (Definition definition in usedDefinitions)
+        foreach (Definition definition in _relevantDefinitions)
             visitorEventsBuilder.AppendLine($"ProcessNodeResult {GetEventName(definition)}(TContext context, ASTNode node, IList<ParserMessage> messages);");
         String visitorEvents = visitorEventsBuilder.ToString();
         StringBuilder builder = new StringBuilder();
