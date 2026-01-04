@@ -15,7 +15,7 @@ public class RegExTerminal : AbstractDefinitionElement
 
     public override String ToParserCode(Grammar grammar) => $"CheckRegEx(actualNode, state, errorName, \"{ToLiteral(RegEx, false).Trim()}\", {Quantifier})";
 
-    public override bool MatchesVariableText() => true;
+    public override Boolean MatchesVariableText(Grammar grammar) => true;
 
     internal protected override RegExResult GetRegEx(Grammar grammar)
     {

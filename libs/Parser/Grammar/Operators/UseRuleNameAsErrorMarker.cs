@@ -17,6 +17,6 @@ public class UseDefinitionNameAsErrorMarker : AbstractMarker
         return result;
     }
 
-    public override bool MatchesVariableText() => Element?.MatchesVariableText() ?? false;
+    public override Boolean MatchesVariableText(Grammar grammar) => Element?.MatchesVariableText(grammar) ?? false;
 
 }

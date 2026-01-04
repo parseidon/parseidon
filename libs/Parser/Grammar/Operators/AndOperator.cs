@@ -14,7 +14,7 @@ public class AndOperator : AbstractTwoChildOperator
         return result;
     }
 
-    public override bool MatchesVariableText() => (Left is null ? base.MatchesVariableText() : Left.MatchesVariableText()) || (Right is null ? base.MatchesVariableText() : Right.MatchesVariableText());
+    public override Boolean MatchesVariableText(Grammar grammar) => (Left is null ? base.MatchesVariableText(grammar) : Left.MatchesVariableText(grammar)) || (Right is null ? base.MatchesVariableText(grammar) : Right.MatchesVariableText(grammar));
 
     internal protected override RegExResult GetRegEx(Grammar grammar)
     {

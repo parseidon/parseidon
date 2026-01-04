@@ -52,7 +52,7 @@ public abstract class AbstractGrammarElement
 
     public virtual String ToParserCode(Grammar grammar) => throw new NotImplementedException($"Not implemented: {this.GetType().Name}.ToString()");
 
-    public virtual Boolean MatchesVariableText() => false;
+    public virtual Boolean MatchesVariableText(Grammar grammar) => false;
 
     internal virtual void IterateElements(Func<AbstractGrammarElement, Boolean> process) => process(this);
 }

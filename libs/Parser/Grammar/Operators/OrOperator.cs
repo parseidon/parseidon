@@ -14,7 +14,7 @@ public class OrOperator : AbstractTwoChildOperator
         return result;
     }
 
-    public override bool MatchesVariableText() => true;
+    public override Boolean MatchesVariableText(Grammar grammar) => true;
 
     internal protected override RegExResult GetRegEx(Grammar grammar)
     {

@@ -21,7 +21,7 @@ public abstract class AbstractOneChildOperator : AbstractDefinitionElement
         }
     }
 
-    public override bool MatchesVariableText() => Element is null ? base.MatchesVariableText() : Element.MatchesVariableText();
+    public override Boolean MatchesVariableText(Grammar grammar) => Element is null ? base.MatchesVariableText(grammar) : Element.MatchesVariableText(grammar);
 
     internal override void IterateElements(Func<AbstractGrammarElement, Boolean> process)
     {

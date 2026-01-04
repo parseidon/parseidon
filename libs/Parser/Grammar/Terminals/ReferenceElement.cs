@@ -29,6 +29,13 @@ public class ReferenceElement : AbstractValueTerminal
 
     public Boolean TreatReferenceInline { get => Parent is TreatInlineMarker; }
 
+    public override Boolean MatchesVariableText(Grammar grammar)
+    {
+        if (grammar.FindDefinitionByName(ReferenceName) is Definition referencedDefinition)
+            return referencedDefinition.MatchesVariableText(grammar);
+        return false;
+    }
+
     internal protected override RegExResult GetRegEx(Grammar grammar)
     {
         if (grammar.FindDefinitionByName(ReferenceName) is Definition referencedDefinition)

@@ -6,7 +6,7 @@ public abstract class AbstractValueTerminal : AbstractDefinitionElement
 {
     public AbstractValueTerminal(Func<Int32, (UInt32, UInt32)> calcLocation, ASTNode node) : base(calcLocation, node) { }
 
-    public override bool MatchesVariableText() => false;
+    public override Boolean MatchesVariableText(Grammar grammar) => false;
 
     public abstract String AsText();
 

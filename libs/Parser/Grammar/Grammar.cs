@@ -414,11 +414,11 @@ public class Grammar : AbstractNamedElement
         return parts.Length == 0 ? new[] { rawValue.Trim() } : parts;
     }
 
-    public override bool MatchesVariableText()
+    public override Boolean MatchesVariableText(Grammar grammar)
     {
         Boolean result = false;
         foreach (Definition definition in Definitions)
-            result = result || definition.MatchesVariableText();
+            result = result || definition.MatchesVariableText(grammar);
         return result;
     }
 
@@ -717,7 +717,7 @@ public class Grammar : AbstractNamedElement
 
     private Boolean IterateRelevantGrammarDefinitions(AbstractGrammarElement element, List<Definition> definitions, Boolean forceAdd)
     {
-        if ((element is Definition definition) && (definitions.IndexOf(definition) < 0) && !(definition.DropDefinition) && (definition.MatchesVariableText() || forceAdd))
+        if ((element is Definition definition) && (definitions.IndexOf(definition) < 0) && !(definition.DropDefinition) && (definition.MatchesVariableText(this) || forceAdd))
             definitions.Add(definition);
         else
             if ((element is ReferenceElement referenceElement) && (!referenceElement.TreatReferenceInline) && (FindDefinitionByName(referenceElement.ReferenceName) is Definition referencedDefinition) && (definitions.IndexOf(referencedDefinition) < 0))

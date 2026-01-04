@@ -372,4 +372,10 @@ public class ParseidonVisitor : INodeVisitor<ParseidonVisitor.CreateCodeVisitorC
     {
         return context.CalcLocation(position);
     }
+
+    public ProcessNodeResult ProcessOptionNode(CreateCodeVisitorContext context, ASTNode node, IList<ParserMessage> messages)
+    {
+        context.Push(context.Pop<ValuePair>());
+        return ProcessNodeResult.Success;
+    }
 }

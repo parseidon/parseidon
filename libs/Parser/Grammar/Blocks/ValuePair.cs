@@ -8,6 +8,6 @@ public class ValuePair : AbstractNamedElement
     }
 
     public String Value { get; }
-    public override bool MatchesVariableText() => false;
+    public override Boolean MatchesVariableText(Grammar grammar) => false;
 
 }

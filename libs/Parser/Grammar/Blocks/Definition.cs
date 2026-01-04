@@ -38,6 +38,6 @@ public class Definition : AbstractNamedElement
     public IReadOnlyList<ValuePair> ValuePairs { get; }
     public IReadOnlyDictionary<String, String> KeyValuePairs { get; }
     public Boolean DropDefinition { get => HasMarker<DropMarker>() || HasMarker<TreatInlineMarker>(); }
-    public override bool MatchesVariableText() => !DropDefinition && DefinitionElement.MatchesVariableText();
+    public override Boolean MatchesVariableText(Grammar grammar) => !DropDefinition && DefinitionElement.MatchesVariableText(grammar);
 
 }
