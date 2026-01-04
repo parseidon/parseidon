@@ -16,7 +16,4 @@ public class UseDefinitionNameAsErrorMarker : AbstractMarker
         result += ")";
         return result;
     }
-
-    public override Boolean MatchesVariableText(Grammar grammar) => Element?.MatchesVariableText(grammar) ?? false;
-
 }

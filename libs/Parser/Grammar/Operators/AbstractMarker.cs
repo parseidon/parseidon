@@ -19,7 +19,7 @@ public abstract class AbstractMarker : AbstractOneChildOperator
         throw new InvalidCastException("Found no definition for marker!");
     }
 
-    public override Boolean MatchesVariableText(Grammar grammar) => true;
+    public override Boolean MatchesVariableText(Grammar grammar) => Element?.MatchesVariableText(grammar) ?? false;
 
     public override String ToParserCode(Grammar grammar) => Element?.ToParserCode(grammar) ?? String.Empty;
 
