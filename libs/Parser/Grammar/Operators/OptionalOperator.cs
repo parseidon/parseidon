@@ -1,3 +1,5 @@
+using Parseidon.Helper;
+
 namespace Parseidon.Parser.Grammar.Operators;
 
 public class OptionalOperator : AbstractOneChildOperator
@@ -8,7 +10,7 @@ public class OptionalOperator : AbstractOneChildOperator
     {
         String result = "";
         result += $"CheckRange(actualNode, state, errorName, 0, 1,\n";
-        result += Indent($"(actualNode, errorName) => {Element?.ToParserCode(grammar)}") + "\n";
+        result += $"(actualNode, errorName) => {Element?.ToParserCode(grammar)}".Indent() + "\n";
         result += ")";
         return result;
     }

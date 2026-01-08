@@ -1,3 +1,5 @@
+using Parseidon.Helper;
+
 namespace Parseidon.Parser.Grammar.Operators;
 
 public class DropMarker : AbstractMarker
@@ -8,7 +10,7 @@ public class DropMarker : AbstractMarker
     {
         String result = "";
         result += $"Drop(actualNode, state, errorName,\n";
-        result += Indent($"(actualNode, errorName) => {Element?.ToParserCode(grammar)}") + "\n";
+        result += $"(actualNode, errorName) => {Element?.ToParserCode(grammar)}".Indent() + "\n";
         result += ")";
         return result;
     }

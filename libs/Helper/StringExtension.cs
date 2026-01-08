@@ -238,4 +238,16 @@ public static class StringExtensions
     {
         return Regex.Replace(input, @"[ \t]+(?=\r?$)", String.Empty, RegexOptions.Multiline);
     }
+
+    public static String Indent(this String text, Int32 level = 1)
+    {
+        if ((text.Length > 0) && (text[text.Length - 1] == '\n'))
+            text = text.Substring(0, text.Length - 1);
+        String result = "";
+        foreach (String line in text.Split('\n'))
+        {
+            result += (new String(' ', 4 * level)) + line + "\n";
+        }
+        return result.Substring(0, result.Length - 1);
+    }
 }

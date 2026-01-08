@@ -1,3 +1,5 @@
+using Parseidon.Helper;
+
 namespace Parseidon.Parser.Grammar.Operators;
 
 public class IsTerminalMarker : AbstractMarker
@@ -12,7 +14,7 @@ public class IsTerminalMarker : AbstractMarker
     {
         String result = "";
         result += $"MakeTerminal(actualNode, state, errorName, {DoNotEscape.ToString().ToLower()}, \n";
-        result += Indent($"(actualNode, errorName) => {Element?.ToParserCode(grammar)}") + "\n";
+        result += $"(actualNode, errorName) => {Element?.ToParserCode(grammar)}".Indent() + "\n";
         result += ")";
         return result;
     }

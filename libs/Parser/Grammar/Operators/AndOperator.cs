@@ -1,3 +1,5 @@
+using Parseidon.Helper;
+
 namespace Parseidon.Parser.Grammar.Operators;
 
 public class AndOperator : AbstractTwoChildOperator
@@ -8,8 +10,8 @@ public class AndOperator : AbstractTwoChildOperator
     {
         String result = "";
         result += $"CheckAnd(actualNode, state, errorName,\n";
-        result += Indent($"(actualNode, errorName) => {Left.ToParserCode(grammar)},") + "\n";
-        result += Indent($"(actualNode, errorName) => {Right.ToParserCode(grammar)}") + "\n";
+        result += $"(actualNode, errorName) => {Left.ToParserCode(grammar)},".Indent() + "\n";
+        result += $"(actualNode, errorName) => {Right.ToParserCode(grammar)}".Indent() + "\n";
         result += ")";
         return result;
     }

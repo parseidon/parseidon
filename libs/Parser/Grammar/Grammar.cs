@@ -339,19 +339,19 @@ public class Grammar : AbstractNamedElement
 
                 namespace {{parserNamespace}}
                 {
-                {{Indent(GetIVisitorCode(generateNodeVisitor))}}
+                {{GetIVisitorCode(generateNodeVisitor).Indent()}}
 
-                {{Indent(GetParseResultCode(generateNodeVisitor))}}
+                {{GetParseResultCode(generateNodeVisitor).Indent()}}
 
-                {{Indent(GetGlobalClassesCode())}}
+                {{GetGlobalClassesCode().Indent()}}
 
                     public sealed class {{parserClass}}
                     {
-                {{Indent(Indent(GetParseCode()))}}
+                {{GetParseCode().Indent().Indent()}}
 
-                {{Indent(Indent(GetBasicCode()))}}
+                {{GetBasicCode().Indent().Indent()}}
 
-                {{Indent(Indent(GetCheckDefinitionCode()))}}
+                {{GetCheckDefinitionCode().Indent().Indent()}}
                     }
                 }
                 """.TrimLineEndWhitespace();
@@ -845,7 +845,7 @@ public class Grammar : AbstractNamedElement
                 {
                     switch (tokenId)
                     {
-                {{Indent(Indent(visitorCalls))}}
+                {{visitorCalls.Indent().Indent()}}
                     }
                     return ProcessNodeResult.Success;
                 }
@@ -900,7 +900,7 @@ public class Grammar : AbstractNamedElement
                     }
                     return new EmptyResult(false, visitMessages);
                 }
-            {{Indent(nodeVisitorMethods)}}
+            {{nodeVisitorMethods.Indent()}}
             }
             """;
         return result;
@@ -930,7 +930,7 @@ public class Grammar : AbstractNamedElement
         String result = String.Join("", elements.Select(x => x.ToParserCode(this))) + ";";
         if (result.IndexOf("\n") > 0)
             result = $"\n{result}";
-        return Indent(Indent(result));
+        return result.Indent().Indent();
     }
 
     protected String GetIVisitorCode(Boolean generateNodeVisitor)
@@ -965,7 +965,7 @@ public class Grammar : AbstractNamedElement
 
                 public interface INodeVisitor<TContext> : IVisitor<TContext> where TContext : class
                 {
-                {{Indent(visitorEvents)}}
+                {{visitorEvents.Indent()}}
                     void BeginVisit(TContext context, ASTNode node);
                     void EndVisit(TContext context, ASTNode node);
                 }

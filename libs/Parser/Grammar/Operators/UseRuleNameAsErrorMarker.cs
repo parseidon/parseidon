@@ -1,3 +1,4 @@
+using Parseidon.Helper;
 using Parseidon.Parser.Grammar.Blocks;
 
 namespace Parseidon.Parser.Grammar.Operators;
@@ -12,7 +13,7 @@ public class UseDefinitionNameAsErrorMarker : AbstractMarker
         String errorName = definition.KeyValuePairs.TryGetValue(Grammar.GrammarPropertyErrorName, out String temp) ? $"\"{temp}\"" : $"\"{definition.Name}\"";
         String result = "";
         result += $"SetErrorName(actualNode, state, {errorName},\n";
-        result += Indent($"(actualNode, errorName) => {Element?.ToParserCode(grammar)}") + "\n";
+        result += $"(actualNode, errorName) => {Element?.ToParserCode(grammar)}".Indent() + "\n";
         result += ")";
         return result;
     }
